@@ -4,7 +4,10 @@
       "mcp__obsidian__view",
       "mcp__obsidian__get_workspace_files",
       "mcp__obsidian__str_replace",
-      "mcp__obsidian__create"
+      "mcp__obsidian__create",
+      "mcp__obsidian__obsidian_api",
+      "Bash(python -c ':*)",
+      "Bash(python -c \"import re; f=open\\('unity/Assets/Spiders/Prefabs/spider_brown.prefab'\\); c=f.read\\(\\); f.close\\(\\); names=re.findall\\(r'm_Name: \\(.+\\)', c\\); [print\\(n.strip\\(\\)\\) for n in names if any\\(x in n for x in ['Leg','Bone','LEG']\\)]\")"
     ]
   }
 }
