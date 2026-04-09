@@ -1,0 +1,18 @@
+{
+  "animal_name": "fish",
+  "description": "물고기 — 몸통 굴곡 2관절 + 지느러미 3개",
+  "joints": [
+    {"id": "body_mid",        "parent": "body",     "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "body_tail",       "parent": "body_mid", "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Y"},
+    {"id": "fin_pectoral_R",  "parent": "body",     "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "X"},
+    {"id": "fin_pectoral_L",  "parent": "body",     "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "X"},
+    {"id": "fin_dorsal",      "parent": "body",     "dof": 1, "min_angle": -20.0, "max_angle":  20.0, "axis": "Z"}
+  ],
+  "chains": [
+    ["body_mid", "body_tail"],
+    ["fin_pectoral_R"],
+    ["fin_pectoral_L"],
+    ["fin_dorsal"]
+  ],
+  "notes": "유영은 body_mid/tail 웨이브. 지느러미는 손가락 펼침에 대응."
+}

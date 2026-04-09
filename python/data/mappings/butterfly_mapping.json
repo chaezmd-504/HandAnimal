@@ -1,0 +1,81 @@
+{
+  "animal": "butterfly",
+  "mode": "bilateral",
+  "mapping": {
+    "wing_L_inner": {
+      "hand_dof_idx": 4,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 1.0,
+      "Q_score": -3.4351,
+      "hand": "left"
+    },
+    "wing_L_outer": {
+      "hand_dof_idx": 3,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 0.6111,
+      "Q_score": -3.4818,
+      "hand": "left"
+    },
+    "wing_R_inner": {
+      "hand_dof_idx": 4,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 1.0,
+      "Q_score": -3.441,
+      "hand": "right"
+    },
+    "wing_R_outer": {
+      "hand_dof_idx": 3,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 0.6111,
+      "Q_score": -3.4856,
+      "hand": "right"
+    }
+  },
+  "reference_pose_H": {
+    "left": {
+      "thumb_cmc": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 15.0,
+      "index_mcp": 45.0,
+      "index_pip": 55.0,
+      "index_dip": 10.0,
+      "middle_mcp": 10.0,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 10.0,
+      "ring_pip": 10.0,
+      "ring_dip": 10.0,
+      "pinky_mcp": 10.0,
+      "pinky_pip": 10.0,
+      "pinky_dip": 10.0
+    },
+    "right": {
+      "thumb_cmc": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 15.0,
+      "index_mcp": 45.0,
+      "index_pip": 55.0,
+      "index_dip": 10.0,
+      "middle_mcp": 10.0,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 10.0,
+      "ring_pip": 10.0,
+      "ring_dip": 10.0,
+      "pinky_mcp": 10.0,
+      "pinky_pip": 10.0,
+      "pinky_dip": 10.0
+    }
+  },
+  "reference_pose_A": {
+    "wing_L_inner": -35.0,
+    "wing_L_outer": -17.5,
+    "wing_R_inner": 35.0,
+    "wing_R_outer": 17.5
+  },
+  "bilateral_balance": {
+    "n_left": 2,
+    "n_right": 2,
+    "balanced": true
+  }
+}

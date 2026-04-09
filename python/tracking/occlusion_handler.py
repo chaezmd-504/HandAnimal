@@ -78,16 +78,17 @@ class OcclusionHandler:
 
     def process(self, landmarks) -> list[tuple[float, float, float]]:
         """
-        MediaPipe NormalizedLandmarkList를 받아 필터링된 좌표 리스트를 반환한다.
+        MediaPipe Tasks API의 NormalizedLandmark 리스트를 받아 필터링된 좌표 리스트를 반환한다.
 
         Args:
-            landmarks: mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList
+            landmarks: List[NormalizedLandmark] (mediapipe.tasks.python.vision)
 
         Returns:
             List of (x, y, z) tuples, length 21
         """
         result = []
-        for i, lm in enumerate(landmarks.landmark):
-            fx, fy, fz = self.filters[i].update(lm.x, lm.y, lm.z, lm.visibility)
+        for i, lm in enumerate(landmarks):
+            visibility = lm.visibility if lm.visibility is not None else 1.0
+            fx, fy, fz = self.filters[i].update(lm.x, lm.y, lm.z, visibility)
             result.append((fx, fy, fz))
         return result

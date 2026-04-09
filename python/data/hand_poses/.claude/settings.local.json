@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__obsidian__view",
+      "mcp__obsidian__str_replace",
+      "mcp__obsidian__create",
+      "mcp__obsidian__obsidian_api",
+      "mcp__obsidian__insert",
+      "Bash(mkdir -p \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/python/communication\")",
+      "Bash(mkdir -p \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/unity/Assets/Scripts/Communication\")",
+      "Bash(mkdir -p \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/unity/Assets/Scripts/Avatar\")",
+      "Bash(mkdir -p \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/unity/Assets/Scripts/Utils\")",
+      "mcp__obsidian__get_workspace_files"
+    ]
+  }
+}

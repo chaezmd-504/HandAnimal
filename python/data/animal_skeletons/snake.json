@@ -1,0 +1,18 @@
+{
+  "animal_name": "snake",
+  "description": "뱀 — 척추 8마디 사행 운동 (대조군)",
+  "joints": [
+    {"id": "spine_1", "parent": "head",    "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_2", "parent": "spine_1", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_3", "parent": "spine_2", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_4", "parent": "spine_3", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_5", "parent": "spine_4", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_6", "parent": "spine_5", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_7", "parent": "spine_6", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"},
+    {"id": "spine_8", "parent": "spine_7", "dof": 1, "min_angle": -45.0, "max_angle":  45.0, "axis": "Y"}
+  ],
+  "chains": [
+    ["spine_1", "spine_2", "spine_3", "spine_4", "spine_5", "spine_6", "spine_7", "spine_8"]
+  ],
+  "notes": "사행 운동 구현. 손 구조와 유사성이 낮아 대조군으로 사용."
+}

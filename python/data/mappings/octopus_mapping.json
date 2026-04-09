@@ -1,0 +1,241 @@
+{
+  "animal": "octopus",
+  "mode": "bilateral",
+  "mapping": {
+    "tentacle_1_base": {
+      "hand_dof_idx": 13,
+      "hand_dof_name": "pinky_pip",
+      "scale_factor": 1.8,
+      "Q_score": -3.471,
+      "hand": "left"
+    },
+    "tentacle_1_mid": {
+      "hand_dof_idx": 14,
+      "hand_dof_name": "pinky_dip",
+      "scale_factor": 2.25,
+      "Q_score": -3.5048,
+      "hand": "left"
+    },
+    "tentacle_1_tip": {
+      "hand_dof_idx": 12,
+      "hand_dof_name": "pinky_mcp",
+      "scale_factor": 2.25,
+      "Q_score": -3.5222,
+      "hand": "left"
+    },
+    "tentacle_2_base": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "ring_mcp",
+      "scale_factor": 2.0,
+      "Q_score": -3.4879,
+      "hand": "left"
+    },
+    "tentacle_2_mid": {
+      "hand_dof_idx": 10,
+      "hand_dof_name": "ring_pip",
+      "scale_factor": 1.6364,
+      "Q_score": -3.4373,
+      "hand": "left"
+    },
+    "tentacle_2_tip": {
+      "hand_dof_idx": 11,
+      "hand_dof_name": "ring_dip",
+      "scale_factor": 2.0,
+      "Q_score": -3.4916,
+      "hand": "left"
+    },
+    "tentacle_3_base": {
+      "hand_dof_idx": 8,
+      "hand_dof_name": "middle_dip",
+      "scale_factor": 2.0,
+      "Q_score": -3.4973,
+      "hand": "left"
+    },
+    "tentacle_3_mid": {
+      "hand_dof_idx": 6,
+      "hand_dof_name": "middle_mcp",
+      "scale_factor": 2.0,
+      "Q_score": -3.482,
+      "hand": "left"
+    },
+    "tentacle_3_tip": {
+      "hand_dof_idx": 7,
+      "hand_dof_name": "middle_pip",
+      "scale_factor": 1.6364,
+      "Q_score": -3.4463,
+      "hand": "left"
+    },
+    "tentacle_4_base": {
+      "hand_dof_idx": 5,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 2.0,
+      "Q_score": -3.493,
+      "hand": "left"
+    },
+    "tentacle_4_mid": {
+      "hand_dof_idx": 4,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 1.6364,
+      "Q_score": -3.4386,
+      "hand": "left"
+    },
+    "tentacle_4_tip": {
+      "hand_dof_idx": 3,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 2.0,
+      "Q_score": -3.4861,
+      "hand": "left"
+    },
+    "tentacle_5_base": {
+      "hand_dof_idx": 13,
+      "hand_dof_name": "pinky_pip",
+      "scale_factor": 1.8,
+      "Q_score": -3.471,
+      "hand": "right"
+    },
+    "tentacle_5_mid": {
+      "hand_dof_idx": 14,
+      "hand_dof_name": "pinky_dip",
+      "scale_factor": 2.25,
+      "Q_score": -3.5048,
+      "hand": "right"
+    },
+    "tentacle_5_tip": {
+      "hand_dof_idx": 12,
+      "hand_dof_name": "pinky_mcp",
+      "scale_factor": 2.25,
+      "Q_score": -3.5222,
+      "hand": "right"
+    },
+    "tentacle_6_base": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "ring_mcp",
+      "scale_factor": 2.0,
+      "Q_score": -3.4879,
+      "hand": "right"
+    },
+    "tentacle_6_mid": {
+      "hand_dof_idx": 10,
+      "hand_dof_name": "ring_pip",
+      "scale_factor": 1.6364,
+      "Q_score": -3.4373,
+      "hand": "right"
+    },
+    "tentacle_6_tip": {
+      "hand_dof_idx": 11,
+      "hand_dof_name": "ring_dip",
+      "scale_factor": 2.0,
+      "Q_score": -3.4916,
+      "hand": "right"
+    },
+    "tentacle_7_base": {
+      "hand_dof_idx": 8,
+      "hand_dof_name": "middle_dip",
+      "scale_factor": 2.0,
+      "Q_score": -3.4973,
+      "hand": "right"
+    },
+    "tentacle_7_mid": {
+      "hand_dof_idx": 6,
+      "hand_dof_name": "middle_mcp",
+      "scale_factor": 2.0,
+      "Q_score": -3.482,
+      "hand": "right"
+    },
+    "tentacle_7_tip": {
+      "hand_dof_idx": 7,
+      "hand_dof_name": "middle_pip",
+      "scale_factor": 1.6364,
+      "Q_score": -3.4463,
+      "hand": "right"
+    },
+    "tentacle_8_base": {
+      "hand_dof_idx": 5,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 2.0,
+      "Q_score": -3.493,
+      "hand": "right"
+    },
+    "tentacle_8_mid": {
+      "hand_dof_idx": 4,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 1.6364,
+      "Q_score": -3.4386,
+      "hand": "right"
+    },
+    "tentacle_8_tip": {
+      "hand_dof_idx": 3,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 2.0,
+      "Q_score": -3.4861,
+      "hand": "right"
+    }
+  },
+  "reference_pose_H": {
+    "left": {
+      "thumb_cmc": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 15.0,
+      "index_mcp": 45.0,
+      "index_pip": 55.0,
+      "index_dip": 45.0,
+      "middle_mcp": 45.0,
+      "middle_pip": 55.0,
+      "middle_dip": 45.0,
+      "ring_mcp": 45.0,
+      "ring_pip": 55.0,
+      "ring_dip": 45.0,
+      "pinky_mcp": 40.0,
+      "pinky_pip": 50.0,
+      "pinky_dip": 40.0
+    },
+    "right": {
+      "thumb_cmc": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 15.0,
+      "index_mcp": 45.0,
+      "index_pip": 55.0,
+      "index_dip": 45.0,
+      "middle_mcp": 45.0,
+      "middle_pip": 55.0,
+      "middle_dip": 45.0,
+      "ring_mcp": 45.0,
+      "ring_pip": 55.0,
+      "ring_dip": 45.0,
+      "pinky_mcp": 40.0,
+      "pinky_pip": 50.0,
+      "pinky_dip": 40.0
+    }
+  },
+  "reference_pose_A": {
+    "tentacle_1_base": -0.0,
+    "tentacle_1_mid": -0.0,
+    "tentacle_1_tip": -0.0,
+    "tentacle_2_base": -0.0,
+    "tentacle_2_mid": -0.0,
+    "tentacle_2_tip": -0.0,
+    "tentacle_3_base": -0.0,
+    "tentacle_3_mid": -0.0,
+    "tentacle_3_tip": -0.0,
+    "tentacle_4_base": -0.0,
+    "tentacle_4_mid": -0.0,
+    "tentacle_4_tip": -0.0,
+    "tentacle_5_base": -0.0,
+    "tentacle_5_mid": -0.0,
+    "tentacle_5_tip": -0.0,
+    "tentacle_6_base": -0.0,
+    "tentacle_6_mid": -0.0,
+    "tentacle_6_tip": -0.0,
+    "tentacle_7_base": -0.0,
+    "tentacle_7_mid": -0.0,
+    "tentacle_7_tip": -0.0,
+    "tentacle_8_base": -0.0,
+    "tentacle_8_mid": -0.0,
+    "tentacle_8_tip": -0.0
+  },
+  "bilateral_balance": {
+    "n_left": 12,
+    "n_right": 12,
+    "balanced": true
+  }
+}

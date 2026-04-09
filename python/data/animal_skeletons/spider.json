@@ -1,0 +1,48 @@
+{
+  "animal_name": "spider",
+  "description": "거미 — 8다리, 각 다리 3관절 (base/mid/tip)",
+  "joints": [
+    {"id": "leg_R1_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_R1_mid",  "parent": "leg_R1_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_R1_tip",  "parent": "leg_R1_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_R2_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_R2_mid",  "parent": "leg_R2_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_R2_tip",  "parent": "leg_R2_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_R3_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_R3_mid",  "parent": "leg_R3_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_R3_tip",  "parent": "leg_R3_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_R4_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_R4_mid",  "parent": "leg_R4_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_R4_tip",  "parent": "leg_R4_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_L1_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_L1_mid",  "parent": "leg_L1_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_L1_tip",  "parent": "leg_L1_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_L2_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_L2_mid",  "parent": "leg_L2_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_L2_tip",  "parent": "leg_L2_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_L3_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_L3_mid",  "parent": "leg_L3_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_L3_tip",  "parent": "leg_L3_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "leg_L4_base", "parent": "body",       "dof": 1, "min_angle": -60.0, "max_angle":  60.0, "axis": "Z"},
+    {"id": "leg_L4_mid",  "parent": "leg_L4_base","dof": 1, "min_angle":   0.0, "max_angle": 120.0, "axis": "X"},
+    {"id": "leg_L4_tip",  "parent": "leg_L4_mid", "dof": 1, "min_angle":   0.0, "max_angle":  90.0, "axis": "X"}
+  ],
+  "chains": [
+    ["leg_R1_base", "leg_R1_mid", "leg_R1_tip"],
+    ["leg_R2_base", "leg_R2_mid", "leg_R2_tip"],
+    ["leg_R3_base", "leg_R3_mid", "leg_R3_tip"],
+    ["leg_R4_base", "leg_R4_mid", "leg_R4_tip"],
+    ["leg_L1_base", "leg_L1_mid", "leg_L1_tip"],
+    ["leg_L2_base", "leg_L2_mid", "leg_L2_tip"],
+    ["leg_L3_base", "leg_L3_mid", "leg_L3_tip"],
+    ["leg_L4_base", "leg_L4_mid", "leg_L4_tip"]
+  ],
+  "notes": "ROM은 Unity 애니메이션 키프레임 추출 후 실측값으로 교체할 것."
+}

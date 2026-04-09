@@ -1,0 +1,48 @@
+{
+  "animal_name": "octopus",
+  "description": "문어 — 8개 촉수, 각 촉수 3마디",
+  "joints": [
+    {"id": "tentacle_1_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_1_mid",  "parent": "tentacle_1_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_1_tip",  "parent": "tentacle_1_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_2_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_2_mid",  "parent": "tentacle_2_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_2_tip",  "parent": "tentacle_2_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_3_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_3_mid",  "parent": "tentacle_3_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_3_tip",  "parent": "tentacle_3_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_4_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_4_mid",  "parent": "tentacle_4_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_4_tip",  "parent": "tentacle_4_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_5_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_5_mid",  "parent": "tentacle_5_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_5_tip",  "parent": "tentacle_5_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_6_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_6_mid",  "parent": "tentacle_6_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_6_tip",  "parent": "tentacle_6_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_7_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_7_mid",  "parent": "tentacle_7_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_7_tip",  "parent": "tentacle_7_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+
+    {"id": "tentacle_8_base", "parent": "body",              "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_8_mid",  "parent": "tentacle_8_base",   "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"},
+    {"id": "tentacle_8_tip",  "parent": "tentacle_8_mid",    "dof": 1, "min_angle": -90.0, "max_angle":  90.0, "axis": "X"}
+  ],
+  "chains": [
+    ["tentacle_1_base", "tentacle_1_mid", "tentacle_1_tip"],
+    ["tentacle_2_base", "tentacle_2_mid", "tentacle_2_tip"],
+    ["tentacle_3_base", "tentacle_3_mid", "tentacle_3_tip"],
+    ["tentacle_4_base", "tentacle_4_mid", "tentacle_4_tip"],
+    ["tentacle_5_base", "tentacle_5_mid", "tentacle_5_tip"],
+    ["tentacle_6_base", "tentacle_6_mid", "tentacle_6_tip"],
+    ["tentacle_7_base", "tentacle_7_mid", "tentacle_7_tip"],
+    ["tentacle_8_base", "tentacle_8_mid", "tentacle_8_tip"]
+  ],
+  "notes": "촉수 ROM은 넓게 잡음. Unity 모델 확인 후 실측 ROM으로 교체 권장."
+}

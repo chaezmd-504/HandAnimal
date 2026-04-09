@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__obsidian__view",
+      "mcp__obsidian__get_workspace_files",
+      "mcp__obsidian__str_replace",
+      "mcp__obsidian__create"
+    ]
+  }
+}

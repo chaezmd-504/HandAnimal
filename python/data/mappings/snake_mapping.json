@@ -1,0 +1,113 @@
+{
+  "animal": "snake",
+  "mode": "bilateral",
+  "mapping": {
+    "spine_1": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "ring_mcp",
+      "scale_factor": 1.0,
+      "Q_score": -3.4862,
+      "hand": "left"
+    },
+    "spine_2": {
+      "hand_dof_idx": 10,
+      "hand_dof_name": "ring_pip",
+      "scale_factor": 0.8182,
+      "Q_score": -3.4357,
+      "hand": "left"
+    },
+    "spine_3": {
+      "hand_dof_idx": 3,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 1.0,
+      "Q_score": -3.4844,
+      "hand": "left"
+    },
+    "spine_4": {
+      "hand_dof_idx": 4,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 0.8182,
+      "Q_score": -3.437,
+      "hand": "left"
+    },
+    "spine_5": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "ring_mcp",
+      "scale_factor": 1.0,
+      "Q_score": -3.4862,
+      "hand": "right"
+    },
+    "spine_6": {
+      "hand_dof_idx": 10,
+      "hand_dof_name": "ring_pip",
+      "scale_factor": 0.8182,
+      "Q_score": -3.4357,
+      "hand": "right"
+    },
+    "spine_7": {
+      "hand_dof_idx": 3,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 1.0,
+      "Q_score": -3.4844,
+      "hand": "right"
+    },
+    "spine_8": {
+      "hand_dof_idx": 4,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 0.8182,
+      "Q_score": -3.437,
+      "hand": "right"
+    }
+  },
+  "reference_pose_H": {
+    "left": {
+      "thumb_cmc": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 15.0,
+      "index_mcp": 45.0,
+      "index_pip": 55.0,
+      "index_dip": 10.0,
+      "middle_mcp": 10.0,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 45.0,
+      "ring_pip": 55.0,
+      "ring_dip": 10.0,
+      "pinky_mcp": 10.0,
+      "pinky_pip": 10.0,
+      "pinky_dip": 10.0
+    },
+    "right": {
+      "thumb_cmc": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 15.0,
+      "index_mcp": 45.0,
+      "index_pip": 55.0,
+      "index_dip": 10.0,
+      "middle_mcp": 10.0,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 45.0,
+      "ring_pip": 55.0,
+      "ring_dip": 10.0,
+      "pinky_mcp": 10.0,
+      "pinky_pip": 10.0,
+      "pinky_dip": 10.0
+    }
+  },
+  "reference_pose_A": {
+    "spine_1": -0.0,
+    "spine_2": -0.0,
+    "spine_3": -0.0,
+    "spine_4": -0.0,
+    "spine_5": -0.0,
+    "spine_6": -0.0,
+    "spine_7": -0.0,
+    "spine_8": -0.0
+  },
+  "bilateral_balance": {
+    "n_left": 4,
+    "n_right": 4,
+    "balanced": true
+  }
+}
