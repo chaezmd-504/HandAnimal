@@ -106,8 +106,8 @@ class MappingEngine:
         h_ref     = float(ref_H.get(dof_name, h_current))
         delta_h   = h_current - h_ref
 
-        # 데드존: 15° 이하 변화는 무시 (손가락 해부학적 결합 억제)
-        DEAD_ZONE = 15.0
+        # 데드존: 5° 이하 변화는 무시 (손가락 해부학적 결합 억제)
+        DEAD_ZONE = 5.0
         if abs(delta_h) < DEAD_ZONE:
             delta_h = 0.0
         else:

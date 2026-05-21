@@ -335,6 +335,14 @@ def main():
               "extract_avatar_poses.py 를 먼저 실행하세요.")
         sys.exit(1)
 
+    # skeleton ROM 클리핑용
+    _skel_path = os.path.join(POSES_DIR, f"{args.animal}.json")
+    _skeleton  = None
+    if os.path.exists(_skel_path):
+        with open(_skel_path, encoding="utf-8") as _f:
+            _skeleton = json.load(_f)
+        print(f"[INFO] skeleton ROM 로드: {_skel_path}")
+
     server.start()
 
     options = HandLandmarkerOptions(
@@ -450,7 +458,7 @@ def main():
             hand_detected = bool(hands_angles)
             if hand_detected:
                 try:
-                    joints = engine.transform_bilateral(hands_angles)
+                    joints = engine.transform_clamped(hands_angles, _skeleton)
                     # direct 모드: float → {x,y,z} 변환 (애니메이션 데이터에서 축 자동 계산)
                     if joints and not isinstance(next(iter(joints.values())), dict):
                         joints = _float_joints_to_xyz(joints, engine.current_animal)

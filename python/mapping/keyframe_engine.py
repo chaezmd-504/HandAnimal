@@ -129,6 +129,26 @@ class KeyframeMappingEngine:
         """양손 20-DOF dict → 동물 관절 각도 dict ({"x","y","z"} per joint)."""
         return self._blend(hands_dofs)
 
+    def transform_clamped(
+        self,
+        dof_input: dict,
+        skeleton: "Optional[dict]" = None,
+    ) -> dict[str, float]:
+        """transform_bilateral 후 skeleton ROM으로 클리핑."""
+        raw = self.transform_bilateral(dof_input)
+        if skeleton is None:
+            return raw
+        joint_rom = {j["id"]: (j["min_angle"], j["max_angle"])
+                     for j in skeleton.get("joints", [])}
+        result = {}
+        for jid, val in raw.items():
+            if isinstance(val, dict):
+                result[jid] = val  # keyframe은 xyz dict — 클리핑 불필요
+            else:
+                lo, hi = joint_rom.get(jid, (-360, 360))
+                result[jid] = float(max(lo, min(hi, val)))
+        return result
+
     def calibrate(self, hands_dofs: dict[str, dict[str, float]]):
         """현재 손 포즈를 기준 포즈로 설정 (c 키 캘리브레이션).
 

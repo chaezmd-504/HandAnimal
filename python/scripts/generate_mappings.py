@@ -53,7 +53,7 @@ BETA_MAP = {
 
 SKELETONS_DIR = os.path.join(PYTHON_DIR, "data", "animal_skeletons")
 POSES_10K     = os.path.join(PYTHON_DIR, "data", "hand_poses", "poses_10k.npy")
-POSES_SUB     = os.path.join(PYTHON_DIR, "data", "hand_poses", "poses_100_comfortable.npy")
+POSES_SUB     = os.path.join(PYTHON_DIR, "data", "hand_poses", "poses_1000_comfortable.npy")
 MAPPINGS_DIR  = os.path.join(PYTHON_DIR, "data", "mappings")
 
 
