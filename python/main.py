@@ -54,6 +54,7 @@ HAND_COLOR = {"left": (0, 255, 0), "right": (255, 100, 0)}
 
 _bone_axes_cache: dict[str, dict[str, tuple[str, int]]] = {}
 
+
 def _get_bone_axes(animal: str) -> dict[str, tuple[str, int]]:
     """
     {animal}_poses.json 에서 각 관절의 지배 축과 부호를 자동 계산 (캐시).
@@ -70,18 +71,32 @@ def _get_bone_axes(animal: str) -> dict[str, tuple[str, int]]:
     with open(poses_path, encoding="utf-8") as f:
         poses = json.load(f)
 
+    # bone_map에서 명시된 축 읽기 (추측 없이)
+    bone_map_path = os.path.join(POSES_DIR, f"bone_map_{animal}.json")
+    axis_map: dict[str, str] = {}
+    if os.path.exists(bone_map_path):
+        with open(bone_map_path, encoding="utf-8") as f:
+            bm = json.load(f)
+        for jid, info in bm.get("joint_map", {}).items():
+            axis_map[jid] = info.get("axis", "Y").lower()
+
     joints: set[str] = set(k for p in poses for k in p if not k.startswith("_"))
     result: dict[str, tuple[str, int]] = {}
     for jid in joints:
-        sx = sy = sz = 0.0
-        for p in poses:
-            v = p.get(jid)
-            if not isinstance(v, dict):
-                continue
-            sx += abs(v.get("x", 0.0))
-            sy += abs(v.get("y", 0.0))
-            sz += abs(v.get("z", 0.0))
-        dom_ax = max(("x", sx), ("y", sy), ("z", sz), key=lambda t: t[1])[0]
+        # 축: bone_map 우선, 없으면 poses에서 dominant axis 추측
+        if jid in axis_map:
+            dom_ax = axis_map[jid]
+        else:
+            sx = sy = sz = 0.0
+            for p in poses:
+                v = p.get(jid)
+                if not isinstance(v, dict):
+                    continue
+                sx += abs(v.get("x", 0.0))
+                sy += abs(v.get("y", 0.0))
+                sz += abs(v.get("z", 0.0))
+            dom_ax = max(("x", sx), ("y", sy), ("z", sz), key=lambda t: t[1])[0]
+
         sign_sum = sum(
             p.get(jid, {}).get(dom_ax, 0.0)
             for p in poses if isinstance(p.get(jid), dict)

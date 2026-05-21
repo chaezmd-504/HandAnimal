@@ -5,191 +5,170 @@
     "r_leg": {
       "hand_dof_idx": 5,
       "hand_dof_name": "thumb_mcp",
-      "scale_factor": 1.2978,
+      "scale_factor": 1.255,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_003": {
       "hand_dof_idx": 14,
       "hand_dof_name": "ring_pip",
-      "scale_factor": 0.5433,
+      "scale_factor": 0.6966,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_004": {
       "hand_dof_idx": 15,
       "hand_dof_name": "ring_dip",
-      "scale_factor": 0.6644,
+      "scale_factor": 0.7306,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_leg_001": {
       "hand_dof_idx": 7,
       "hand_dof_name": "index_mcp",
-      "scale_factor": 0.5878,
+      "scale_factor": 0.7472,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_006": {
       "hand_dof_idx": 11,
       "hand_dof_name": "middle_pip",
-      "scale_factor": 1.5289,
+      "scale_factor": 1.1478,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_007": {
       "hand_dof_idx": 12,
       "hand_dof_name": "middle_dip",
-      "scale_factor": 1.5944,
+      "scale_factor": 1.1472,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_leg_002": {
       "hand_dof_idx": 10,
       "hand_dof_name": "middle_mcp",
-      "scale_factor": 0.3456,
+      "scale_factor": 0.8061,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_009": {
       "hand_dof_idx": 8,
       "hand_dof_name": "index_pip",
-      "scale_factor": 0.5522,
+      "scale_factor": 0.6361,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_010": {
       "hand_dof_idx": 9,
       "hand_dof_name": "index_dip",
-      "scale_factor": 0.5589,
+      "scale_factor": 0.6178,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_leg_003": {
       "hand_dof_idx": 13,
       "hand_dof_name": "ring_mcp",
-      "scale_factor": 0.9011,
+      "scale_factor": 0.8222,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_012": {
       "hand_dof_idx": 6,
       "hand_dof_name": "thumb_ip",
-      "scale_factor": 0.8933,
+      "scale_factor": 0.8195,
       "Q_score": 0.0,
       "hand": "right"
     },
     "r_bone_013": {
       "hand_dof_idx": 6,
       "hand_dof_name": "thumb_ip",
-      "scale_factor": 0.87,
+      "scale_factor": 0.7984,
       "Q_score": 0.0,
       "hand": "right"
     },
     "l_leg": {
       "hand_dof_idx": 5,
       "hand_dof_name": "thumb_mcp",
-      "scale_factor": 1.2122,
+      "scale_factor": 1.255,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_003": {
       "hand_dof_idx": 14,
       "hand_dof_name": "ring_pip",
-      "scale_factor": 0.85,
+      "scale_factor": 0.6966,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_004": {
       "hand_dof_idx": 15,
       "hand_dof_name": "ring_dip",
-      "scale_factor": 0.7967,
+      "scale_factor": 0.7306,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_leg_001": {
       "hand_dof_idx": 7,
       "hand_dof_name": "index_mcp",
-      "scale_factor": 0.9067,
+      "scale_factor": 0.7472,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_006": {
       "hand_dof_idx": 11,
       "hand_dof_name": "middle_pip",
-      "scale_factor": 0.7667,
+      "scale_factor": 1.1478,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_007": {
       "hand_dof_idx": 12,
       "hand_dof_name": "middle_dip",
-      "scale_factor": 0.7,
+      "scale_factor": 1.1472,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_leg_002": {
       "hand_dof_idx": 10,
       "hand_dof_name": "middle_mcp",
-      "scale_factor": 1.2667,
+      "scale_factor": 0.8061,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_009": {
       "hand_dof_idx": 8,
       "hand_dof_name": "index_pip",
-      "scale_factor": 0.72,
+      "scale_factor": 0.6361,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_010": {
       "hand_dof_idx": 9,
       "hand_dof_name": "index_dip",
-      "scale_factor": 0.6767,
+      "scale_factor": 0.6178,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_leg_003": {
       "hand_dof_idx": 13,
       "hand_dof_name": "ring_mcp",
-      "scale_factor": 0.7433,
+      "scale_factor": 0.8222,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_012": {
       "hand_dof_idx": 6,
       "hand_dof_name": "thumb_ip",
-      "scale_factor": 0.7456,
+      "scale_factor": 0.8195,
       "Q_score": 0.0,
       "hand": "left"
     },
     "l_bone_013": {
       "hand_dof_idx": 6,
       "hand_dof_name": "thumb_ip",
-      "scale_factor": 0.7267,
+      "scale_factor": 0.7984,
       "Q_score": 0.0,
       "hand": "left"
-    },
-    "bone": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 2.5,
-      "Q_score": 0.0,
-      "hand": "right"
-    },
-    "bodyik_001": {
-      "hand_dof_idx": 1,
-      "hand_dof_name": "wrist_dev",
-      "scale_factor": 1.5,
-      "Q_score": 0.0,
-      "hand": "right"
-    },
-    "atack1": {
-      "hand_dof_idx": 2,
-      "hand_dof_name": "wrist_rot",
-      "scale_factor": 2.5,
-      "Q_score": 0.0,
-      "hand": "right"
     }
   },
   "reference_pose_H": {
@@ -262,9 +241,6 @@
     "l_bone_010": 0.0,
     "l_leg_003": 0.0,
     "l_bone_012": 0.0,
-    "l_bone_013": 0.0,
-    "bone": 0.0,
-    "bodyik_001": 0.0,
-    "atack1": 0.0
+    "l_bone_013": 0.0
   }
 }

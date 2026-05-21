@@ -165,9 +165,9 @@ public class AnimalController : MonoBehaviour
     /// </summary>
     private static Quaternion BuildRotation(JointEntry entry, Vector3 rot)
     {
-        float ax = Mathf.Clamp(rot.x, entry.minAngle, entry.maxAngle);
-        float ay = Mathf.Clamp(rot.y, entry.minAngle, entry.maxAngle);
-        float az = Mathf.Clamp(rot.z, entry.minAngle, entry.maxAngle);
+        float ax = entry.axisX ? Mathf.Clamp(rot.x, entry.minAngle, entry.maxAngle) : 0f;
+        float ay = entry.axisY ? Mathf.Clamp(rot.y, entry.minAngle, entry.maxAngle) : 0f;
+        float az = entry.axisZ ? Mathf.Clamp(rot.z, entry.minAngle, entry.maxAngle) : 0f;
 
         Quaternion delta = Quaternion.Euler(ax, ay, az);
         return entry.restRotation * delta;

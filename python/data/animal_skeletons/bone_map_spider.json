@@ -7,56 +7,6 @@
   "output_path": "data\\animal_skeletons\\spider.json",
   "margin_deg": 5.0,
   "joint_map": {
-    "atack1": {
-      "unity_path": "Spider/Atack1",
-      "axis": "Y",
-      "_match_confidence": "auto"
-    },
-    "bodyik_001": {
-      "unity_path": "Spider/BodyIK.001",
-      "axis": "Z",
-      "_match_confidence": "auto"
-    },
-    "bone": {
-      "unity_path": "Spider/Bone",
-      "axis": "Z",
-      "_match_confidence": "auto"
-    },
-    "l_leg_ik_005": {
-      "unity_path": "Spider/L.LEG_IK.005",
-      "axis": "X",
-      "_match_confidence": "auto"
-    },
-    "l_leg_ik_008": {
-      "unity_path": "Spider/L.LEG_IK.008",
-      "axis": "X",
-      "_match_confidence": "auto"
-    },
-    "l_leg_ik_011": {
-      "unity_path": "Spider/L.LEG_IK.011",
-      "axis": "X",
-      "_match_confidence": "auto"
-    },
-    "l_legik_015": {
-      "unity_path": "Spider/L.LegIK.015",
-      "axis": "Z",
-      "_match_confidence": "auto"
-    },
-    "r_leg_ik_005": {
-      "unity_path": "Spider/R.LEG_IK.005",
-      "axis": "X",
-      "_match_confidence": "auto"
-    },
-    "r_leg_ik_008": {
-      "unity_path": "Spider/R.LEG_IK.008",
-      "axis": "X",
-      "_match_confidence": "auto"
-    },
-    "r_leg_ik_011": {
-      "unity_path": "Spider/R.LEG_IK.011",
-      "axis": "X",
-      "_match_confidence": "auto"
-    },
     "ass": {
       "unity_path": "Spider/Bone/Ass",
       "axis": "X",

@@ -219,9 +219,6 @@ MonoBehaviour:
     axisX: 1
     axisY: 0
     axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -12.5
     maxAngle: 94.4
   - jointName: right_wing
@@ -229,9 +226,6 @@ MonoBehaviour:
     axisX: 1
     axisY: 0
     axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -98.7
     maxAngle: 5
   lerpSpeed: 12
@@ -291,6 +285,16 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &634993155 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4236021772625791834, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+  m_PrefabInstance: {fileID: 731406558}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &641222880 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1715898406860877614, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+  m_PrefabInstance: {fileID: 731406558}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &649112977 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 445814, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
@@ -367,6 +371,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 894869243}
+    - targetCorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 894869245}
   m_SourcePrefab: {fileID: 100100000, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
 --- !u!4 &731406559 stripped
 Transform:
@@ -598,246 +605,202 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jointEntries:
+  - jointName: ass
+    jointTransform: {fileID: 641222880}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -5
+    maxAngle: 51
+  - jointName: bone_002
+    jointTransform: {fileID: 634993155}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -9.4
+    maxAngle: 33.4
   - jointName: l_leg
     jointTransform: {fileID: 731406573}
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -68.6
     maxAngle: 40.5
-  - jointName: l_bone_012
-    jointTransform: {fileID: 731406572}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -44.2
-    maxAngle: 22.9
-  - jointName: l_bone_013
-    jointTransform: {fileID: 731406571}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -26.5
-    maxAngle: 38.9
   - jointName: l_leg_001
     jointTransform: {fileID: 731406576}
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -24.1
     maxAngle: 57.5
-  - jointName: l_bone_009
-    jointTransform: {fileID: 731406575}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -49.8
-    maxAngle: 15
-  - jointName: l_bone_010
-    jointTransform: {fileID: 731406574}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -45
-    maxAngle: 15.9
   - jointName: l_leg_002
     jointTransform: {fileID: 731406579}
     axisX: 0
     axisY: 1
     axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -21.7
     maxAngle: 92.3
-  - jointName: l_bone_006
-    jointTransform: {fileID: 731406578}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -61.6
-    maxAngle: 7.4
-  - jointName: l_bone_007
-    jointTransform: {fileID: 731406577}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -49.8
-    maxAngle: 13.2
   - jointName: l_leg_003
     jointTransform: {fileID: 731406582}
     axisX: 0
     axisY: 1
     axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -27.7
     maxAngle: 39.2
-  - jointName: l_bone_003
-    jointTransform: {fileID: 731406581}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -66.7
-    maxAngle: 9.8
-  - jointName: l_bone_004
-    jointTransform: {fileID: 731406580}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -52.5
-    maxAngle: 19.2
   - jointName: r_leg
     jointTransform: {fileID: 731406561}
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -40.2
     maxAngle: 76.6
-  - jointName: r_bone_012
-    jointTransform: {fileID: 731406560}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -23.2
-    maxAngle: 57.2
-  - jointName: r_bone_013
-    jointTransform: {fileID: 731406559}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -26.7
-    maxAngle: 51.6
   - jointName: r_leg_001
     jointTransform: {fileID: 731406564}
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -31.9
     maxAngle: 21
-  - jointName: r_bone_009
-    jointTransform: {fileID: 731406563}
-    axisX: 0
-    axisY: 1
-    axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -23.8
-    maxAngle: 25.9
-  - jointName: r_bone_010
-    jointTransform: {fileID: 731406562}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -28.7
-    maxAngle: 21.6
   - jointName: r_leg_002
     jointTransform: {fileID: 731406567}
     axisX: 0
     axisY: 1
     axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -26.1
     maxAngle: 5
-  - jointName: r_bone_006
-    jointTransform: {fileID: 731406566}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -54
-    maxAngle: 83.6
-  - jointName: r_bone_007
-    jointTransform: {fileID: 731406565}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
-    minAngle: -102.8
-    maxAngle: 40.7
   - jointName: r_leg_003
     jointTransform: {fileID: 731406570}
     axisX: 0
     axisY: 1
     axisZ: 0
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -45.2
     maxAngle: 35.9
+  - jointName: l_bone_014
+    jointTransform: {fileID: 1249902811}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -24.6
+    maxAngle: 5
+  - jointName: r_bone_014
+    jointTransform: {fileID: 1762438718}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -5
+    maxAngle: 30.1
+  - jointName: l_bone_009
+    jointTransform: {fileID: 731406575}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -49.8
+    maxAngle: 15
+  - jointName: l_bone_006
+    jointTransform: {fileID: 731406578}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -61.6
+    maxAngle: 7.4
+  - jointName: l_bone_003
+    jointTransform: {fileID: 731406581}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -66.7
+    maxAngle: 9.8
+  - jointName: l_bone_012
+    jointTransform: {fileID: 731406572}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -44.2
+    maxAngle: 22.9
+  - jointName: r_bone_009
+    jointTransform: {fileID: 731406563}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -23.8
+    maxAngle: 25.9
+  - jointName: r_bone_006
+    jointTransform: {fileID: 731406566}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -54
+    maxAngle: 83.6
   - jointName: r_bone_003
     jointTransform: {fileID: 731406569}
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -18.9
     maxAngle: 30
+  - jointName: r_bone_012
+    jointTransform: {fileID: 731406560}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -23.2
+    maxAngle: 57.2
+  - jointName: l_bone_010
+    jointTransform: {fileID: 731406574}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -45
+    maxAngle: 15.9
+  - jointName: l_bone_007
+    jointTransform: {fileID: 731406577}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -49.8
+    maxAngle: 13.2
+  - jointName: l_bone_004
+    jointTransform: {fileID: 731406580}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -52.5
+    maxAngle: 19.2
+  - jointName: l_bone_013
+    jointTransform: {fileID: 731406571}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -26.5
+    maxAngle: 38.9
+  - jointName: r_bone_010
+    jointTransform: {fileID: 731406562}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -28.7
+    maxAngle: 21.6
+  - jointName: r_bone_007
+    jointTransform: {fileID: 731406565}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -102.8
+    maxAngle: 40.7
   - jointName: r_bone_004
     jointTransform: {fileID: 731406568}
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -23.7
     maxAngle: 36.1
+  - jointName: r_bone_013
+    jointTransform: {fileID: 731406559}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -26.7
+    maxAngle: 51.6
   lerpSpeed: 12
   idleAnimator: {fileID: 0}
   autoInferAxes: 0
@@ -853,13 +816,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82fd55a6e6e8f814f9785b62ba0ccb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animalController: {fileID: 894869241}
-  changeThreshold: 2
-  snapshotInterval: 0
-  heartbeatInterval: 3
-  _frameCount: 0
-  _lastHeartbeat: 0
-  _anyChangeThisSecond: 0
+--- !u!95 &894869245
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 894869239}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 1e7989a53eef7d04b9b4863a8698aeea, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &976849675
 GameObject:
   m_ObjectHideFlags: 0
@@ -909,6 +887,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1249902811 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8056283531185043717, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+  m_PrefabInstance: {fileID: 731406558}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1370443062
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1010,9 +993,6 @@ MonoBehaviour:
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -50.8
     maxAngle: 26.9
   - jointName: bone_spine_front
@@ -1020,9 +1000,6 @@ MonoBehaviour:
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -19.9
     maxAngle: 53.9
   - jointName: bone_fin_r
@@ -1030,9 +1007,6 @@ MonoBehaviour:
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -36.1
     maxAngle: 44.5
   - jointName: bone_tailfin
@@ -1040,9 +1014,6 @@ MonoBehaviour:
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -36.1
     maxAngle: 33
   - jointName: bone_fin_l
@@ -1050,9 +1021,6 @@ MonoBehaviour:
     axisX: 0
     axisY: 0
     axisZ: 1
-    invertX: 0
-    invertY: 0
-    invertZ: 0
     minAngle: -53.6
     maxAngle: 48.6
   lerpSpeed: 12
@@ -1105,7 +1073,7 @@ MonoBehaviour:
   animalEntries:
   - animalName: spider
     rootObject: {fileID: 894869239}
-    controller: {fileID: 0}
+    controller: {fileID: 894869241}
   animalNameText: {fileID: 0}
   useFade: 1
   fadeDuration: 0.5
@@ -1125,6 +1093,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1762438718 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7220422535144821765, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+  m_PrefabInstance: {fileID: 731406558}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1884684763 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3152085545950965018, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
