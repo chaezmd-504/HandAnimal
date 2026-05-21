@@ -119,6 +119,134 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &84474228
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 138252, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_Name
+      value: Butterfly
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -19.66
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.5042472
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.22
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.4996543
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.4996543
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.5003456
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.50034547
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -90.079
+      objectReference: {fileID: 0}
+    - target: {fileID: 421922, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 11160076, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 138252, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 201399216}
+  m_SourcePrefab: {fileID: 100100000, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+--- !u!1 &201399213 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 138252, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+  m_PrefabInstance: {fileID: 84474228}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &201399216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 201399213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2f227ad29a90774c871a53e704ec1e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jointEntries:
+  - jointName: left_wing
+    jointTransform: {fileID: 649112977}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -12.5
+    maxAngle: 94.4
+  - jointName: right_wing
+    jointTransform: {fileID: 283986981}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -98.7
+    maxAngle: 5
+  lerpSpeed: 12
+  idleAnimator: {fileID: 0}
+  autoInferAxes: 0
+--- !u!4 &283986981 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 420778, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+  m_PrefabInstance: {fileID: 84474228}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &486895659 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3478121568917374666, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+  m_PrefabInstance: {fileID: 1370443062}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &586957744
 GameObject:
   m_ObjectHideFlags: 0
@@ -163,6 +291,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &649112977 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 445814, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
+  m_PrefabInstance: {fileID: 84474228}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &731406558
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -175,6 +308,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: spider_black
       objectReference: {fileID: 0}
+    - target: {fileID: 5470847905714145899, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+      propertyPath: m_Avatar
+      value: 
+      objectReference: {fileID: 9000000, guid: a96ff394aa19efb4bbcd55446aefd7db, type: 2}
+    - target: {fileID: 5470847905714145899, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 1e7989a53eef7d04b9b4863a8698aeea, type: 2}
     - target: {fileID: 5505336437074420642, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -219,7 +360,13 @@ PrefabInstance:
     - {fileID: 5470847905714145899, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 894869241}
+    - targetCorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 894869243}
   m_SourcePrefab: {fileID: 100100000, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
 --- !u!4 &731406559 stripped
 Transform:
@@ -438,6 +585,281 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
   m_PrefabInstance: {fileID: 731406558}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &894869241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 894869239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2f227ad29a90774c871a53e704ec1e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jointEntries:
+  - jointName: l_leg
+    jointTransform: {fileID: 731406573}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -68.6
+    maxAngle: 40.5
+  - jointName: l_bone_012
+    jointTransform: {fileID: 731406572}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -44.2
+    maxAngle: 22.9
+  - jointName: l_bone_013
+    jointTransform: {fileID: 731406571}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -26.5
+    maxAngle: 38.9
+  - jointName: l_leg_001
+    jointTransform: {fileID: 731406576}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -24.1
+    maxAngle: 57.5
+  - jointName: l_bone_009
+    jointTransform: {fileID: 731406575}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -49.8
+    maxAngle: 15
+  - jointName: l_bone_010
+    jointTransform: {fileID: 731406574}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -45
+    maxAngle: 15.9
+  - jointName: l_leg_002
+    jointTransform: {fileID: 731406579}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -21.7
+    maxAngle: 92.3
+  - jointName: l_bone_006
+    jointTransform: {fileID: 731406578}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -61.6
+    maxAngle: 7.4
+  - jointName: l_bone_007
+    jointTransform: {fileID: 731406577}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -49.8
+    maxAngle: 13.2
+  - jointName: l_leg_003
+    jointTransform: {fileID: 731406582}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -27.7
+    maxAngle: 39.2
+  - jointName: l_bone_003
+    jointTransform: {fileID: 731406581}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -66.7
+    maxAngle: 9.8
+  - jointName: l_bone_004
+    jointTransform: {fileID: 731406580}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -52.5
+    maxAngle: 19.2
+  - jointName: r_leg
+    jointTransform: {fileID: 731406561}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -40.2
+    maxAngle: 76.6
+  - jointName: r_bone_012
+    jointTransform: {fileID: 731406560}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -23.2
+    maxAngle: 57.2
+  - jointName: r_bone_013
+    jointTransform: {fileID: 731406559}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -26.7
+    maxAngle: 51.6
+  - jointName: r_leg_001
+    jointTransform: {fileID: 731406564}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -31.9
+    maxAngle: 21
+  - jointName: r_bone_009
+    jointTransform: {fileID: 731406563}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -23.8
+    maxAngle: 25.9
+  - jointName: r_bone_010
+    jointTransform: {fileID: 731406562}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -28.7
+    maxAngle: 21.6
+  - jointName: r_leg_002
+    jointTransform: {fileID: 731406567}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -26.1
+    maxAngle: 5
+  - jointName: r_bone_006
+    jointTransform: {fileID: 731406566}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -54
+    maxAngle: 83.6
+  - jointName: r_bone_007
+    jointTransform: {fileID: 731406565}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -102.8
+    maxAngle: 40.7
+  - jointName: r_leg_003
+    jointTransform: {fileID: 731406570}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -45.2
+    maxAngle: 35.9
+  - jointName: r_bone_003
+    jointTransform: {fileID: 731406569}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -18.9
+    maxAngle: 30
+  - jointName: r_bone_004
+    jointTransform: {fileID: 731406568}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -23.7
+    maxAngle: 36.1
+  lerpSpeed: 12
+  idleAnimator: {fileID: 0}
+  autoInferAxes: 0
+--- !u!114 &894869243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 894869239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82fd55a6e6e8f814f9785b62ba0ccb17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animalController: {fileID: 894869241}
+  changeThreshold: 2
+  snapshotInterval: 0
+  heartbeatInterval: 3
+  _frameCount: 0
+  _lastHeartbeat: 0
+  _anyChangeThisSecond: 0
 --- !u!1 &976849675
 GameObject:
   m_ObjectHideFlags: 0
@@ -470,8 +892,8 @@ MonoBehaviour:
   serverUrl: ws://localhost:8765
   maxRetries: 5
   retryDelay: 3
-  animalController: {fileID: 1685436419}
   animalSwitcher: {fileID: 1685436418}
+  animalController: {fileID: 894869241}
 --- !u!4 &976849677
 Transform:
   m_ObjectHideFlags: 0
@@ -487,6 +909,170 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1370443062
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3793146743532390487, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_Name
+      value: freshWater_guppy
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 4.84
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4604972887363670765, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 3270957785964087377, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+    - {fileID: 7568310881254115479, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3793146743532390487, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1520840391}
+  m_SourcePrefab: {fileID: 100100000, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+--- !u!1 &1520840387 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3793146743532390487, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+  m_PrefabInstance: {fileID: 1370443062}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1520840391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1520840387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2f227ad29a90774c871a53e704ec1e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jointEntries:
+  - jointName: bone_spine_back
+    jointTransform: {fileID: 486895659}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -50.8
+    maxAngle: 26.9
+  - jointName: bone_spine_front
+    jointTransform: {fileID: 1570630274}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -19.9
+    maxAngle: 53.9
+  - jointName: bone_fin_r
+    jointTransform: {fileID: 1530606620}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -36.1
+    maxAngle: 44.5
+  - jointName: bone_tailfin
+    jointTransform: {fileID: 1594136262}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -36.1
+    maxAngle: 33
+  - jointName: bone_fin_l
+    jointTransform: {fileID: 1884684763}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    invertX: 0
+    invertY: 0
+    invertZ: 0
+    minAngle: -53.6
+    maxAngle: 48.6
+  lerpSpeed: 12
+  idleAnimator: {fileID: 0}
+  autoInferAxes: 0
+--- !u!4 &1530606620 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7906265599094990029, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+  m_PrefabInstance: {fileID: 1370443062}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1570630274 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5998754879832145552, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+  m_PrefabInstance: {fileID: 1370443062}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1594136262 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7253842678161689929, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+  m_PrefabInstance: {fileID: 1370443062}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1685436417
 GameObject:
   m_ObjectHideFlags: 0
@@ -496,7 +1082,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1685436420}
-  - component: {fileID: 1685436419}
   - component: {fileID: 1685436418}
   m_Layer: 0
   m_Name: AnimalManager
@@ -520,95 +1105,11 @@ MonoBehaviour:
   animalEntries:
   - animalName: spider
     rootObject: {fileID: 894869239}
-    controller: {fileID: 1685436419}
+    controller: {fileID: 0}
   animalNameText: {fileID: 0}
---- !u!114 &1685436419
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1685436417}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2f227ad29a90774c871a53e704ec1e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jointEntries:
-  - jointName: leg_L1_base
-    jointTransform: {fileID: 731406573}
-    rotationAxis: 1
-  - jointName: leg_L1_mid
-    jointTransform: {fileID: 731406572}
-    rotationAxis: 2
-  - jointName: leg_L1_tip
-    jointTransform: {fileID: 731406571}
-    rotationAxis: 2
-  - jointName: leg_L2_base
-    jointTransform: {fileID: 731406576}
-    rotationAxis: 1
-  - jointName: leg_L2_mid
-    jointTransform: {fileID: 731406575}
-    rotationAxis: 2
-  - jointName: leg_L2_tip
-    jointTransform: {fileID: 731406574}
-    rotationAxis: 2
-  - jointName: leg_L3_base
-    jointTransform: {fileID: 731406579}
-    rotationAxis: 1
-  - jointName: leg_L3_mid
-    jointTransform: {fileID: 731406578}
-    rotationAxis: 2
-  - jointName: leg_L3_tip
-    jointTransform: {fileID: 731406577}
-    rotationAxis: 2
-  - jointName: leg_L4_base
-    jointTransform: {fileID: 731406582}
-    rotationAxis: 1
-  - jointName: leg_L4_mid
-    jointTransform: {fileID: 731406581}
-    rotationAxis: 2
-  - jointName: leg_L4_tip
-    jointTransform: {fileID: 731406580}
-    rotationAxis: 2
-  - jointName: leg_R1_base
-    jointTransform: {fileID: 731406561}
-    rotationAxis: 1
-  - jointName: leg_R1_mid
-    jointTransform: {fileID: 731406560}
-    rotationAxis: 2
-  - jointName: leg_R1_tip
-    jointTransform: {fileID: 731406559}
-    rotationAxis: 2
-  - jointName: leg_R2_base
-    jointTransform: {fileID: 731406564}
-    rotationAxis: 1
-  - jointName: leg_R2_mid
-    jointTransform: {fileID: 731406563}
-    rotationAxis: 2
-  - jointName: leg_R2_tip
-    jointTransform: {fileID: 731406562}
-    rotationAxis: 2
-  - jointName: leg_R3_base
-    jointTransform: {fileID: 731406567}
-    rotationAxis: 1
-  - jointName: leg_R3_mid
-    jointTransform: {fileID: 731406566}
-    rotationAxis: 2
-  - jointName: leg_R3_tip
-    jointTransform: {fileID: 731406565}
-    rotationAxis: 2
-  - jointName: leg_R4_base
-    jointTransform: {fileID: 731406570}
-    rotationAxis: 1
-  - jointName: leg_R4_mid
-    jointTransform: {fileID: 731406569}
-    rotationAxis: 2
-  - jointName: leg_R4_tip
-    jointTransform: {fileID: 731406568}
-    rotationAxis: 2
-  lerpSpeed: 12
-  idleAnimator: {fileID: 0}
+  useFade: 1
+  fadeDuration: 0.5
+  fadeCanvasGroup: {fileID: 0}
 --- !u!4 &1685436420
 Transform:
   m_ObjectHideFlags: 0
@@ -624,6 +1125,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1884684763 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3152085545950965018, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
+  m_PrefabInstance: {fileID: 1370443062}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2102382508
 GameObject:
   m_ObjectHideFlags: 0
@@ -755,3 +1261,5 @@ SceneRoots:
   - {fileID: 976849677}
   - {fileID: 1685436420}
   - {fileID: 731406558}
+  - {fileID: 84474228}
+  - {fileID: 1370443062}

@@ -30,69 +30,16 @@ from typing import Optional
 
 import numpy as np
 
-# hand_tracker 에서 나오는 5개 손가락 각도 이름
-FINGER_NAMES = ["thumb", "index", "middle", "ring", "pinky"]
-
-# MappingOptimizer 의 HAND_DOFS 와 동일한 구조
+# ⚠️ 이 목록은 mapping_optimizer.py HAND_DOFS 와 순서·이름이 동일해야 한다.
+# hand_tracker.compute_dof_angles() 가 이 이름들로 DOF를 반환한다.
 _HAND_DOF_NAMES = [
-    "thumb_cmc", "thumb_mcp", "thumb_ip",
+    "wrist_flex", "wrist_dev", "wrist_rot",
+    "thumb_cmc", "thumb_abd", "thumb_mcp", "thumb_ip",
     "index_mcp", "index_pip", "index_dip",
     "middle_mcp", "middle_pip", "middle_dip",
-    "ring_mcp",   "ring_pip",  "ring_dip",
-    "pinky_mcp",  "pinky_pip", "pinky_dip",
+    "ring_mcp", "ring_pip", "ring_dip",
+    "pinky_cmc", "pinky_mcp", "pinky_pip", "pinky_dip",
 ]
-_FINGER_TO_DOFS: dict[str, list[int]] = {
-    "thumb":  [0, 1, 2],
-    "index":  [3, 4, 5],
-    "middle": [6, 7, 8],
-    "ring":   [9, 10, 11],
-    "pinky":  [12, 13, 14],
-}
-
-# ── 핵심 수정 ──────────────────────────────────────────────────
-# 손가락 전체 굴신 각도를 MCP/PIP/DIP 비율로 분배.
-# 비율 근거: Hume et al.(1990) 기능적 ROM 실측 데이터
-#   MCP: 전체의 ~31%, PIP: ~47%, DIP: ~22%  (합 = 1.0)
-# thumb은 CMC/MCP/IP 구조가 달라 별도 비율 사용
-_SEGMENT_RATIOS: dict[str, list[float]] = {
-    "thumb":  [0.35, 0.40, 0.25],   # CMC, MCP, IP
-    "index":  [0.31, 0.47, 0.22],   # MCP, PIP, DIP
-    "middle": [0.31, 0.47, 0.22],
-    "ring":   [0.31, 0.47, 0.22],
-    "pinky":  [0.31, 0.47, 0.22],
-}
-
-# 각 DOF의 개별 ROM 한계 (mapping_optimizer.py HAND_DOFS와 동일)
-_DOF_ROM: list[tuple[float, float]] = [
-    (0, 60), (0, 60), (0, 80),    # thumb cmc/mcp/ip
-    (0, 90), (0, 110), (0, 90),   # index mcp/pip/dip
-    (0, 90), (0, 110), (0, 90),   # middle
-    (0, 90), (0, 110), (0, 90),   # ring
-    (0, 80), (0, 100), (0, 80),   # pinky
-]
-
-
-def _finger_angles_to_dof_vector(finger_angles: dict[str, float]) -> np.ndarray:
-    """
-    hand_tracker의 5-finger 굴신 각도를 15-DOF 벡터로 변환.
-
-    [수정] MCP/PIP/DIP를 생리학적 비율로 분리 추정.
-    손가락 전체 굴신량(finger_angles["index"] 등)이
-    MediaPipe에서 나오는 3관절 합산 각도이므로,
-    비율로 나눠 각 DOF에 배분한다.
-
-    완전히 굽힌 손가락(180°) 기준:
-      index_mcp ≈ 55°, index_pip ≈ 85°, index_dip ≈ 40° (합 ≈ 180°)
-    """
-    vec = np.zeros(15)
-    for finger, dof_indices in _FINGER_TO_DOFS.items():
-        total_angle = float(finger_angles.get(finger, 0.0))
-        ratios = _SEGMENT_RATIOS[finger]
-        for k, idx in enumerate(dof_indices):
-            raw = total_angle * ratios[k]
-            lo, hi = _DOF_ROM[idx]
-            vec[idx] = float(np.clip(raw, lo, hi))
-    return vec
 
 
 class MappingEngine:
@@ -104,7 +51,7 @@ class MappingEngine:
         current_animal: 현재 선택된 동물 이름
     """
 
-    ANIMALS = ["spider", "butterfly", "fish", "octopus", "snake"]
+    ANIMALS = ["spider", "butterfly", "fish"]
 
     def __init__(self, mappings_dir: str):
         self.mappings_dir  = mappings_dir
@@ -133,18 +80,8 @@ class MappingEngine:
         self.current_animal = animal_name
         self._animal_index  = self.ANIMALS.index(animal_name)
         print(f"[MappingEngine] 동물 전환: {animal_name}")
+        self._print_guide()
 
-    def next_animal(self) -> str:
-        self._animal_index = (self._animal_index + 1) % len(self.ANIMALS)
-        name = self.ANIMALS[self._animal_index]
-        self.set_animal(name)
-        return name
-
-    def prev_animal(self) -> str:
-        self._animal_index = (self._animal_index - 1) % len(self.ANIMALS)
-        name = self.ANIMALS[self._animal_index]
-        self.set_animal(name)
-        return name
 
     # ──────────────────────────────────────────────────────────
     # 실시간 변환
@@ -156,79 +93,161 @@ class MappingEngine:
     def _compute_joint(
         self,
         info: dict,
-        finger_angles: dict[str, float],
+        dof_dict: dict[str, float],
         ref_H: dict,
         ref_A: dict,
         joint_id: str,
     ) -> float:
+        """DOF 이름으로 직접 조회 (비율 변환 불필요)."""
         dof_name  = info["hand_dof_name"]
-        dof_idx   = info["hand_dof_idx"]
         scale     = info["scale_factor"]
 
-        current_dof = _finger_angles_to_dof_vector(finger_angles)
-        h_current   = current_dof[dof_idx]
-        h_ref       = ref_H.get(dof_name, h_current)
-        delta_h     = h_current - h_ref
+        h_current = float(dof_dict.get(dof_name, 0.0))
+        h_ref     = float(ref_H.get(dof_name, h_current))
+        delta_h   = h_current - h_ref
 
-        a_ref = ref_A.get(joint_id, 0.0)
+        # 데드존: 15° 이하 변화는 무시 (손가락 해부학적 결합 억제)
+        DEAD_ZONE = 15.0
+        if abs(delta_h) < DEAD_ZONE:
+            delta_h = 0.0
+        else:
+            delta_h -= DEAD_ZONE * (1.0 if delta_h > 0 else -1.0)
+
+        a_ref = float(ref_A.get(joint_id, 0.0))
         return round(float(a_ref + delta_h * scale), 2)
 
-    def transform(self, finger_angles: dict[str, float]) -> dict[str, float]:
+    def transform(self, dof_dict: dict[str, float]) -> dict[str, float]:
+        """단일 손 20-DOF dict → 동물 관절 각도 dict."""
         if self.current_animal is None:
             raise RuntimeError("먼저 set_animal() 을 호출하세요.")
 
         if self._is_bilateral():
-            return self.transform_bilateral({"left": finger_angles, "right": finger_angles})
+            return self.transform_bilateral({"left": dof_dict, "right": dof_dict})
 
         data  = self._cache[self.current_animal]
         ref_H = data["reference_pose_H"]
         ref_A = data["reference_pose_A"]
 
         return {
-            joint_id: self._compute_joint(info, finger_angles, ref_H, ref_A, joint_id)
+            joint_id: self._compute_joint(info, dof_dict, ref_H, ref_A, joint_id)
             for joint_id, info in data["mapping"].items()
         }
 
     def transform_bilateral(
         self,
-        hands_angles: dict[str, Optional[dict[str, float]]],
+        hands_dofs: dict[str, Optional[dict[str, float]]],
     ) -> dict[str, float]:
+        """양손 20-DOF dict → 동물 관절 각도 dict.
+        한 손이 미감지(None 또는 빈 dict)이면 해당 관절은 기준 포즈 유지.
+        """
         if self.current_animal is None:
             raise RuntimeError("먼저 set_animal() 을 호출하세요.")
 
         data = self._cache[self.current_animal]
 
         if not self._is_bilateral():
-            angles = hands_angles.get("right") or hands_angles.get("left") or {}
-            return self.transform(angles)
+            dof_dict = hands_dofs.get("right") or hands_dofs.get("left") or {}
+            return self.transform(dof_dict)
 
         ref_A   = data["reference_pose_A"]
         result: dict[str, float] = {}
 
         for joint_id, info in data["mapping"].items():
-            hand_side     = info.get("hand", "right")
-            finger_angles = hands_angles.get(hand_side) or {}
-            ref_H         = data["reference_pose_H"][hand_side]
+            hand_side = info.get("hand", "right")
+            dof_dict  = hands_dofs.get(hand_side) or {}
+            ref_H     = data["reference_pose_H"][hand_side]
 
-            if not finger_angles:
+            if not dof_dict:
                 result[joint_id] = round(float(ref_A.get(joint_id, 0.0)), 2)
             else:
                 result[joint_id] = self._compute_joint(
-                    info, finger_angles, ref_H, ref_A, joint_id
+                    info, dof_dict, ref_H, ref_A, joint_id
                 )
 
         return result
 
+    def _print_guide(self):
+        """시작 시 기준 손 자세 + 손가락→다리 매핑 출력."""
+        data = self._cache[self.current_animal]
+        mode = data.get("mode", "unilateral")
+        mapping = data["mapping"]
+        ref_H   = data["reference_pose_H"]
+
+        # 손가락별 대표 DOF (한 관절만 표시)
+        FINGER_REPR = {
+            "thumb_abd": "엄지(abd)", "thumb_ip": "엄지(ip)", "thumb_cmc": "엄지(cmc)",
+            "index_mcp": "검지(mcp)", "index_pip": "검지(pip)", "index_dip": "검지(dip)",
+            "middle_mcp": "중지(mcp)", "middle_pip": "중지(pip)", "middle_dip": "중지(dip)",
+            "ring_mcp": "약지(mcp)", "ring_pip": "약지(pip)",
+            "pinky_pip": "소지(pip)", "pinky_mcp": "소지(mcp)", "pinky_cmc": "소지(cmc)",
+            "wrist_flex": "손목(flex)", "wrist_dev": "손목(dev)",
+        }
+
+        print("\n" + "━"*55)
+        print(f"  {self.current_animal.upper()} 매핑 가이드  (mode: {mode})")
+        print("━"*55)
+
+        # 기준 손 자세
+        if mode == "bilateral":
+            for side in ("right", "left"):
+                ref = ref_H.get(side, {})
+                key_dofs = ["thumb_abd", "index_mcp", "middle_mcp", "pinky_pip"]
+                vals = "  ".join(f"{FINGER_REPR.get(d,d)}={ref.get(d,0):.0f}°" for d in key_dofs)
+                print(f"  기준 손 자세 ({side}): {vals}")
+        else:
+            ref = ref_H
+            key_dofs = ["thumb_abd", "index_mcp", "middle_mcp", "pinky_pip"]
+            vals = "  ".join(f"{FINGER_REPR.get(d,d)}={ref.get(d,0):.0f}°" for d in key_dofs)
+            print(f"  기준 손 자세: {vals}")
+
+        print(f"  → 이 자세에서 손가락 움직이면 다리가 반응 (데드존: 15°)")
+        print()
+
+        # 손가락→다리 매핑 표
+        print("  손가락 → 다리 매핑")
+        print(f"  {'다리':<20} {'손':>6}  {'DOF':<20} {'scale':>6}")
+        print("  " + "-"*50)
+
+        # leg 이름 기준 정렬
+        for joint_id in sorted(mapping.keys()):
+            info = mapping[joint_id]
+            dof  = info["hand_dof_name"]
+            hand = info.get("hand", "right")
+            scale = info["scale_factor"]
+            finger = FINGER_REPR.get(dof, dof)
+            print(f"  {joint_id:<20} {hand:>6}  {finger:<20} {scale:>6.3f}")
+
+        print("━"*55 + "\n")
+
+    def calibrate(self, hands_dofs: dict[str, dict[str, float]]):
+        """현재 손 포즈를 기준 포즈로 설정 (c 키 캘리브레이션).
+
+        이후 모든 변환에서 delta_h = h_current - calibrated_ref 로 계산됨.
+        → 캘리브레이션 시점 포즈에서 모든 관절이 ref_A (기준 포즈)에 위치.
+        """
+        data = self._cache[self.current_animal]
+        if self._is_bilateral():
+            for side in ("left", "right"):
+                if hands_dofs.get(side):
+                    data["reference_pose_H"][side].update(hands_dofs[side])
+                    print(f"[MappingEngine] 캘리브레이션 완료 ({side})")
+        else:
+            dof_dict = hands_dofs.get("right") or hands_dofs.get("left") or {}
+            if dof_dict:
+                data["reference_pose_H"].update(dof_dict)
+                print("[MappingEngine] 캘리브레이션 완료")
+
     def transform_clamped(
         self,
-        finger_angles_or_hands: dict,
+        dof_input: dict,
         skeleton: Optional[dict] = None,
     ) -> dict[str, float]:
-        first_val = next(iter(finger_angles_or_hands.values()), None)
+        """transform 또는 transform_bilateral 후 skeleton ROM으로 클리핑."""
+        first_val = next(iter(dof_input.values()), None)
         if isinstance(first_val, dict):
-            raw = self.transform_bilateral(finger_angles_or_hands)
+            raw = self.transform_bilateral(dof_input)
         else:
-            raw = self.transform(finger_angles_or_hands)
+            raw = self.transform(dof_input)
 
         if skeleton is None:
             return raw
@@ -259,26 +278,31 @@ if __name__ == "__main__":
         print(f"[ERROR] {e}")
         sys.exit(1)
 
-    # 검지를 완전히 편 상태 (0°) vs 완전히 굽힌 상태 (180°)
-    left_open  = {"thumb": 0.0, "index": 0.0, "middle": 0.0, "ring": 0.0, "pinky": 0.0}
-    left_bend  = {"thumb": 120.0, "index": 180.0, "middle": 180.0, "ring": 160.0, "pinky": 140.0}
-    right_open = {"thumb": 0.0, "index": 0.0, "middle": 0.0, "ring": 0.0, "pinky": 0.0}
-    right_bend = {"thumb": 120.0, "index": 180.0, "middle": 180.0, "ring": 160.0, "pinky": 140.0}
+    # 20-DOF dict로 테스트 (모든 키를 0으로 초기화, 필요한 것만 설정)
+    def make_dof(overrides: dict) -> dict[str, float]:
+        base = {name: 0.0 for name in _HAND_DOF_NAMES}
+        base.update(overrides)
+        return base
 
-    print("\n[테스트 1] 손 펼침 → 다리 관절 값")
+    left_open  = make_dof({})
+    right_open = make_dof({})
+    left_bend  = make_dof({"index_mcp": 80.0, "index_pip": 100.0, "index_dip": 80.0,
+                            "middle_mcp": 80.0, "middle_pip": 100.0, "ring_mcp": 80.0,
+                            "pinky_mcp": 70.0})
+    right_bend = dict(left_bend)
+
+    print("\n[테스트 1] 손 펼침 → 관절 값")
     result_open = engine.transform_bilateral({"left": left_open, "right": right_open})
     for jid, val in result_open.items():
         print(f"  {jid:25s}: {val:.2f}°")
 
-    print("\n[테스트 2] 손 완전 굽힘 → 다리 관절 값")
+    print("\n[테스트 2] 손 굽힘 → 관절 값")
     result_bend = engine.transform_bilateral({"left": left_bend, "right": right_bend})
     for jid, val in result_bend.items():
         print(f"  {jid:25s}: {val:.2f}°")
 
-    print("\n[테스트 3] MCP/PIP/DIP 분리 확인 (검지)")
-    vec_open = _finger_angles_to_dof_vector({"index": 0.0})
-    vec_bend = _finger_angles_to_dof_vector({"index": 180.0})
-    dof_names = ["index_mcp", "index_pip", "index_dip"]
-    for name, i in zip(dof_names, [3, 4, 5]):
-        print(f"  {name}: 펼침={vec_open[i]:.1f}°  굽힘={vec_bend[i]:.1f}°")
-    # 기대값: mcp≈55.8°, pip≈84.6°, dip≈39.6°
+    print("\n[테스트 3] 손목 방향 → 관절 값")
+    wrist_test = make_dof({"wrist_flex": 45.0, "wrist_dev": -15.0, "wrist_rot": 30.0})
+    result_wrist = engine.transform_bilateral({"left": wrist_test, "right": wrist_test})
+    for jid, val in result_wrist.items():
+        print(f"  {jid:25s}: {val:.2f}°")

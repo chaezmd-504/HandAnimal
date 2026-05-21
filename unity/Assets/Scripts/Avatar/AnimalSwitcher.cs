@@ -8,6 +8,7 @@
 //   4. controller: 해당 동물의 AnimalController 컴포넌트
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -28,8 +29,14 @@ public class AnimalSwitcher : MonoBehaviour
     [Header("UI (선택 사항)")]
     [SerializeField] private TextMeshProUGUI animalNameText;
 
+    [Header("전환 효과")]
+    [SerializeField] private bool  useFade      = true;
+    [SerializeField] private float fadeDuration = 0.5f;
+    [SerializeField] private CanvasGroup fadeCanvasGroup;   // 선택 — 없으면 즉시 전환
+
     private Dictionary<string, AnimalEntry> _map;
     private string _current;
+    private bool   _isSwitching;
 
     // ──────────────────────────────────────────────────────────
     // Unity 생명주기
@@ -66,12 +73,22 @@ public class AnimalSwitcher : MonoBehaviour
     /// </summary>
     public void SwitchTo(string animalName)
     {
-        if (!_map.TryGetValue(animalName, out var next))
+        if (!_map.TryGetValue(animalName, out _))
         {
             Debug.LogWarning($"[AnimalSwitcher] 알 수 없는 동물: {animalName}");
             return;
         }
 
+        if (_isSwitching || animalName == _current) return;
+
+        if (useFade && fadeCanvasGroup != null)
+            StartCoroutine(SwitchWithFade(animalName));
+        else
+            ApplySwitch(animalName);
+    }
+
+    private void ApplySwitch(string animalName)
+    {
         // 현재 동물 비활성화
         if (_current != null && _map.TryGetValue(_current, out var prev))
         {
@@ -80,13 +97,43 @@ public class AnimalSwitcher : MonoBehaviour
         }
 
         // 다음 동물 활성화
-        next.rootObject?.SetActive(true);
+        _map[animalName].rootObject?.SetActive(true);
         _current = animalName;
 
         if (animalNameText != null)
             animalNameText.text = animalName;
 
         Debug.Log($"[AnimalSwitcher] 동물 전환: {animalName}");
+    }
+
+    private IEnumerator SwitchWithFade(string animalName)
+    {
+        _isSwitching = true;
+
+        // 페이드 아웃
+        float t = 0f;
+        float startAlpha = fadeCanvasGroup.alpha;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadeCanvasGroup.alpha = Mathf.Lerp(startAlpha, 1f, t / fadeDuration);
+            yield return null;
+        }
+        fadeCanvasGroup.alpha = 1f;
+
+        ApplySwitch(animalName);
+
+        // 페이드 인
+        t = 0f;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadeCanvasGroup.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            yield return null;
+        }
+        fadeCanvasGroup.alpha = 0f;
+
+        _isSwitching = false;
     }
 
     public string CurrentAnimal => _current;

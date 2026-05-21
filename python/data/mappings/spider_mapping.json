@@ -2,264 +2,269 @@
   "animal": "spider",
   "mode": "bilateral",
   "mapping": {
-    "leg_L1_base": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "pinky_pip",
-      "scale_factor": 1.2,
-      "Q_score": -3.47,
-      "hand": "left",
-      "rotation_axis": "Y"
-    },
-    "leg_L1_mid": {
-      "hand_dof_idx": 14,
-      "hand_dof_name": "pinky_dip",
-      "scale_factor": 1.5,
-      "Q_score": -3.507,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L1_tip": {
-      "hand_dof_idx": 12,
-      "hand_dof_name": "pinky_mcp",
-      "scale_factor": 1.125,
-      "Q_score": -3.5266,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L2_base": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4869,
-      "hand": "left",
-      "rotation_axis": "Y"
-    },
-    "leg_L2_mid": {
-      "hand_dof_idx": 11,
-      "hand_dof_name": "ring_dip",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4941,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L2_tip": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.441,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L3_base": {
-      "hand_dof_idx": 8,
-      "hand_dof_name": "middle_dip",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4963,
-      "hand": "left",
-      "rotation_axis": "Y"
-    },
-    "leg_L3_mid": {
-      "hand_dof_idx": 6,
-      "hand_dof_name": "middle_mcp",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4845,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L3_tip": {
-      "hand_dof_idx": 7,
-      "hand_dof_name": "middle_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.45,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L4_base": {
+    "r_leg": {
       "hand_dof_idx": 5,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 1.3333,
-      "Q_score": -3.492,
-      "hand": "left",
-      "rotation_axis": "Y"
+      "hand_dof_name": "thumb_mcp",
+      "scale_factor": 1.2978,
+      "Q_score": 0.0,
+      "hand": "right"
     },
-    "leg_L4_mid": {
-      "hand_dof_idx": 3,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4886,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_L4_tip": {
-      "hand_dof_idx": 4,
-      "hand_dof_name": "index_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.4422,
-      "hand": "left",
-      "rotation_axis": "X"
-    },
-    "leg_R1_base": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "pinky_pip",
-      "scale_factor": 1.2,
-      "Q_score": -3.47,
-      "hand": "right",
-      "rotation_axis": "Y"
-    },
-    "leg_R1_mid": {
+    "r_bone_003": {
       "hand_dof_idx": 14,
-      "hand_dof_name": "pinky_dip",
-      "scale_factor": 1.5,
-      "Q_score": -3.507,
-      "hand": "right",
-      "rotation_axis": "X"
-    },
-    "leg_R1_tip": {
-      "hand_dof_idx": 12,
-      "hand_dof_name": "pinky_mcp",
-      "scale_factor": 1.125,
-      "Q_score": -3.5266,
-      "hand": "right",
-      "rotation_axis": "X"
-    },
-    "leg_R2_base": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4869,
-      "hand": "right",
-      "rotation_axis": "Y"
-    },
-    "leg_R2_mid": {
-      "hand_dof_idx": 11,
-      "hand_dof_name": "ring_dip",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4941,
-      "hand": "right",
-      "rotation_axis": "X"
-    },
-    "leg_R2_tip": {
-      "hand_dof_idx": 10,
       "hand_dof_name": "ring_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.441,
-      "hand": "right",
-      "rotation_axis": "X"
+      "scale_factor": 0.5433,
+      "Q_score": 0.0,
+      "hand": "right"
     },
-    "leg_R3_base": {
-      "hand_dof_idx": 8,
-      "hand_dof_name": "middle_dip",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4963,
-      "hand": "right",
-      "rotation_axis": "Y"
+    "r_bone_004": {
+      "hand_dof_idx": 15,
+      "hand_dof_name": "ring_dip",
+      "scale_factor": 0.6644,
+      "Q_score": 0.0,
+      "hand": "right"
     },
-    "leg_R3_mid": {
-      "hand_dof_idx": 6,
-      "hand_dof_name": "middle_mcp",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4845,
-      "hand": "right",
-      "rotation_axis": "X"
-    },
-    "leg_R3_tip": {
+    "r_leg_001": {
       "hand_dof_idx": 7,
-      "hand_dof_name": "middle_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.45,
-      "hand": "right",
-      "rotation_axis": "X"
-    },
-    "leg_R4_base": {
-      "hand_dof_idx": 5,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 1.3333,
-      "Q_score": -3.492,
-      "hand": "right",
-      "rotation_axis": "Y"
-    },
-    "leg_R4_mid": {
-      "hand_dof_idx": 3,
       "hand_dof_name": "index_mcp",
-      "scale_factor": 1.3333,
-      "Q_score": -3.4886,
-      "hand": "right",
-      "rotation_axis": "X"
+      "scale_factor": 0.5878,
+      "Q_score": 0.0,
+      "hand": "right"
     },
-    "leg_R4_tip": {
-      "hand_dof_idx": 4,
+    "r_bone_006": {
+      "hand_dof_idx": 11,
+      "hand_dof_name": "middle_pip",
+      "scale_factor": 1.5289,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_bone_007": {
+      "hand_dof_idx": 12,
+      "hand_dof_name": "middle_dip",
+      "scale_factor": 1.5944,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_leg_002": {
+      "hand_dof_idx": 10,
+      "hand_dof_name": "middle_mcp",
+      "scale_factor": 0.3456,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_bone_009": {
+      "hand_dof_idx": 8,
       "hand_dof_name": "index_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.4422,
-      "hand": "right",
-      "rotation_axis": "X"
+      "scale_factor": 0.5522,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_bone_010": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 0.5589,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_leg_003": {
+      "hand_dof_idx": 13,
+      "hand_dof_name": "ring_mcp",
+      "scale_factor": 0.9011,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_bone_012": {
+      "hand_dof_idx": 6,
+      "hand_dof_name": "thumb_ip",
+      "scale_factor": 0.8933,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "r_bone_013": {
+      "hand_dof_idx": 6,
+      "hand_dof_name": "thumb_ip",
+      "scale_factor": 0.87,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "l_leg": {
+      "hand_dof_idx": 5,
+      "hand_dof_name": "thumb_mcp",
+      "scale_factor": 1.2122,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_003": {
+      "hand_dof_idx": 14,
+      "hand_dof_name": "ring_pip",
+      "scale_factor": 0.85,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_004": {
+      "hand_dof_idx": 15,
+      "hand_dof_name": "ring_dip",
+      "scale_factor": 0.7967,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_leg_001": {
+      "hand_dof_idx": 7,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 0.9067,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_006": {
+      "hand_dof_idx": 11,
+      "hand_dof_name": "middle_pip",
+      "scale_factor": 0.7667,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_007": {
+      "hand_dof_idx": 12,
+      "hand_dof_name": "middle_dip",
+      "scale_factor": 0.7,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_leg_002": {
+      "hand_dof_idx": 10,
+      "hand_dof_name": "middle_mcp",
+      "scale_factor": 1.2667,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_009": {
+      "hand_dof_idx": 8,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 0.72,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_010": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 0.6767,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_leg_003": {
+      "hand_dof_idx": 13,
+      "hand_dof_name": "ring_mcp",
+      "scale_factor": 0.7433,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_012": {
+      "hand_dof_idx": 6,
+      "hand_dof_name": "thumb_ip",
+      "scale_factor": 0.7456,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "l_bone_013": {
+      "hand_dof_idx": 6,
+      "hand_dof_name": "thumb_ip",
+      "scale_factor": 0.7267,
+      "Q_score": 0.0,
+      "hand": "left"
+    },
+    "bone": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 2.5,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "bodyik_001": {
+      "hand_dof_idx": 1,
+      "hand_dof_name": "wrist_dev",
+      "scale_factor": 1.5,
+      "Q_score": 0.0,
+      "hand": "right"
+    },
+    "atack1": {
+      "hand_dof_idx": 2,
+      "hand_dof_name": "wrist_rot",
+      "scale_factor": 2.5,
+      "Q_score": 0.0,
+      "hand": "right"
     }
   },
   "reference_pose_H": {
-    "left": {
-      "thumb_cmc": 20.0,
-      "thumb_mcp": 20.0,
-      "thumb_ip": 15.0,
-      "index_mcp": 45.0,
-      "index_pip": 55.0,
-      "index_dip": 45.0,
-      "middle_mcp": 45.0,
-      "middle_pip": 55.0,
-      "middle_dip": 45.0,
-      "ring_mcp": 45.0,
-      "ring_pip": 55.0,
-      "ring_dip": 45.0,
-      "pinky_mcp": 40.0,
-      "pinky_pip": 50.0,
-      "pinky_dip": 40.0
-    },
     "right": {
+      "wrist_flex": 0.0,
+      "wrist_dev": 0.0,
+      "wrist_rot": 0.0,
       "thumb_cmc": 20.0,
+      "thumb_abd": 20.0,
       "thumb_mcp": 20.0,
-      "thumb_ip": 15.0,
-      "index_mcp": 45.0,
-      "index_pip": 55.0,
-      "index_dip": 45.0,
-      "middle_mcp": 45.0,
-      "middle_pip": 55.0,
-      "middle_dip": 45.0,
-      "ring_mcp": 45.0,
-      "ring_pip": 55.0,
-      "ring_dip": 45.0,
-      "pinky_mcp": 40.0,
-      "pinky_pip": 50.0,
-      "pinky_dip": 40.0
+      "thumb_ip": 20.0,
+      "index_mcp": 20.0,
+      "index_pip": 15.0,
+      "index_dip": 10.0,
+      "middle_mcp": 20.0,
+      "middle_pip": 15.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 20.0,
+      "ring_pip": 15.0,
+      "ring_dip": 10.0,
+      "pinky_cmc": 15.0,
+      "pinky_mcp": 20.0,
+      "pinky_pip": 15.0,
+      "pinky_dip": 10.0
+    },
+    "left": {
+      "wrist_flex": 0.0,
+      "wrist_dev": 0.0,
+      "wrist_rot": 0.0,
+      "thumb_cmc": 20.0,
+      "thumb_abd": 20.0,
+      "thumb_mcp": 20.0,
+      "thumb_ip": 20.0,
+      "index_mcp": 20.0,
+      "index_pip": 15.0,
+      "index_dip": 10.0,
+      "middle_mcp": 20.0,
+      "middle_pip": 15.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 20.0,
+      "ring_pip": 15.0,
+      "ring_dip": 10.0,
+      "pinky_cmc": 15.0,
+      "pinky_mcp": 20.0,
+      "pinky_pip": 15.0,
+      "pinky_dip": 10.0
     }
   },
   "reference_pose_A": {
-    "leg_L1_base": 0.0,
-    "leg_L1_mid": 60.0,
-    "leg_L1_tip": 45.0,
-    "leg_L2_base": 0.0,
-    "leg_L2_mid": 60.0,
-    "leg_L2_tip": 45.0,
-    "leg_L3_base": 0.0,
-    "leg_L3_mid": 60.0,
-    "leg_L3_tip": 45.0,
-    "leg_L4_base": 0.0,
-    "leg_L4_mid": 60.0,
-    "leg_L4_tip": 45.0,
-    "leg_R1_base": 0.0,
-    "leg_R1_mid": 60.0,
-    "leg_R1_tip": 45.0,
-    "leg_R2_base": 0.0,
-    "leg_R2_mid": 60.0,
-    "leg_R2_tip": 45.0,
-    "leg_R3_base": 0.0,
-    "leg_R3_mid": 60.0,
-    "leg_R3_tip": 45.0,
-    "leg_R4_base": 0.0,
-    "leg_R4_mid": 60.0,
-    "leg_R4_tip": 45.0
-  },
-  "bilateral_balance": {
-    "n_left": 12,
-    "n_right": 12,
-    "balanced": true
+    "r_leg": 0.0,
+    "r_bone_003": 0.0,
+    "r_bone_004": 0.0,
+    "r_leg_001": 0.0,
+    "r_bone_006": 0.0,
+    "r_bone_007": 0.0,
+    "r_leg_002": 0.0,
+    "r_bone_009": 0.0,
+    "r_bone_010": 0.0,
+    "r_leg_003": 0.0,
+    "r_bone_012": 0.0,
+    "r_bone_013": 0.0,
+    "l_leg": 0.0,
+    "l_bone_003": 0.0,
+    "l_bone_004": 0.0,
+    "l_leg_001": 0.0,
+    "l_bone_006": 0.0,
+    "l_bone_007": 0.0,
+    "l_leg_002": 0.0,
+    "l_bone_009": 0.0,
+    "l_bone_010": 0.0,
+    "l_leg_003": 0.0,
+    "l_bone_012": 0.0,
+    "l_bone_013": 0.0,
+    "bone": 0.0,
+    "bodyik_001": 0.0,
+    "atack1": 0.0
   }
 }

@@ -22,13 +22,12 @@ MODEL_URL = (
     "hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
 )
 
-FINGER_BEND_JOINTS = {
-    "thumb":  (1, 2, 4),
-    "index":  (5, 6, 8),
-    "middle": (9, 10, 12),
-    "ring":   (13, 14, 16),
-    "pinky":  (17, 18, 20),
-}
+# MediaPipe landmark 인덱스 (참고용)
+# 0=wrist, 1=thumb_cmc, 2=thumb_mcp, 3=thumb_ip, 4=thumb_tip
+# 5=index_mcp, 6=index_pip, 7=index_dip, 8=index_tip
+# 9=middle_mcp, 10=middle_pip, 11=middle_dip, 12=middle_tip
+# 13=ring_mcp, 14=ring_pip, 15=ring_dip, 16=ring_tip
+# 17=pinky_mcp, 18=pinky_pip, 19=pinky_dip, 20=pinky_tip
 
 HAND_CONNECTIONS = [
     (0, 1), (1, 2), (2, 3), (3, 4),
@@ -59,14 +58,134 @@ def calculate_bend_angle(p1: tuple, p2: tuple, p3: tuple) -> float:
     return float(np.degrees(np.arccos(cos_angle)))
 
 
-def compute_finger_angles(filtered_coords: list[tuple]) -> dict[str, float]:
-    """필터링된 21개 관절 좌표에서 손가락 5개의 구부림 각도를 계산한다."""
-    return {
-        finger: calculate_bend_angle(
-            filtered_coords[i1], filtered_coords[i2], filtered_coords[i3]
-        )
-        for finger, (i1, i2, i3) in FINGER_BEND_JOINTS.items()
-    }
+def compute_dof_angles(filtered_coords: list[tuple]) -> dict[str, float]:
+    """
+    필터링된 21개 관절 좌표에서 20-DOF 각도를 직접 계산한다.
+
+    반환 키는 mapping_optimizer.HAND_DOFS 의 name 필드와 1:1 대응:
+      wrist_flex, wrist_dev, wrist_rot          (손목 방향 3)
+      thumb_cmc, thumb_abd, thumb_mcp, thumb_ip (엄지 4)
+      index_mcp/pip/dip                          (검지 3)
+      middle_mcp/pip/dip                         (중지 3)
+      ring_mcp/pip/dip                           (약지 3)
+      pinky_cmc, pinky_mcp/pip/dip               (소지 4)
+
+    굴신 DOF: 180 - geometric_angle (0°=완전 신전, 양수=굴신)
+    손목 DOF: 양방향 (음수~양수, 0°=중립)
+    """
+    lm = [np.array(p) for p in filtered_coords]  # (21, 3)
+    result: dict[str, float] = {}
+
+    # ── 1. 손목 방향 (3 DOF) ──────────────────────────────────
+    # 손바닥 법선: wrist(0), index_MCP(5), pinky_MCP(17)
+    v_idx = lm[5]  - lm[0]
+    v_pnk = lm[17] - lm[0]
+    palm_n = np.cross(v_idx, v_pnk)
+    n_len = np.linalg.norm(palm_n)
+    if n_len > 1e-8:
+        palm_n /= n_len
+
+    # wrist_flex: 손바닥 법선의 y성분 → 손목 전후 굴신
+    result["wrist_flex"] = float(np.clip(
+        np.degrees(np.arcsin(np.clip(palm_n[1], -1.0, 1.0))) * (70.0 / 90.0),
+        -70, 70
+    ))
+    # wrist_dev: 손바닥 법선의 x성분 → 손목 좌우 편위
+    result["wrist_dev"] = float(np.clip(
+        np.degrees(np.arcsin(np.clip(palm_n[0], -1.0, 1.0))) * (25.0 / 90.0),
+        -25, 25
+    ))
+    # wrist_rot: index_MCP-pinky_MCP 벡터의 이미지 평면 회전각 → 전완 회전 근사
+    v_side = lm[5][:2] - lm[17][:2]  # xy 평면 (z 제외, 더 안정적)
+    result["wrist_rot"] = float(np.clip(
+        np.degrees(np.arctan2(-v_side[1], v_side[0])),
+        -90, 90
+    ))
+
+    # ── 2. 엄지 (4 DOF) ──────────────────────────────────────
+    # thumb_cmc: CMC(1) 굴신 = angle at CMC between wrist(0) and MCP(2) → 180-
+    result["thumb_cmc"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[1], filtered_coords[2]),
+        0, 60
+    ))
+    # thumb_abd: wrist(0) 에서 index_MCP(5)와 thumb_CMC(1) 사이 각도 (직접 사용)
+    result["thumb_abd"] = float(np.clip(
+        calculate_bend_angle(filtered_coords[5], filtered_coords[0], filtered_coords[1]),
+        0, 70
+    ))
+    # thumb_mcp: angle at MCP(2) between CMC(1) and IP(3) → 180-
+    result["thumb_mcp"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[1], filtered_coords[2], filtered_coords[3]),
+        0, 60
+    ))
+    # thumb_ip: angle at IP(3) between MCP(2) and TIP(4) → 180-
+    result["thumb_ip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[2], filtered_coords[3], filtered_coords[4]),
+        0, 80
+    ))
+
+    # ── 3. 검지 (3 DOF) ──────────────────────────────────────
+    result["index_mcp"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[5], filtered_coords[6]),
+        0, 90
+    ))
+    result["index_pip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[5], filtered_coords[6], filtered_coords[7]),
+        0, 110
+    ))
+    result["index_dip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[6], filtered_coords[7], filtered_coords[8]),
+        0, 90
+    ))
+
+    # ── 4. 중지 (3 DOF) ──────────────────────────────────────
+    result["middle_mcp"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[9], filtered_coords[10]),
+        0, 90
+    ))
+    result["middle_pip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[9], filtered_coords[10], filtered_coords[11]),
+        0, 110
+    ))
+    result["middle_dip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[10], filtered_coords[11], filtered_coords[12]),
+        0, 90
+    ))
+
+    # ── 5. 약지 (3 DOF) ──────────────────────────────────────
+    result["ring_mcp"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[13], filtered_coords[14]),
+        0, 90
+    ))
+    result["ring_pip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[13], filtered_coords[14], filtered_coords[15]),
+        0, 110
+    ))
+    result["ring_dip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[14], filtered_coords[15], filtered_coords[16]),
+        0, 90
+    ))
+
+    # ── 6. 소지 (4 DOF) ──────────────────────────────────────
+    # pinky_cmc: 손바닥 굽힘(cup) = ring_MCP(13), pinky_MCP(17), pinky_PIP(18) 각도 → 180-
+    result["pinky_cmc"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[13], filtered_coords[17], filtered_coords[18]),
+        0, 30
+    ))
+    result["pinky_mcp"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[17], filtered_coords[18]),
+        0, 80
+    ))
+    result["pinky_pip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[17], filtered_coords[18], filtered_coords[19]),
+        0, 100
+    ))
+    result["pinky_dip"] = float(np.clip(
+        180.0 - calculate_bend_angle(filtered_coords[18], filtered_coords[19], filtered_coords[20]),
+        0, 80
+    ))
+
+    return result
 
 
 def draw_landmarks(frame, landmarks, h: int, w: int, color: tuple = (0, 255, 0)):
@@ -134,18 +253,23 @@ def run_tracker():
                     draw_landmarks(frame, landmarks, h, w, color=color)
 
                     filtered = occlusion_handlers[side].process(landmarks)
-                    angles = compute_finger_angles(filtered)
-                    hands_angles[side] = angles
+                    hands_angles[side] = compute_dof_angles(filtered)
 
-                print("\n--- 손가락 구부림 각도 ---")
+                print("\n--- 20-DOF 각도 ---")
                 for side in ("left", "right"):
                     if side not in hands_angles:
                         print(f"  [{side:5s}] 미감지")
                         continue
-                    angles_str = "  ".join(
-                        f"{f}={a:.0f}°" for f, a in hands_angles[side].items()
+                    dofs = hands_angles[side]
+                    wrist_str = (f"flex={dofs['wrist_flex']:+.0f}° "
+                                 f"dev={dofs['wrist_dev']:+.0f}° "
+                                 f"rot={dofs['wrist_rot']:+.0f}°")
+                    finger_str = "  ".join(
+                        f"{k}={v:.0f}°"
+                        for k, v in dofs.items()
+                        if not k.startswith("wrist_")
                     )
-                    print(f"  [{side:5s}] {angles_str}")
+                    print(f"  [{side:5s}] wrist({wrist_str})  {finger_str}")
 
             cv2.imshow("Hand Tracker", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):

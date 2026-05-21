@@ -4,13 +4,14 @@ generate_hand_poses.py
 MANO 모델에서 손 포즈 10,000개를 샘플링하여
 data/hand_poses/poses_10k.npy 로 저장한다.
 
-출력 형식: (N, 15) numpy array
-  - 15개 DOF = 5손가락 × 3관절(MCP, PIP, DIP) 구부림 각도 (degrees)
-  - 열 순서: thumb_cmc, thumb_mcp, thumb_ip,
+출력 형식: (N, 20) numpy array
+  - 20 DOF = 손목 방향(3) + 엄지(4) + 검지/중지/약지(3×3) + 소지(4)
+  - 열 순서: wrist_flex, wrist_dev, wrist_rot,
+             thumb_cmc, thumb_abd, thumb_mcp, thumb_ip,
              index_mcp, index_pip, index_dip,
              middle_mcp, middle_pip, middle_dip,
              ring_mcp, ring_pip, ring_dip,
-             pinky_mcp, pinky_pip, pinky_dip
+             pinky_cmc, pinky_mcp, pinky_pip, pinky_dip
 
 실행:
     conda activate capstone_env
@@ -20,6 +21,7 @@ data/hand_poses/poses_10k.npy 로 저장한다.
 import os
 import sys
 import pickle
+from typing import Optional
 import numpy as np
 
 # ──────────────────────────────────────────────────────────────
@@ -40,22 +42,33 @@ RANDOM_SEED = 42
 #    (min_deg, max_deg, rest_deg)
 # ──────────────────────────────────────────────────────────────
 DOF_DEFS = [
-    # name              min   max  rest
-    ("thumb_cmc",        0,   60,  20),
-    ("thumb_mcp",        0,   60,  20),
-    ("thumb_ip",         0,   80,  15),
-    ("index_mcp",        0,   90,  10),
-    ("index_pip",        0,  110,  10),
-    ("index_dip",        0,   90,  10),
-    ("middle_mcp",       0,   90,  10),
-    ("middle_pip",       0,  110,  10),
-    ("middle_dip",       0,   90,  10),
-    ("ring_mcp",         0,   90,  10),
-    ("ring_pip",         0,  110,  10),
-    ("ring_dip",         0,   90,  10),
-    ("pinky_mcp",        0,   80,  10),
-    ("pinky_pip",        0,  100,  10),
-    ("pinky_dip",        0,   80,  10),
+    # name              min    max  rest
+    # 손목 방향 (양방향, rest=0)
+    ("wrist_flex",      -70,   70,   0),
+    ("wrist_dev",       -25,   25,   0),
+    ("wrist_rot",       -90,   90,   0),
+    # 엄지 4 DOF
+    ("thumb_cmc",         0,   60,  20),
+    ("thumb_abd",         0,   70,  15),
+    ("thumb_mcp",         0,   60,  20),
+    ("thumb_ip",          0,   80,  15),
+    # 검지 3 DOF
+    ("index_mcp",         0,   90,  10),
+    ("index_pip",         0,  110,  10),
+    ("index_dip",         0,   90,  10),
+    # 중지 3 DOF
+    ("middle_mcp",        0,   90,  10),
+    ("middle_pip",        0,  110,  10),
+    ("middle_dip",        0,   90,  10),
+    # 약지 3 DOF
+    ("ring_mcp",          0,   90,  10),
+    ("ring_pip",          0,  110,  10),
+    ("ring_dip",          0,   90,  10),
+    # 소지 4 DOF
+    ("pinky_cmc",         0,   30,   5),
+    ("pinky_mcp",         0,   80,  10),
+    ("pinky_pip",         0,  100,  10),
+    ("pinky_dip",         0,   80,  10),
 ]
 
 DOF_NAMES = [d[0] for d in DOF_DEFS]
@@ -120,18 +133,22 @@ def mano_fk(pose_params: np.ndarray, model: dict) -> np.ndarray:
     return joint_pos
 
 
-def joint_positions_to_angles(joint_pos: np.ndarray) -> np.ndarray:
+def joint_positions_to_angles(
+    joint_pos: np.ndarray,
+    R_wrist: Optional[np.ndarray] = None,
+) -> np.ndarray:
     """
-    MANO 16-관절 위치 → 15-DOF 구부림 각도 변환
+    MANO 16-관절 위치 → 20-DOF 각도 변환.
+
     MANO 관절 인덱스:
-      0: Wrist
-      1-3: Index (MCP, PIP, DIP)
-      4-6: Middle (MCP, PIP, DIP)
-      7-9: Ring (MCP, PIP, DIP)
-      10-12: Pinky (MCP, PIP, DIP)
-      13-15: Thumb (CMC, MCP, IP)
+      0: Wrist,  1-3: Index (MCP/PIP/DIP),  4-6: Middle,
+      7-9: Ring, 10-12: Pinky,              13-15: Thumb (CMC/MCP/IP)
+    ※ Tip 없음 → DIP 각도는 0으로 채움 (합성 모드에서 Beta 샘플링으로 보완)
+
+    R_wrist: MANO 손목 회전행렬 (3×3). None이면 손목 DOF는 0(중립).
     """
     def angle_deg(a, b, c):
+        """angle at vertex b, returns 0~180°."""
         v1 = a - b
         v2 = c - b
         n1, n2 = np.linalg.norm(v1), np.linalg.norm(v2)
@@ -140,35 +157,53 @@ def joint_positions_to_angles(joint_pos: np.ndarray) -> np.ndarray:
         cos_a = np.clip(np.dot(v1, v2) / (n1 * n2), -1.0, 1.0)
         return float(np.degrees(np.arccos(cos_a)))
 
-    W  = joint_pos[0]
-    angles = np.zeros(15)
+    W = joint_pos[0]
+    angles = np.zeros(20)
 
-    # Thumb: CMC(13), MCP(14), IP(15)
-    angles[0] = angle_deg(W,             joint_pos[13], joint_pos[14])  # thumb_cmc
-    angles[1] = angle_deg(joint_pos[13], joint_pos[14], joint_pos[15])  # thumb_mcp
-    angles[2] = 0.0  # thumb_ip: no tip landmark in MANO 16-joint model
+    # ── 손목 방향 DOF (0, 1, 2) ────────────────────────────────
+    if R_wrist is not None:
+        sy = float(np.sqrt(R_wrist[0, 0] ** 2 + R_wrist[1, 0] ** 2))
+        if sy > 1e-6:
+            angles[0] = float(np.degrees(np.arctan2( R_wrist[2, 1], R_wrist[2, 2])))  # wrist_flex
+            angles[1] = float(np.degrees(np.arctan2(-R_wrist[2, 0], sy)))              # wrist_dev
+            angles[2] = float(np.degrees(np.arctan2( R_wrist[1, 0], R_wrist[0, 0])))  # wrist_rot
+    # else: 0 (중립)
 
-    # Index: MCP(1), PIP(2), DIP(3)
-    angles[3] = angle_deg(W,            joint_pos[1], joint_pos[2])
-    angles[4] = angle_deg(joint_pos[1], joint_pos[2], joint_pos[3])
-    angles[5] = 0.0
+    # ── 엄지 (3, 4, 5, 6) ──────────────────────────────────────
+    # thumb_cmc (3): angle at CMC(13) between wrist(0) and MCP(14) → 180-
+    angles[3] = 180.0 - angle_deg(W,             joint_pos[13], joint_pos[14])
+    # thumb_abd (4): angle at wrist(0) between index_MCP(1) and thumb_CMC(13) (직접 사용)
+    angles[4] = angle_deg(joint_pos[1], W, joint_pos[13])
+    # thumb_mcp (5): angle at MCP(14) between CMC(13) and IP(15) → 180-
+    angles[5] = 180.0 - angle_deg(joint_pos[13], joint_pos[14], joint_pos[15])
+    angles[6] = 0.0  # thumb_ip: tip 없음
 
-    # Middle: MCP(4), PIP(5), DIP(6)
-    angles[6] = angle_deg(W,            joint_pos[4], joint_pos[5])
-    angles[7] = angle_deg(joint_pos[4], joint_pos[5], joint_pos[6])
-    angles[8] = 0.0
+    # ── 검지 (7, 8, 9) ─────────────────────────────────────────
+    angles[7] = 180.0 - angle_deg(W,           joint_pos[1], joint_pos[2])
+    angles[8] = 180.0 - angle_deg(joint_pos[1], joint_pos[2], joint_pos[3])
+    angles[9] = 0.0
 
-    # Ring: MCP(7), PIP(8), DIP(9)
-    angles[9]  = angle_deg(W,            joint_pos[7], joint_pos[8])
-    angles[10] = angle_deg(joint_pos[7], joint_pos[8], joint_pos[9])
-    angles[11] = 0.0
+    # ── 중지 (10, 11, 12) ──────────────────────────────────────
+    angles[10] = 180.0 - angle_deg(W,           joint_pos[4], joint_pos[5])
+    angles[11] = 180.0 - angle_deg(joint_pos[4], joint_pos[5], joint_pos[6])
+    angles[12] = 0.0
 
-    # Pinky: MCP(10), PIP(11), DIP(12)
-    angles[12] = angle_deg(W,             joint_pos[10], joint_pos[11])
-    angles[13] = angle_deg(joint_pos[10], joint_pos[11], joint_pos[12])
-    angles[14] = 0.0
+    # ── 약지 (13, 14, 15) ──────────────────────────────────────
+    angles[13] = 180.0 - angle_deg(W,           joint_pos[7], joint_pos[8])
+    angles[14] = 180.0 - angle_deg(joint_pos[7], joint_pos[8], joint_pos[9])
+    angles[15] = 0.0
 
-    return angles
+    # ── 소지 (16, 17, 18, 19) ──────────────────────────────────
+    # pinky_cmc (16): angle at pinky_MCP(10) between ring_MCP(7) and pinky_PIP(11) → 180-
+    angles[16] = 180.0 - angle_deg(joint_pos[7], joint_pos[10], joint_pos[11])
+    angles[17] = 180.0 - angle_deg(W,              joint_pos[10], joint_pos[11])
+    angles[18] = 180.0 - angle_deg(joint_pos[10],  joint_pos[11], joint_pos[12])
+    angles[19] = 0.0
+
+    # ROM 클리핑
+    mins = np.array([d[1] for d in DOF_DEFS], dtype=float)
+    maxs = np.array([d[2] for d in DOF_DEFS], dtype=float)
+    return np.clip(angles, mins, maxs)
 
 
 def sample_with_mano(n: int, rng: np.random.Generator) -> np.ndarray:
@@ -181,21 +216,24 @@ def sample_with_mano(n: int, rng: np.random.Generator) -> np.ndarray:
     hands_mean = model.get("hands_mean", np.zeros(45))          # (45,)
     hands_comps = model.get("hands_components", None)
 
-    poses = np.zeros((n, 15))
+    poses = np.zeros((n, len(DOF_DEFS)))
     for i in range(n):
+        # 손목 방향 랜덤 샘플링 (작은 표준편차 → 자연스러운 범위)
+        wrist_params = rng.normal(0, 0.25, 3)
+
         if hands_comps is not None and hands_comps.shape[0] >= 20:
-            # PCA 공간에서 샘플링 (상위 20개 성분)
             n_comp = min(20, hands_comps.shape[0])
             coeff  = rng.normal(0, 1, n_comp)
             pose45 = hands_mean + hands_comps[:n_comp].T @ coeff
         else:
-            # 직접 axis-angle 샘플링
             pose45 = rng.uniform(-0.5, 0.5, 45)
 
+        full_pose = np.concatenate([wrist_params, pose45])
+        R = [rodrigues(full_pose[k * 3: k * 3 + 3]) for k in range(16)]
+        R_wrist   = R[0]
         joint_pos = mano_fk(pose45, model)
-        angles    = joint_positions_to_angles(joint_pos)
-        # ROM 범위로 클리핑
-        poses[i] = np.clip(angles, DOF_MIN, DOF_MAX)
+        angles    = joint_positions_to_angles(joint_pos, R_wrist=R_wrist)
+        poses[i]  = angles  # ROM 클리핑은 joint_positions_to_angles 내부에서 처리
 
         if (i + 1) % 1000 == 0:
             print(f"  {i+1}/{n} 샘플링 완료...")
@@ -208,12 +246,12 @@ def sample_with_mano(n: int, rng: np.random.Generator) -> np.ndarray:
 # ──────────────────────────────────────────────────────────────
 def sample_synthetic(n: int, rng: np.random.Generator) -> np.ndarray:
     """
-    각 DOF의 ROM 범위 내에서 Beta 분포로 샘플링.
-    실제 손 포즈는 극단값보다 중간 범위에 몰려있으므로 Beta(2,2) 사용.
+    각 DOF의 ROM 범위 내에서 Beta(2,2) 분포로 샘플링 (20 DOF).
+    손목 DOF는 양방향(min<0)이므로 Beta로 0~1 샘플 후 ROM으로 스케일.
     """
-    print("[INFO] 합성 샘플링 모드 (MANO FK 없이)")
-    u     = rng.beta(2, 2, size=(n, len(DOF_DEFS)))     # (N, 15), 0~1
-    poses = DOF_MIN + u * (DOF_MAX - DOF_MIN)            # ROM으로 스케일
+    print("[INFO] 합성 샘플링 모드 (MANO FK 없이, 20-DOF)")
+    u     = rng.beta(2, 2, size=(n, len(DOF_DEFS)))
+    poses = DOF_MIN + u * (DOF_MAX - DOF_MIN)
     return poses.astype(np.float32)
 
 
@@ -256,7 +294,7 @@ def main():
     print(f"[OK] {N_SAMPLES}개 포즈 저장 완료 ({method})")
     print(f"     경로: {OUT_PATH}")
     print(f"     shape: {poses.shape}  dtype: {poses.dtype}")
-    print(f"     각도 통계 — min: {poses.min():.1f}°  max: {poses.max():.1f}°  mean: {poses.mean():.1f}°")
+    print(f"     각도 통계: min={poses.min():.1f}deg  max={poses.max():.1f}deg  mean={poses.mean():.1f}deg")
 
 
 if __name__ == "__main__":

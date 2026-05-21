@@ -117,7 +117,7 @@ class WebSocketServer:
 
     def send_frame(
         self,
-        joints: dict[str, float],
+        joints: dict[str, dict],
         animal: str,
         hand_detected: bool,
         gesture: Optional[str] = None,
@@ -126,7 +126,7 @@ class WebSocketServer:
         매 프레임 관절 데이터를 Unity로 전송한다.
 
         Args:
-            joints:       {"leg_R1_base": 45.3, ...}
+            joints:       {"leg_R1_base": {"x": 0.0, "y": 45.3, "z": 0.0}, ...}
             animal:       현재 동물 이름 ("spider" 등)
             hand_detected: 손이 감지됐는지 여부
             gesture:      감지된 제스처 이름 또는 None

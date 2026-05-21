@@ -14,11 +14,19 @@ using UnityEngine;
 using WebSocketSharp;
 
 [Serializable]
+public class JointRotation
+{
+    public float x;
+    public float y;
+    public float z;
+}
+
+[Serializable]
 public class FrameData
 {
     public string type;
     public string animal;
-    public System.Collections.Generic.Dictionary<string, float> joints;
+    public System.Collections.Generic.Dictionary<string, JointRotation> joints;
     public bool hand_detected;
     public string gesture;
 }
@@ -31,8 +39,9 @@ public class WebSocketClient : MonoBehaviour
     [SerializeField] private float retryDelay  = 3f;
 
     [Header("연결 컴포넌트")]
-    [SerializeField] private AnimalController animalController;
     [SerializeField] private AnimalSwitcher   animalSwitcher;
+    [Tooltip("AnimalSwitcher가 없을 때만 사용하는 폴백 컨트롤러")]
+    [SerializeField] private AnimalController animalController;
 
     private WebSocket _ws;
     private int _retryCount;
@@ -138,10 +147,12 @@ public class WebSocketClient : MonoBehaviour
 
         if (data.type == "frame")
         {
+            // 현재 활성 동물의 컨트롤러를 우선 사용, 없으면 폴백
+            var ctrl = animalSwitcher?.GetCurrentController() ?? animalController;
             if (data.hand_detected && data.joints != null)
-                animalController?.ApplyJoints(data.joints);
+                ctrl?.ApplyJoints(data.joints);
             else
-                animalController?.SetIdle();
+                ctrl?.SetIdle();
         }
     }
 }

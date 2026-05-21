@@ -1,4 +1,8 @@
+wrist_flex
+wrist_dev
+wrist_rot
 thumb_cmc
+thumb_abd
 thumb_mcp
 thumb_ip
 index_mcp
@@ -10,6 +14,7 @@ middle_dip
 ring_mcp
 ring_pip
 ring_dip
+pinky_cmc
 pinky_mcp
 pinky_pip
 pinky_dip

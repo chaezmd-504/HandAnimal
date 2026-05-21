@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__obsidian__view",
+      "mcp__obsidian__create",
+      "Read(//c/Program Files \\(x86\\)/GitHub/HandAnimal/python/**)",
+      "Bash(python scripts/analyze_rom.py)",
+      "Bash(python scripts/analyze_rom.py --mode dump_spider --out bone_map_spider.json)",
+      "Bash(python scripts/analyze_rom.py --mode generate --bone_map bone_map_spider.json)",
+      "Bash(del:*)",
+      "mcp__obsidian__str_replace",
+      "mcp__obsidian__get_workspace_files"
+    ]
+  }
+}

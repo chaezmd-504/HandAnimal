@@ -1,113 +1,87 @@
 {
   "animal": "snake",
-  "mode": "bilateral",
   "mapping": {
     "spine_1": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 1.0,
-      "Q_score": -3.4862,
-      "hand": "left"
+      "hand_dof_idx": 3,
+      "hand_dof_name": "thumb_cmc",
+      "scale_factor": 1.5,
+      "Q_score": -25.846
     },
     "spine_2": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.4357,
-      "hand": "left"
+      "hand_dof_idx": 4,
+      "hand_dof_name": "thumb_abd",
+      "scale_factor": 1.2857,
+      "Q_score": -32.147
     },
     "spine_3": {
-      "hand_dof_idx": 3,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.0,
-      "Q_score": -3.4844,
-      "hand": "left"
+      "hand_dof_idx": 5,
+      "hand_dof_name": "thumb_mcp",
+      "scale_factor": 1.5,
+      "Q_score": -26.3613
     },
     "spine_4": {
-      "hand_dof_idx": 4,
-      "hand_dof_name": "index_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.437,
-      "hand": "left"
+      "hand_dof_idx": 16,
+      "hand_dof_name": "pinky_cmc",
+      "scale_factor": 3.0,
+      "Q_score": -24.9033
     },
     "spine_5": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 1.0,
-      "Q_score": -3.4862,
-      "hand": "right"
+      "hand_dof_idx": 19,
+      "hand_dof_name": "pinky_dip",
+      "scale_factor": 1.125,
+      "Q_score": -28.7627
     },
     "spine_6": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.4357,
-      "hand": "right"
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 0.6429,
+      "Q_score": -25.2896
     },
     "spine_7": {
-      "hand_dof_idx": 3,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.0,
-      "Q_score": -3.4844,
-      "hand": "right"
+      "hand_dof_idx": 2,
+      "hand_dof_name": "wrist_rot",
+      "scale_factor": 0.5,
+      "Q_score": -26.2396
     },
     "spine_8": {
-      "hand_dof_idx": 4,
-      "hand_dof_name": "index_pip",
-      "scale_factor": 0.8182,
-      "Q_score": -3.437,
-      "hand": "right"
+      "hand_dof_idx": 1,
+      "hand_dof_name": "wrist_dev",
+      "scale_factor": 1.8,
+      "Q_score": -24.1254
     }
   },
   "reference_pose_H": {
-    "left": {
-      "thumb_cmc": 20.0,
-      "thumb_mcp": 20.0,
-      "thumb_ip": 15.0,
-      "index_mcp": 45.0,
-      "index_pip": 55.0,
-      "index_dip": 10.0,
-      "middle_mcp": 10.0,
-      "middle_pip": 10.0,
-      "middle_dip": 10.0,
-      "ring_mcp": 45.0,
-      "ring_pip": 55.0,
-      "ring_dip": 10.0,
-      "pinky_mcp": 10.0,
-      "pinky_pip": 10.0,
-      "pinky_dip": 10.0
-    },
-    "right": {
-      "thumb_cmc": 20.0,
-      "thumb_mcp": 20.0,
-      "thumb_ip": 15.0,
-      "index_mcp": 45.0,
-      "index_pip": 55.0,
-      "index_dip": 10.0,
-      "middle_mcp": 10.0,
-      "middle_pip": 10.0,
-      "middle_dip": 10.0,
-      "ring_mcp": 45.0,
-      "ring_pip": 55.0,
-      "ring_dip": 10.0,
-      "pinky_mcp": 10.0,
-      "pinky_pip": 10.0,
-      "pinky_dip": 10.0
-    }
+    "wrist_flex": 0.0,
+    "wrist_dev": 0.0,
+    "wrist_rot": 0.0,
+    "thumb_cmc": 30.0,
+    "thumb_abd": 35.0,
+    "thumb_mcp": 30.0,
+    "thumb_ip": 15.0,
+    "index_mcp": 10.0,
+    "index_pip": 10.0,
+    "index_dip": 10.0,
+    "middle_mcp": 10.0,
+    "middle_pip": 10.0,
+    "middle_dip": 10.0,
+    "ring_mcp": 10.0,
+    "ring_pip": 10.0,
+    "ring_dip": 10.0,
+    "pinky_cmc": 15.0,
+    "pinky_mcp": 10.0,
+    "pinky_pip": 10.0,
+    "pinky_dip": 40.0
   },
   "reference_pose_A": {
-    "spine_1": -0.0,
-    "spine_2": -0.0,
-    "spine_3": -0.0,
-    "spine_4": -0.0,
-    "spine_5": -0.0,
-    "spine_6": -0.0,
-    "spine_7": -0.0,
-    "spine_8": -0.0
+    "spine_1": 0.0,
+    "spine_2": 0.0,
+    "spine_3": 0.0,
+    "spine_4": 0.0,
+    "spine_5": 0.0,
+    "spine_6": 0.0,
+    "spine_7": 0.0,
+    "spine_8": 0.0
   },
-  "bilateral_balance": {
-    "n_left": 4,
-    "n_right": 4,
-    "balanced": true
-  }
+  "Q_score_reference": -91.7624,
+  "mode": "unilateral"
 }
