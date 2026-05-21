@@ -77,6 +77,12 @@ def _discover_animals() -> dict[str, float]:
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="동물 매핑 생성")
+    parser.add_argument("--animal", nargs="+", metavar="ANIMAL",
+                        help="처리할 동물 이름 (미지정 시 전체). 예: --animal spider butterfly")
+    args = parser.parse_args()
+
     # ── 사전 조건 확인 ──────────────────────────────────────
     if not os.path.exists(POSES_10K):
         print(f"[WARN] 포즈 파일 없음: {POSES_10K}")
@@ -92,6 +98,14 @@ def main():
         print("[ERROR] data/animal_skeletons/ 에 skeleton JSON 이 없습니다.")
         print("        Unity HandAvatar > Export Animation Poses 를 먼저 실행하세요.")
         return
+
+    # --animal 필터 적용
+    if args.animal:
+        filter_set = set(args.animal)
+        discovered = {k: v for k, v in discovered.items() if k in filter_set}
+        if not discovered:
+            print(f"[ERROR] 지정한 동물 {args.animal} 의 skeleton JSON 이 없습니다.")
+            return
 
     print(f"[자동 탐색] {len(discovered)}개 동물: {list(discovered.keys())}")
     for animal, beta in discovered.items():

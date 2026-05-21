@@ -54,6 +54,48 @@ HAND_COLOR = {"left": (0, 255, 0), "right": (255, 100, 0)}
 
 _bone_axes_cache: dict[str, dict[str, tuple[str, int]]] = {}
 
+_DOF_FINGER = {
+    "thumb":  "thumb",
+    "index":  "index finger",
+    "middle": "middle finger",
+    "ring":   "ring finger",
+    "pinky":  "pinky",
+    "wrist":  "wrist",
+}
+
+def _calib_feedback(calib_warnings: dict) -> str:
+    """
+    calibrate() 반환값 → 화면 표시용 짧은 피드백 문자열.
+    diff 가 큰 순서로 최대 2개 표시.
+    예: "Extend thumb  |  Bend index finger"
+    """
+    items = []
+    all_dofs: list[tuple[str, float, float, float]] = []
+    for dof_list in calib_warnings.values():
+        all_dofs.extend(dof_list)
+    all_dofs.sort(key=lambda x: x[3], reverse=True)  # diff 내림차순
+
+    seen_fingers: set[str] = set()
+    for dof_name, user_val, ref_val, _ in all_dofs:
+        finger = next((f for f in _DOF_FINGER if dof_name.startswith(f)), None)
+        if finger is None or finger in seen_fingers:
+            continue
+        seen_fingers.add(finger)
+        fname = _DOF_FINGER[finger]
+
+        if dof_name.endswith("_abd"):
+            action = "Spread" if user_val < ref_val else "Close"
+            items.append(f"{action} {fname}")
+        else:
+            # MCP/PIP/DIP: 양수 = 굴곡(bend)
+            action = "Bend" if user_val < ref_val else "Extend"
+            items.append(f"{action} {fname}")
+
+        if len(items) >= 2:
+            break
+
+    return "  |  ".join(items) if items else "Match the reference pose"
+
 
 def _get_bone_axes(animal: str) -> dict[str, tuple[str, int]]:
     """
@@ -183,7 +225,13 @@ def _draw_hand_guide(img, cx, cy, scale=1.0, color=(100, 220, 100)):
                  25, 20, color)
 
 
-def _draw_calib_overlay(frame, remaining: float, hands_detected: bool, retry: bool = False):
+def _draw_calib_overlay(
+    frame,
+    remaining: float,
+    hands_detected: bool,
+    retry: bool = False,
+    reject_msg: str = "",
+):
     """캘리브레이션 가이드 오버레이를 frame 위에 그린다."""
     h, w = frame.shape[:2]
 
@@ -196,18 +244,18 @@ def _draw_calib_overlay(frame, remaining: float, hands_detected: bool, retry: bo
     guide_cx = w * 3 // 4
     guide_cy = h // 2
     _draw_hand_guide(frame, guide_cx, guide_cy, scale=1.2)
-    cv2.putText(frame, "Reference pose", (guide_cx - 80, guide_cy + int(90 * 1.2)),
+    cv2.putText(frame, "Reference Pose", (guide_cx - 70, guide_cy + int(90 * 1.2)),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.55, (180, 255, 180), 1)
 
     # 왼쪽: 안내 텍스트
-    cv2.putText(frame, "Calibration", (24, 50),
+    cv2.putText(frame, "Calibration", (24, 55),
                 cv2.FONT_HERSHEY_SIMPLEX, 1.3, (255, 255, 255), 2)
     for i, line in enumerate([
-        "오른쪽처럼 양손 손가락을",
-        "살짝 구부려 주세요.",
+        "Slightly bend both hands",
+        "like the guide on the right.",
         "",
-        "엄지: 약 20도",
-        "검지~약지: 약 15~20도",
+        "Thumb: ~20 deg",
+        "Index~Ring: ~15-20 deg",
     ]):
         cv2.putText(frame, line, (24, 100 + i * 32),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.62, (200, 200, 200), 1)
@@ -221,14 +269,17 @@ def _draw_calib_overlay(frame, remaining: float, hands_detected: bool, retry: bo
                 cv2.FONT_HERSHEY_SIMPLEX, 5.0, count_color, 8)
 
     # 하단 상태 표시
-    if retry:
-        cv2.putText(frame, "손이 감지되지 않았습니다. 다시 시도...", (24, h - 20),
+    if reject_msg:
+        cv2.putText(frame, reject_msg, (24, h - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 80, 255), 2)
+    elif retry:
+        cv2.putText(frame, "Hand not detected. Retrying...", (24, h - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 80, 255), 2)
     elif hands_detected:
-        cv2.putText(frame, "손 감지됨  ✓  자세를 유지하세요", (24, h - 20),
+        cv2.putText(frame, "Hands detected  -  Hold the pose", (24, h - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 220, 100), 2)
     else:
-        cv2.putText(frame, "손을 카메라에 보여주세요", (24, h - 20),
+        cv2.putText(frame, "Show both hands to the camera", (24, h - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 120, 255), 2)
 
 
@@ -261,7 +312,10 @@ def main():
 
     download_model()
 
-    occlusion = {"left": OcclusionHandler(), "right": OcclusionHandler()}
+    occlusion       = {"left": OcclusionHandler(), "right": OcclusionHandler()}
+    occlusion_world = {"left": OcclusionHandler(), "right": OcclusionHandler()}
+    _dof_ema: dict[str, dict[str, float]] = {}   # DOF 각도 EMA 스무딩 상태
+    _EMA_ALPHA = 0.35  # 낮을수록 더 강한 스무딩 (0.2~0.5 권장)
     server    = WebSocketServer(port=args.port)
 
     if args.mapping == "keyframe":
@@ -304,6 +358,7 @@ def main():
     calib_done            = args.no_window   # 창 없으면 캘리브 스킵
     calib_start           = time.time()
     calib_retry_until     = 0.0             # 재시도 메시지 표시 종료 시각
+    calib_reject_msg      = ""              # g* 불일치 거부 메시지
 
     frame_count = 0
     t_start     = time.time()
@@ -325,16 +380,32 @@ def main():
 
             # ── 손 감지 (캘리브레이션 중에도 실행) ────────────
             hands_angles: dict[str, dict[str, float]] = {}
-            if result.hand_landmarks:
-                for landmarks, handedness_list in zip(
-                    result.hand_landmarks, result.handedness
+            if result.hand_landmarks and result.hand_world_landmarks:
+                for landmarks, world_landmarks, handedness_list in zip(
+                    result.hand_landmarks,
+                    result.hand_world_landmarks,
+                    result.handedness,
                 ):
                     side  = handedness_list[0].category_name.lower()
                     color = HAND_COLOR.get(side, (0, 255, 0))
                     if not args.no_window:
                         draw_landmarks(frame, landmarks, h, w, color=color)
-                    filtered = occlusion[side].process(landmarks)
-                    hands_angles[side] = compute_dof_angles(filtered)
+
+                    # 이미지 좌표: occlusion 핸들러만 유지 (그리기 일관성)
+                    occlusion[side].process(landmarks)
+
+                    # 월드 좌표로 DOF 계산 (손목 원점 기준 미터 단위 → 위치 이동 무영향)
+                    world_filtered = occlusion_world[side].process(world_landmarks)
+                    raw_angles     = compute_dof_angles(world_filtered)
+
+                    # EMA 스무딩: 손가락 위치 노이즈 추가 억제
+                    prev = _dof_ema.get(side, raw_angles)
+                    smoothed = {
+                        k: _EMA_ALPHA * raw_angles[k] + (1.0 - _EMA_ALPHA) * prev.get(k, raw_angles[k])
+                        for k in raw_angles
+                    }
+                    _dof_ema[side] = smoothed
+                    hands_angles[side] = smoothed
 
             # ── 캘리브레이션 단계 ──────────────────────────────
             if not calib_done:
@@ -343,13 +414,21 @@ def main():
 
                 if remaining <= 0:
                     if hands_angles:
-                        engine.calibrate(hands_angles)
-                        print("[INFO] 캘리브레이션 완료")
-                        calib_done = True
+                        calib_warnings = engine.calibrate(hands_angles)
+                        if calib_warnings:
+                            # g* 와 너무 다른 포즈 → 재시도
+                            calib_start       = time.time()
+                            calib_retry_until = now + 2.5
+                            calib_reject_msg  = _calib_feedback(calib_warnings)
+                            print(f"[WARN] 캘리브레이션 거부. 재시도...")
+                        else:
+                            print("[INFO] 캘리브레이션 완료")
+                            calib_done = True
                     else:
                         # 손 미감지 → 카운트다운 재시작
                         calib_start       = time.time()
                         calib_retry_until = now + 1.5
+                        calib_reject_msg  = ""
                         print("[WARN] 손 미감지. 캘리브레이션 재시도...")
 
                 if not args.no_window:
@@ -358,6 +437,7 @@ def main():
                         max(0.0, remaining),
                         bool(hands_angles),
                         retry=(now < calib_retry_until),
+                        reject_msg=calib_reject_msg if now < calib_retry_until else "",
                     )
                     cv2.imshow("HandAvatar", frame)
 

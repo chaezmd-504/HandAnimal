@@ -40,6 +40,20 @@ def _norm_avatar(val: float, a_min: float, a_range: float) -> float:
     return (val - a_min) / a_range
 
 
+def _extract_pose_scalar(val) -> float:
+    """
+    spider_poses.json 값이 {"x":..., "y":..., "z":...} dict이면
+    절댓값이 가장 큰 축의 값을 반환, 이미 float이면 그대로 반환.
+    ILP S 계산은 부호 차이(|p̂ - ĝ|)를 쓰므로 abs 최대값 축이 실질 운동량.
+    """
+    if isinstance(val, dict):
+        x = val.get("x", 0.0)
+        y = val.get("y", 0.0)
+        z = val.get("z", 0.0)
+        return max((x, y, z), key=abs)
+    return float(val) if val is not None else 0.0
+
+
 def compute_S(
     g: np.ndarray,
     p_dict: dict,
@@ -64,7 +78,7 @@ def compute_S(
         j       = int(assignment[i])
         a_min   = float(aj["min_angle"])
         a_range = float(aj["max_angle"]) - a_min + 1e-8
-        t_a_n   = _norm_avatar(float(p_dict.get(aj["id"], 0.0)), a_min, a_range)
+        t_a_n   = _norm_avatar(_extract_pose_scalar(p_dict.get(aj["id"], 0.0)), a_min, a_range)
         t_h_n   = float(g_norm[j])
         total  += abs(t_a_n - t_h_n)
     return total
@@ -102,7 +116,7 @@ def compute_S_bar(
     for g_norm in G_norm:
         for p_dict in P:
             for i, aj in enumerate(joints):
-                t_a_n = (float(p_dict.get(aj["id"], 0.0)) - a_mins[i]) / a_ranges[i]
+                t_a_n = (_extract_pose_scalar(p_dict.get(aj["id"], 0.0)) - a_mins[i]) / a_ranges[i]
                 S_bar[i] += np.abs(t_a_n - g_norm)   # 브로드캐스트: (N_HAND,)
 
     S_bar /= float(n_pairs)

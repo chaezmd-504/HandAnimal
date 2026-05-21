@@ -200,8 +200,12 @@ def draw_landmarks(frame, landmarks, h: int, w: int, color: tuple = (0, 255, 0))
 def run_tracker():
     download_model()
 
-    # 왼손/오른손 각각 독립적인 칼만 필터 유지
+    # 왼손/오른손 각각 독립적인 칼만 필터 유지 (이미지 좌표 / 월드 좌표 분리)
     occlusion_handlers = {
+        "left":  OcclusionHandler(),
+        "right": OcclusionHandler(),
+    }
+    occlusion_world = {
         "left":  OcclusionHandler(),
         "right": OcclusionHandler(),
     }
@@ -243,17 +247,17 @@ def run_tracker():
 
             hands_angles: dict[str, dict[str, float]] = {}
 
-            if result.hand_landmarks:
-                for landmarks, handedness_list in zip(
-                    result.hand_landmarks, result.handedness
+            if result.hand_landmarks and result.hand_world_landmarks:
+                for landmarks, world_landmarks, handedness_list in zip(
+                    result.hand_landmarks, result.hand_world_landmarks, result.handedness
                 ):
-                    # MediaPipe Tasks API: handedness[0].category_name = "Left" / "Right"
                     side = handedness_list[0].category_name.lower()
                     color = HAND_COLOR.get(side, (0, 255, 0))
                     draw_landmarks(frame, landmarks, h, w, color=color)
 
-                    filtered = occlusion_handlers[side].process(landmarks)
-                    hands_angles[side] = compute_dof_angles(filtered)
+                    occlusion_handlers[side].process(landmarks)  # 그리기 일관성용
+                    world_filtered = occlusion_world[side].process(world_landmarks)
+                    hands_angles[side] = compute_dof_angles(world_filtered)
 
                 print("\n--- 20-DOF 각도 ---")
                 for side in ("left", "right"):

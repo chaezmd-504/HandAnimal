@@ -234,7 +234,7 @@ def generate_bone_map(animal: str, anim_dir: str, n_poses: int = 10):
 # 포즈 추출 (Mode 2)
 # ──────────────────────────────────────────────────────────────
 
-def extract_poses(animal: str, anim_dir: str, n_poses: int = 10, rest_anim: str = "Idle"):
+def extract_poses(animal: str, anim_dir: str, n_poses: int = 500, rest_anim: str = "Idle"):
     """
     bone_map_{animal}.json 을 읽어 .anim 키프레임에서 포즈 샘플링.
     rest_anim(기본 Idle)의 첫 프레임을 기준 포즈로 사용.
@@ -394,7 +394,7 @@ def main():
     parser.add_argument("--anim_dir", required=True, help="Unity Animations 폴더 경로")
     parser.add_argument("--mode",     choices=["bone_map", "poses"], default="poses",
                         help="bone_map: 템플릿 생성 / poses: 포즈 추출 (기본)")
-    parser.add_argument("--n_poses",  type=int, default=10, help="샘플링할 포즈 수 (기본: 10)")
+    parser.add_argument("--n_poses",  type=int, default=500, help="샘플링할 포즈 수 (기본: 500 = 사실상 전체 키프레임)")
     parser.add_argument("--rest_anim", default="Idle", help="rest pose 기준 anim 이름 (기본: Idle)")
     args = parser.parse_args()
 

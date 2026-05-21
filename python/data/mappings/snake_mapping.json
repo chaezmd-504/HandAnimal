@@ -1,76 +1,109 @@
 {
   "animal": "snake",
+  "mode": "bilateral",
   "mapping": {
     "spine_1": {
       "hand_dof_idx": 3,
       "hand_dof_name": "thumb_cmc",
       "scale_factor": 1.5,
-      "Q_score": -25.846
+      "Q_score": 4.414,
+      "hand": "left"
     },
     "spine_2": {
       "hand_dof_idx": 4,
       "hand_dof_name": "thumb_abd",
       "scale_factor": 1.2857,
-      "Q_score": -32.147
+      "Q_score": 4.1693,
+      "hand": "left"
     },
     "spine_3": {
       "hand_dof_idx": 5,
       "hand_dof_name": "thumb_mcp",
       "scale_factor": 1.5,
-      "Q_score": -26.3613
+      "Q_score": 4.3622,
+      "hand": "left"
     },
     "spine_4": {
-      "hand_dof_idx": 16,
-      "hand_dof_name": "pinky_cmc",
-      "scale_factor": 3.0,
-      "Q_score": -24.9033
+      "hand_dof_idx": 6,
+      "hand_dof_name": "thumb_ip",
+      "scale_factor": 1.125,
+      "Q_score": 4.093,
+      "hand": "left"
     },
     "spine_5": {
-      "hand_dof_idx": 19,
-      "hand_dof_name": "pinky_dip",
-      "scale_factor": 1.125,
-      "Q_score": -28.7627
+      "hand_dof_idx": 3,
+      "hand_dof_name": "thumb_cmc",
+      "scale_factor": 1.5,
+      "Q_score": 4.414,
+      "hand": "right"
     },
     "spine_6": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.6429,
-      "Q_score": -25.2896
+      "hand_dof_idx": 4,
+      "hand_dof_name": "thumb_abd",
+      "scale_factor": 1.2857,
+      "Q_score": 4.1693,
+      "hand": "right"
     },
     "spine_7": {
-      "hand_dof_idx": 2,
-      "hand_dof_name": "wrist_rot",
-      "scale_factor": 0.5,
-      "Q_score": -26.2396
+      "hand_dof_idx": 5,
+      "hand_dof_name": "thumb_mcp",
+      "scale_factor": 1.5,
+      "Q_score": 4.3622,
+      "hand": "right"
     },
     "spine_8": {
-      "hand_dof_idx": 1,
-      "hand_dof_name": "wrist_dev",
-      "scale_factor": 1.8,
-      "Q_score": -24.1254
+      "hand_dof_idx": 6,
+      "hand_dof_name": "thumb_ip",
+      "scale_factor": 1.125,
+      "Q_score": 4.093,
+      "hand": "right"
     }
   },
   "reference_pose_H": {
-    "wrist_flex": 0.0,
-    "wrist_dev": 0.0,
-    "wrist_rot": 0.0,
-    "thumb_cmc": 30.0,
-    "thumb_abd": 35.0,
-    "thumb_mcp": 30.0,
-    "thumb_ip": 15.0,
-    "index_mcp": 10.0,
-    "index_pip": 10.0,
-    "index_dip": 10.0,
-    "middle_mcp": 10.0,
-    "middle_pip": 10.0,
-    "middle_dip": 10.0,
-    "ring_mcp": 10.0,
-    "ring_pip": 10.0,
-    "ring_dip": 10.0,
-    "pinky_cmc": 15.0,
-    "pinky_mcp": 10.0,
-    "pinky_pip": 10.0,
-    "pinky_dip": 40.0
+    "left": {
+      "wrist_flex": 0.0,
+      "wrist_dev": 0.0,
+      "wrist_rot": 0.0,
+      "thumb_cmc": 31.78,
+      "thumb_abd": 43.27,
+      "thumb_mcp": 32.88,
+      "thumb_ip": 35.11,
+      "index_mcp": 10.0,
+      "index_pip": 10.0,
+      "index_dip": 10.0,
+      "middle_mcp": 10.0,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 10.0,
+      "ring_pip": 10.0,
+      "ring_dip": 10.0,
+      "pinky_cmc": 5.0,
+      "pinky_mcp": 10.0,
+      "pinky_pip": 10.0,
+      "pinky_dip": 10.0
+    },
+    "right": {
+      "wrist_flex": 0.0,
+      "wrist_dev": 0.0,
+      "wrist_rot": 0.0,
+      "thumb_cmc": 31.78,
+      "thumb_abd": 43.27,
+      "thumb_mcp": 32.88,
+      "thumb_ip": 35.11,
+      "index_mcp": 10.0,
+      "index_pip": 10.0,
+      "index_dip": 10.0,
+      "middle_mcp": 10.0,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "ring_mcp": 10.0,
+      "ring_pip": 10.0,
+      "ring_dip": 10.0,
+      "pinky_cmc": 5.0,
+      "pinky_mcp": 10.0,
+      "pinky_pip": 10.0,
+      "pinky_dip": 10.0
+    }
   },
   "reference_pose_A": {
     "spine_1": 0.0,
@@ -82,6 +115,10 @@
     "spine_7": 0.0,
     "spine_8": 0.0
   },
-  "Q_score_reference": -91.7624,
-  "mode": "unilateral"
+  "Q_score_reference": 6.1808,
+  "bilateral_balance": {
+    "n_left": 4,
+    "n_right": 4,
+    "balanced": true
+  }
 }

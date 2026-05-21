@@ -8,13 +8,15 @@ ilp_solver.py  —  §7 Step 1: ILP 매핑 M 최적화
 
 ILP 목적함수 (선형화):
     max Σ_{i,j} u_ij × (W_S·(−S̄[i,j]) + W_C·C[i,j] + W_F·F̄[j])
-        + chain_bonus
 
 4가지 제약:
-    (1) Σ_j u_ij = 1      각 아바타 관절은 정확히 1개 손 DOF
-    (2) Σ_i u_ij ≤ 1      각 손 DOF는 최대 1번 사용
-    (3) chain_bonus +5.0   같은 손가락에 연속 관절 배정 시 보너스 (소프트)
-    (4) 양손 균형 경고      |n_left − n_right| ≤ N/3  (하드 미구현, warn만)
+    (1) Σ_j u_ij = 1          각 아바타 관절은 정확히 1개 손 DOF
+    (2) Σ_i u_ij ≤ 1          각 손 DOF는 최대 1번 사용
+    (3a) chain 동일 손가락    연속 관절 쌍은 반드시 같은 손가락 내 DOF에 배정 (하드)
+    (3b) chain 근위→원위 순서 chain[k]의 segment < chain[k+1]의 segment (하드)
+    (4)  forced_fingers        bilateral 대칭: 지정 관절을 특정 손가락으로 강제
+
+    * (3a)(3b)는 이전 소프트 chain_bonus를 대체하는 하드 제약.
 
 솔버: PuLP + CBC (논문: Gurobi)
 """
@@ -55,6 +57,19 @@ def compute_F_bar(G_sub: np.ndarray) -> np.ndarray:
 
 
 # ──────────────────────────────────────────────────────────────
+# 손가락 그룹 / 세그먼트 순서 — 모듈 초기화 시 1회 계산
+# ──────────────────────────────────────────────────────────────
+
+# finger_name → [dof_idx, ...]   (constants.py HAND_DOFS 순서 보장)
+_FINGER_GROUPS: dict[str, list[int]] = {}
+for _j, _d in enumerate(HAND_DOFS):
+    _FINGER_GROUPS.setdefault(_d["finger"], []).append(_j)
+
+# 각 DOF 의 근위→원위 세그먼트 순위 (constants.py 의 "segment" 필드)
+_SEG_OF: list[int] = [d["segment"] for d in HAND_DOFS]
+
+
+# ──────────────────────────────────────────────────────────────
 # ILP 솔버
 # ──────────────────────────────────────────────────────────────
 
@@ -64,6 +79,7 @@ def solve_ilp(
     F_bar: np.ndarray,
     joints: list[dict],
     chains: list[list[str]],
+    forced_fingers: dict[str, str] | None = None,
 ) -> np.ndarray:
     """
     ILP 로 최적 매핑 M 결정.
@@ -73,6 +89,9 @@ def solve_ilp(
     F_bar  : (N_HAND,) per-DOF 편안함 기여 벡터
     joints : skeleton JSON 관절 목록
     chains : 연속 관절 체인 목록 [["base", "mid", "tip"], ...]
+    forced_fingers : {joint_id: finger_name} — bilateral 대칭 강제
+                     예) {"l_leg": "ring"} → l_leg 는 반드시 ring 손가락 내 DOF
+
     반환   : assignment (n_animal,) — 각 관절에 배정된 손 DOF 인덱스
     """
     try:
@@ -90,45 +109,68 @@ def solve_ilp(
     for j in range(n_h):
         Q_mat[:, j] += W_F * F_bar[j]
 
-    finger_of = np.array([d["finger"] for d in HAND_DOFS])
-    CHAIN_BONUS = 5.0
-
     prob = pulp.LpProblem("HandAnimalMapping", pulp.LpMaximize)
     x = [
         [pulp.LpVariable(f"x_{i}_{j}", cat="Binary") for j in range(n_h)]
         for i in range(n_a)
     ]
 
-    obj_terms = [
+    # 목적함수
+    prob += pulp.lpSum(
         Q_mat[i, j] * x[i][j]
         for i in range(n_a)
         for j in range(n_h)
-    ]
+    )
 
-    # 제약 3 소프트: 연속 관절 쌍이 같은 손가락에 배정되면 +chain_bonus
-    for chain in chains:
-        for k in range(len(chain) - 1):
-            if chain[k] not in joint_idx or chain[k + 1] not in joint_idx:
-                continue
-            i1 = joint_idx[chain[k]]
-            i2 = joint_idx[chain[k + 1]]
-            for j1 in range(n_h):
-                for j2 in range(n_h):
-                    if finger_of[j1] == finger_of[j2] and j1 != j2:
-                        bv = pulp.LpVariable(f"b_{i1}_{j1}_{i2}_{j2}", cat="Binary")
-                        prob += bv <= x[i1][j1]
-                        prob += bv <= x[i2][j2]
-                        obj_terms.append(CHAIN_BONUS * bv)
-
-    prob += pulp.lpSum(obj_terms)
-
-    # 제약 1: 각 아바타 관절은 정확히 1개 손 DOF
+    # ── 제약 1: 각 아바타 관절은 정확히 1개 손 DOF ────────────
     for i in range(n_a):
         prob += pulp.lpSum(x[i]) == 1
 
-    # 제약 2: 각 손 DOF는 최대 1번 사용
+    # ── 제약 2: 각 손 DOF는 최대 1번 사용 ─────────────────────
     for j in range(n_h):
         prob += pulp.lpSum(x[i][j] for i in range(n_a)) <= 1
+
+    # ── 제약 3 (하드): 체인 내 연속 관절 쌍 ────────────────────
+    #   (3a) 같은 손가락 강제
+    #   (3b) 근위→원위 순서 강제  (seg[chain[k]] < seg[chain[k+1]])
+    for chain in chains:
+        for k in range(len(chain) - 1):
+            a_id, b_id = chain[k], chain[k + 1]
+            if a_id not in joint_idx or b_id not in joint_idx:
+                continue
+            i1 = joint_idx[a_id]
+            i2 = joint_idx[b_id]
+
+            # (3a) 같은 손가락: 모든 손가락 f 에 대해
+            #      Σ_{j∈f} x[i1][j] == Σ_{j∈f} x[i2][j]
+            for f_idxs in _FINGER_GROUPS.values():
+                prob += (
+                    pulp.lpSum(x[i1][j] for j in f_idxs) ==
+                    pulp.lpSum(x[i2][j] for j in f_idxs)
+                )
+
+            # (3b) 근위→원위:  seg(i1) ≤ seg(i2) - 1
+            prob += (
+                pulp.lpSum(_SEG_OF[j] * x[i1][j] for j in range(n_h)) <=
+                pulp.lpSum(_SEG_OF[j] * x[i2][j] for j in range(n_h)) - 1
+            )
+
+    # ── 제약 4: bilateral 대칭 강제 ────────────────────────────
+    #   forced_fingers[joint_id] = finger_name
+    #   → 해당 관절은 반드시 finger_name 손가락 내 DOF에 배정
+    if forced_fingers:
+        for joint_id, finger_name in forced_fingers.items():
+            if joint_id not in joint_idx:
+                continue
+            i = joint_idx[joint_id]
+            f_idxs = _FINGER_GROUPS.get(finger_name, [])
+            if not f_idxs:
+                warnings.warn(
+                    f"[ILP] forced_fingers 손가락 '{finger_name}' 을 찾을 수 없음 (관절: {joint_id})",
+                    stacklevel=2,
+                )
+                continue
+            prob += pulp.lpSum(x[i][j] for j in f_idxs) == 1
 
     solver = pulp.PULP_CBC_CMD(msg=False, timeLimit=60)
     prob.solve(solver)

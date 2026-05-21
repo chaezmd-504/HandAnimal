@@ -18,6 +18,7 @@ import numpy as np
 
 from .constants import HAND_DOFS, W_F, W_S, W_C, _DOF_MINS, _DOF_MAXS
 from .compute_q import compute_Q
+from .compute_s import _extract_pose_scalar
 
 
 # ──────────────────────────────────────────────────────────────
@@ -142,8 +143,8 @@ def optimize_reference_pose_paper(
                 g_prime = g.copy()
                 for i, aj in enumerate(joints):
                     j = int(assignment[i])
-                    p_val       = float(p_dict.get(aj["id"], 0.0))
-                    p_prime_val = float(p_prime.get(aj["id"], 0.0))
+                    p_val       = _extract_pose_scalar(p_dict.get(aj["id"], 0.0))
+                    p_prime_val = _extract_pose_scalar(p_prime.get(aj["id"], 0.0))
                     g_prime[j] = g[j] + (p_prime_val - p_val) / scale_factors[i]
                 # 손 ROM 범위로 클리핑
                 g_prime = np.clip(g_prime, _DOF_MINS, _DOF_MAXS)
@@ -272,7 +273,7 @@ def build_result(
     # 아바타 고유 특성(snake=펴진 자세, spider=보행 자세 등)을 기준점에 반영
     ref_A: dict[str, float] = {}
     for i, aj in enumerate(joints):
-        ref_A[aj["id"]] = round(float(p_star.get(aj["id"], 0.0)), 2)
+        ref_A[aj["id"]] = round(_extract_pose_scalar(p_star.get(aj["id"], 0.0)), 2)
 
     return {
         "animal":              animal_name,

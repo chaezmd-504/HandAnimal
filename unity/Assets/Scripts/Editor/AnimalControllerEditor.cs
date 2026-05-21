@@ -6,14 +6,8 @@
 //      Transform.Find() 로 각 본을 자동으로 연결하고 skeleton.json 에서 ROM/축도 채운다.
 //      → 새 동물 에셋을 넣을 때 이 버튼 하나로 AnimalController 설정 완료.
 //
-// ② 축 / ROM 채우기 (skeleton.json)
-//      기존 JointEntry 의 axis/ROM 만 갱신한다.
-//
-// ③ joint ID 자동 매핑 (bone_map.json)
-//      이미 jointTransform 이 연결된 항목의 jointName 을 bone_map 으로 채운다.
-//
 // 사용법 (신규 동물):
-//   1. AnimPoseExporter 로 skeleton.json + bone_map_{animal}.json + {animal}_poses.json 생성
+//   1. AnimPoseExporter 로 skeleton.json + bone_map_{animal}.json 생성
 //   2. 동물 이름 입력 후 "① 전체 자동 생성" 클릭
 //   3. generate_mappings.py 실행 → {animal}_mapping.json 자동 생성
 
@@ -41,9 +35,7 @@ public class AnimalControllerEditor : Editor
         bool   jsonExists    = File.Exists(jsonPath);
         bool   boneMapExists = File.Exists(boneMapPath);
 
-        // ── ① 전체 자동 생성 ─────────────────────────────────────────
         EditorGUILayout.Space(4);
-        EditorGUILayout.LabelField("① 전체 자동 생성 (신규 동물 전용)", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
             "bone_map_{animal}.json + skeleton.json 을 읽어\n" +
             "JointEntry 리스트 전체를 자동 생성합니다.\n" +
@@ -52,41 +44,23 @@ public class AnimalControllerEditor : Editor
             MessageType.Info);
 
         EditorGUI.BeginDisabledGroup(!boneMapExists);
-        if (GUILayout.Button("① JointEntry 전체 자동 생성 (bone_map.json)", GUILayout.Height(35)))
-            AutoGenerateEntries(boneMapPath, jsonExists ? jsonPath : null);
+        if (GUILayout.Button("JointEntry 전체 자동 생성 (bone_map.json)", GUILayout.Height(35)))
+        {
+            // 검수 창 열기 → Confirm 후 JointEntry 생성
+            string bmpRaw       = File.ReadAllText(boneMapPath);
+            var    idToInfo     = ParseBoneMapFull(bmpRaw);
+            var    reviewEntries = BuildSideReviewEntries(idToInfo, jsonExists ? jsonPath : null);
+            string finalBmp     = boneMapPath;
+            string finalSkel    = jsonExists ? jsonPath : null;
+
+            ModelReviewWindow.Open(_animal, reviewEntries, _ =>
+                AutoGenerateEntries(finalBmp, finalSkel));
+        }
         EditorGUI.EndDisabledGroup();
 
         if (!boneMapExists)
             EditorGUILayout.HelpBox("bone_map 없음: " + boneMapPath +
                                     "\n먼저 AnimPoseExporter 실행", MessageType.Warning);
-
-        // ── ② 축 / ROM 채우기 ────────────────────────────────────────
-        EditorGUILayout.Space(6);
-        EditorGUILayout.LabelField("② 축 / ROM 채우기 (기존 항목 갱신)", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox(
-            "기존 JointEntry 의 axis/ROM 만 skeleton.json 값으로 덮어씁니다.",
-            MessageType.None);
-
-        EditorGUI.BeginDisabledGroup(!jsonExists);
-        if (GUILayout.Button("② 축 / ROM 채우기 (skeleton.json)", GUILayout.Height(30)))
-            ApplySkeletonJson(jsonPath);
-        EditorGUI.EndDisabledGroup();
-
-        if (!jsonExists)
-            EditorGUILayout.HelpBox("skeleton.json 없음: " + jsonPath, MessageType.Warning);
-
-        // ── ③ joint ID 매핑 ──────────────────────────────────────────
-        EditorGUILayout.Space(6);
-        EditorGUILayout.LabelField("③ joint ID 자동 매핑 (Transform 경로 → 이름)", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox(
-            "jointTransform 이 이미 연결된 항목의 jointName 을\n" +
-            "bone_map 경로 기반으로 채웁니다.",
-            MessageType.None);
-
-        EditorGUI.BeginDisabledGroup(!boneMapExists);
-        if (GUILayout.Button("③ joint ID 자동 매핑 (bone_map.json)", GUILayout.Height(30)))
-            AutoMatchJointNames(boneMapPath);
-        EditorGUI.EndDisabledGroup();
     }
 
     // ── ① 전체 자동 생성 ─────────────────────────────────────────────
@@ -194,114 +168,6 @@ public class AnimalControllerEditor : Editor
                          $"../../python/data/animal_skeletons/bone_map_{animal}.json"));
     }
 
-    // ── JSON 읽어서 axis / ROM 적용 ───────────────────────────────
-    private void ApplySkeletonJson(string jsonPath)
-    {
-        // 간단한 JSON 파싱 (Newtonsoft 없이 처리)
-        string raw = File.ReadAllText(jsonPath);
-        var jointData = ParseSkeletonJson(raw);
-        if (jointData == null || jointData.Count == 0)
-        {
-            EditorUtility.DisplayDialog("오류", "joints 파싱 실패", "OK");
-            return;
-        }
-
-        SerializedObject   so          = new SerializedObject(target);
-        SerializedProperty entriesProp = so.FindProperty("jointEntries");
-        SerializedProperty autoInfer   = so.FindProperty("autoInferAxes");
-
-        // autoInferAxes 끄기
-        autoInfer.boolValue = false;
-
-        int updated = 0, notFound = 0;
-        var missing = new List<string>();
-
-        for (int i = 0; i < entriesProp.arraySize; i++)
-        {
-            SerializedProperty entry     = entriesProp.GetArrayElementAtIndex(i);
-            string             jointName = entry.FindPropertyRelative("jointName").stringValue;
-
-            if (!jointData.TryGetValue(jointName, out var jd))
-            {
-                notFound++;
-                missing.Add(jointName);
-                continue;
-            }
-
-            entry.FindPropertyRelative("axisX").boolValue    = jd.axis == "X";
-            entry.FindPropertyRelative("axisY").boolValue    = jd.axis == "Y";
-            entry.FindPropertyRelative("axisZ").boolValue    = jd.axis == "Z";
-            entry.FindPropertyRelative("minAngle").floatValue = jd.minAngle;
-            entry.FindPropertyRelative("maxAngle").floatValue = jd.maxAngle;
-            updated++;
-        }
-
-        so.ApplyModifiedProperties();
-        EditorUtility.SetDirty(target);
-
-        string msg = $"{updated}개 관절 갱신 완료\nautoInferAxes 비활성화";
-        if (notFound > 0)
-            msg += $"\n\n매핑 없음 ({notFound}개):\n" + string.Join(", ", missing);
-
-        Debug.Log($"[AnimalControllerEditor] {msg}");
-        EditorUtility.DisplayDialog("완료", msg, "OK");
-    }
-
-    // ── joint ID 자동 매핑 ────────────────────────────────────────
-    private void AutoMatchJointNames(string boneMapPath)
-    {
-        string raw = File.ReadAllText(boneMapPath);
-        // bone_map: joint_id → unity_path 파싱
-        var pathToId = ParseBoneMap(raw);
-        if (pathToId.Count == 0)
-        {
-            EditorUtility.DisplayDialog("오류", "bone_map 파싱 실패", "OK");
-            return;
-        }
-
-        var ctrl        = (AnimalController)target;
-        Transform root  = ctrl.transform;
-
-        SerializedObject   so          = new SerializedObject(target);
-        SerializedProperty entriesProp = so.FindProperty("jointEntries");
-
-        int matched = 0, skipped = 0;
-        var missingPaths = new List<string>();
-
-        for (int i = 0; i < entriesProp.arraySize; i++)
-        {
-            SerializedProperty entry       = entriesProp.GetArrayElementAtIndex(i);
-            SerializedProperty tfProp      = entry.FindPropertyRelative("jointTransform");
-            SerializedProperty nameProp    = entry.FindPropertyRelative("jointName");
-
-            if (tfProp.objectReferenceValue == null) { skipped++; continue; }
-
-            Transform bone = (Transform)tfProp.objectReferenceValue;
-            string relPath = GetRelativePath(root, bone);
-
-            if (pathToId.TryGetValue(relPath, out string jointId))
-            {
-                nameProp.stringValue = jointId;
-                matched++;
-            }
-            else
-            {
-                missingPaths.Add($"{bone.name} ({relPath})");
-                skipped++;
-            }
-        }
-
-        so.ApplyModifiedProperties();
-        EditorUtility.SetDirty(target);
-
-        string msg = $"{matched}개 jointName 자동 매핑 완료";
-        if (skipped > 0)
-            msg += $"\n\n경로 불일치 {skipped}개:\n" + string.Join("\n", missingPaths);
-
-        Debug.Log($"[AnimalControllerEditor] {msg}");
-        EditorUtility.DisplayDialog("완료", msg, "OK");
-    }
-
     // bone_map JSON 파싱: joint_id → {unity_path, axis}  (AutoGenerateEntries 용)
     private struct BoneMapEntry { public string unityPath; public string axis; }
 
@@ -355,70 +221,6 @@ public class AnimalControllerEditor : Editor
         return result;
     }
 
-    // bone_map JSON 파싱: unity_path → joint_id
-    private static Dictionary<string, string> ParseBoneMap(string json)
-    {
-        var result = new Dictionary<string, string>();
-
-        int mapStart = json.IndexOf("\"joint_map\"");
-        if (mapStart < 0) return result;
-        int braceStart = json.IndexOf('{', mapStart + "\"joint_map\"".Length);
-        if (braceStart < 0) return result;
-
-        // 중괄호 매칭으로 각 joint 블록 추출
-        int depth = 0, objStart = -1;
-        string currentId = null;
-
-        for (int i = braceStart; i < json.Length; i++)
-        {
-            char c = json[i];
-            if (c == '{')
-            {
-                if (depth == 1) objStart = i;   // joint 오브젝트 시작
-                depth++;
-            }
-            else if (c == '}')
-            {
-                depth--;
-                if (depth == 1 && objStart >= 0 && currentId != null)
-                {
-                    string obj      = json.Substring(objStart, i - objStart + 1);
-                    string unityPath = ExtractString(obj, "unity_path");
-                    if (!string.IsNullOrEmpty(unityPath))
-                        result[unityPath] = currentId;
-                    objStart  = -1;
-                    currentId = null;
-                }
-                else if (depth == 0) break;     // joint_map 블록 종료
-            }
-            else if (c == '"' && depth == 1)
-            {
-                // joint ID 문자열 읽기 (depth=1 에서의 key)
-                int q2 = json.IndexOf('"', i + 1);
-                if (q2 > i)
-                {
-                    string candidate = json.Substring(i + 1, q2 - i - 1);
-                    if (!candidate.StartsWith("_"))     // "_usage" 등 메타 키 제외
-                        currentId = candidate;
-                    i = q2;
-                }
-            }
-        }
-        return result;
-    }
-
-    private static string GetRelativePath(Transform root, Transform target)
-    {
-        var parts = new List<string>();
-        Transform cur = target;
-        while (cur != null && cur != root)
-        {
-            parts.Insert(0, cur.name);
-            cur = cur.parent;
-        }
-        return cur == root ? string.Join("/", parts) : null;
-    }
-
     // ── 간단한 skeleton JSON 파서 ─────────────────────────────────
     // Newtonsoft 없이 정규식 없이 파싱하는 간이 버전
     private struct JointData { public string axis; public float minAngle, maxAngle; }
@@ -469,6 +271,79 @@ public class AnimalControllerEditor : Editor
         }
 
         return result;
+    }
+
+    // ── 관절 좌/우 + 체인 루트 손가락 자동 감지 → 검수 엔트리 생성 ───
+    private static List<ModelReviewWindow.JointSideEntry> BuildSideReviewEntries(
+        Dictionary<string, BoneMapEntry> idToInfo,
+        string skeletonPath)
+    {
+        // skeleton.json 의 chains 파싱 → chain root ID 집합
+        var chainRoots = new HashSet<string>();
+        if (skeletonPath != null && File.Exists(skeletonPath))
+            chainRoots = ParseChainRoots(File.ReadAllText(skeletonPath));
+
+        var entries = new List<ModelReviewWindow.JointSideEntry>();
+        foreach (var kv in idToInfo)
+        {
+            string jid    = kv.Key;
+            string jidLow = jid.ToLower();
+            string detected;
+
+            if (jidLow.StartsWith("l_") || jidLow.EndsWith("_l") || jidLow.Contains("left"))
+                detected = "left";
+            else if (jidLow.StartsWith("r_") || jidLow.EndsWith("_r") || jidLow.Contains("right"))
+                detected = "right";
+            else
+                detected = "center";
+
+            // 체인 루트이면 손가락 자동 감지
+            string detectedFinger = chainRoots.Contains(jid)
+                ? ModelReviewWindow.DetectFinger(jid)
+                : null;
+
+            entries.Add(new ModelReviewWindow.JointSideEntry
+            {
+                jointId        = jid,
+                detectedSide   = detected,
+                overrideSide   = null,
+                detectedFinger = detectedFinger,
+                overrideFinger = null,
+            });
+        }
+        return entries;
+    }
+
+    // skeleton.json "chains" 에서 각 체인의 첫 번째 관절 ID 집합을 추출
+    private static HashSet<string> ParseChainRoots(string json)
+    {
+        var roots   = new HashSet<string>();
+        int chainsStart = json.IndexOf("\"chains\"");
+        if (chainsStart < 0) return roots;
+        int arrStart = json.IndexOf('[', chainsStart);
+        if (arrStart < 0) return roots;
+
+        // "chains": [ [ "root", ...], [...] ]
+        // 각 내부 배열의 첫 번째 문자열을 추출
+        int depth = 0;
+        bool inInner = false;
+        for (int i = arrStart; i < json.Length; i++)
+        {
+            char c = json[i];
+            if (c == '[') { depth++; if (depth == 2) inInner = true; }
+            else if (c == ']') { depth--; inInner = false; if (depth == 0) break; }
+            else if (inInner && c == '"')
+            {
+                int q2 = json.IndexOf('"', i + 1);
+                if (q2 > i)
+                {
+                    roots.Add(json.Substring(i + 1, q2 - i - 1));
+                    inInner = false; // 이 내부 배열의 첫 번째만
+                    i = q2;
+                }
+            }
+        }
+        return roots;
     }
 
     private static string ExtractString(string obj, string key)

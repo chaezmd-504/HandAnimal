@@ -219,23 +219,90 @@ class MappingEngine:
 
         print("━"*55 + "\n")
 
-    def calibrate(self, hands_dofs: dict[str, dict[str, float]]):
-        """현재 손 포즈를 기준 포즈로 설정 (c 키 캘리브레이션).
-
-        이후 모든 변환에서 delta_h = h_current - calibrated_ref 로 계산됨.
-        → 캘리브레이션 시점 포즈에서 모든 관절이 ref_A (기준 포즈)에 위치.
+    def calibrate(
+        self,
+        hands_dofs: dict[str, dict[str, float]],
+        threshold: float = 35.0,
+    ) -> dict[str, list[str]]:
         """
-        data = self._cache[self.current_animal]
+        사용자 손 포즈를 g* 와 비교 후 캘리브레이션 등록.
+
+        논문 §8: g* 는 Step 2 최적화로 구한 수학적·인간공학적 기준 원점.
+        사용자 포즈가 g* 와 너무 다르면 매핑의 수학적 의미가 무너지므로,
+        threshold(°) 초과 DOF 가 있으면 등록을 거부하고 경고를 반환한다.
+
+        Parameters
+        ----------
+        hands_dofs : {"left": {dof: angle}, "right": {dof: angle}}
+        threshold  : 허용 최대 편차 (°). 이 값 이하여야 등록 성공.
+
+        Returns
+        -------
+        warnings : dict[side, list[str]]
+            빈 dict → 등록 성공.
+            비어있지 않으면 등록 거부 — 값은 초과 DOF 목록.
+        """
+        data    = self._cache[self.current_animal]
+        mapping = data["mapping"]
+
+        # 이 동물에서 실제로 사용되는 DOF 이름만 확인 (매핑된 DOF 한정)
+        def _mapped_dofs(side: str) -> set[str]:
+            return {
+                info["hand_dof_name"]
+                for info in mapping.values()
+                if info.get("hand", "right") == side
+            }
+
+        warnings: dict[str, list[str]] = {}
+
         if self._is_bilateral():
             for side in ("left", "right"):
-                if hands_dofs.get(side):
-                    data["reference_pose_H"][side].update(hands_dofs[side])
+                user = hands_dofs.get(side)
+                if not user:
+                    continue
+                g_star  = data["reference_pose_H"][side]
+                dofs    = _mapped_dofs(side)
+                over    = []
+                for dof in dofs:
+                    u    = user.get(dof, 0.0)
+                    r    = g_star.get(dof, 0.0)
+                    diff = abs(u - r)
+                    if diff > threshold:
+                        over.append((dof, u, r, diff))
+                # 절반 이상의 DOF가 초과해야 거부 (소수 outlier는 허용)
+                if len(over) > len(dofs) // 2:
+                    warnings[side] = over
+                    print(f"[MappingEngine] 캘리브레이션 거부 ({side}) — "
+                          f"{len(over)}/{len(dofs)} DOF 기준 초과")
+                    for dof, u, r, d in over:
+                        print(f"  {dof}: 현재={u:.0f}°  기준={r:.0f}°  차이={d:.0f}°")
+                else:
+                    data["reference_pose_H"][side].update(user)
                     print(f"[MappingEngine] 캘리브레이션 완료 ({side})")
         else:
-            dof_dict = hands_dofs.get("right") or hands_dofs.get("left") or {}
-            if dof_dict:
-                data["reference_pose_H"].update(dof_dict)
-                print("[MappingEngine] 캘리브레이션 완료")
+            user = hands_dofs.get("right") or hands_dofs.get("left") or {}
+            side = "right" if "right" in hands_dofs else "left"
+            if user:
+                g_star = data["reference_pose_H"]
+                dofs   = {info["hand_dof_name"] for info in mapping.values()}
+                over   = []
+                for dof in dofs:
+                    u    = user.get(dof, 0.0)
+                    r    = g_star.get(dof, 0.0)
+                    diff = abs(u - r)
+                    if diff > threshold:
+                        over.append((dof, u, r, diff))
+                if len(over) > len(dofs) // 2:
+                    warnings[side] = over
+                    print(f"[MappingEngine] 캘리브레이션 거부 — "
+                          f"{len(over)}/{len(dofs)} DOF 기준 초과")
+                    for dof, u, r, d in over:
+                        print(f"  {dof}: 현재={u:.0f}°  기준={r:.0f}°  차이={d:.0f}°")
+                else:
+                    data["reference_pose_H"].update(user)
+                    print("[MappingEngine] 캘리브레이션 완료")
+
+        return warnings  # {side: [(dof_name, user_val, ref_val, diff), ...]}
 
     def transform_clamped(
         self,

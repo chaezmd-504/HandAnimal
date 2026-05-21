@@ -14,7 +14,7 @@
     },
     "bone_002": {
       "unity_path": "Spider/Bone/Bone.002",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "l_leg": {
@@ -29,12 +29,12 @@
     },
     "l_leg_002": {
       "unity_path": "Spider/Bone/L.Leg.002",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "l_leg_003": {
       "unity_path": "Spider/Bone/L.Leg.003",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "r_leg": {
@@ -49,27 +49,27 @@
     },
     "r_leg_002": {
       "unity_path": "Spider/Bone/R.Leg.002",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "r_leg_003": {
       "unity_path": "Spider/Bone/R.Leg.003",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "l_bone_014": {
       "unity_path": "Spider/Bone/Bone.002/L.Bone.014",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "r_bone_014": {
       "unity_path": "Spider/Bone/Bone.002/R.Bone.014",
-      "axis": "Y",
+      "axis": "Z",
       "_match_confidence": "auto"
     },
     "l_bone_009": {
       "unity_path": "Spider/Bone/L.Leg.001/L.Bone.009",
-      "axis": "Z",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "l_bone_006": {
@@ -84,17 +84,17 @@
     },
     "l_bone_012": {
       "unity_path": "Spider/Bone/L.Leg/L.Bone.012",
-      "axis": "Z",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "r_bone_009": {
       "unity_path": "Spider/Bone/R.Leg.001/R.Bone.009",
-      "axis": "Y",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "r_bone_006": {
       "unity_path": "Spider/Bone/R.Leg.002/R.Bone.006",
-      "axis": "Z",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "r_bone_003": {
@@ -104,12 +104,12 @@
     },
     "r_bone_012": {
       "unity_path": "Spider/Bone/R.Leg/R.Bone.012",
-      "axis": "Z",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "l_bone_010": {
       "unity_path": "Spider/Bone/L.Leg.001/L.Bone.009/L.Bone.010",
-      "axis": "Z",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "l_bone_007": {
@@ -129,7 +129,7 @@
     },
     "r_bone_010": {
       "unity_path": "Spider/Bone/R.Leg.001/R.Bone.009/R.Bone.010",
-      "axis": "Z",
+      "axis": "X",
       "_match_confidence": "auto"
     },
     "r_bone_007": {
@@ -149,6 +149,16 @@
     }
   },
   "_unmapped_paths": [
-    "Spider"
+    "Spider",
+    "Spider/Atack1",
+    "Spider/BodyIK.001",
+    "Spider/Bone",
+    "Spider/L.LEG_IK.005",
+    "Spider/L.LEG_IK.008",
+    "Spider/L.LEG_IK.011",
+    "Spider/L.LegIK.015",
+    "Spider/R.LEG_IK.005",
+    "Spider/R.LEG_IK.008",
+    "Spider/R.LEG_IK.011"
   ]
 }
