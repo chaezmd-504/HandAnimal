@@ -46,15 +46,34 @@ public class AnimalControllerEditor : Editor
         EditorGUI.BeginDisabledGroup(!boneMapExists);
         if (GUILayout.Button("JointEntry 전체 자동 생성 (bone_map.json)", GUILayout.Height(35)))
         {
-            // 검수 창 열기 → Confirm 후 JointEntry 생성
-            string bmpRaw       = File.ReadAllText(boneMapPath);
-            var    idToInfo     = ParseBoneMapFull(bmpRaw);
-            var    reviewEntries = BuildSideReviewEntries(idToInfo, jsonExists ? jsonPath : null);
-            string finalBmp     = boneMapPath;
-            string finalSkel    = jsonExists ? jsonPath : null;
+            string bmpRaw   = File.ReadAllText(boneMapPath);
+            var    idToInfo = ParseBoneMapFull(bmpRaw);
 
-            ModelReviewWindow.Open(_animal, reviewEntries, _ =>
-                AutoGenerateEntries(finalBmp, finalSkel));
+            // 매핑 JSON 에 있는 관절만 남기기
+            string mappingPath = ResolveMappingPath(_animal);
+            if (File.Exists(mappingPath))
+            {
+                var allowed = ParseMappingJointIds(File.ReadAllText(mappingPath));
+                var filtered = new Dictionary<string, BoneMapEntry>();
+                foreach (var kv in idToInfo)
+                    if (allowed.Contains(kv.Key)) filtered[kv.Key] = kv.Value;
+                idToInfo = filtered;
+                Debug.Log($"[AnimalControllerEditor] 매핑 필터: {idToInfo.Count}개 관절");
+            }
+
+            var    reviewEntries = BuildSideReviewEntries(idToInfo, jsonExists ? jsonPath : null);
+            var    capturedInfo  = idToInfo;
+            string finalSkel     = jsonExists ? jsonPath : null;
+
+            ModelReviewWindow.Open(_animal, reviewEntries, included =>
+            {
+                // included 리스트 기준으로 idToInfo 재필터
+                var filteredInfo = new Dictionary<string, BoneMapEntry>();
+                foreach (var e in included)
+                    if (capturedInfo.TryGetValue(e.jointId, out var bme))
+                        filteredInfo[e.jointId] = bme;
+                AutoGenerateEntriesFromMap(filteredInfo, finalSkel);
+            });
         }
         EditorGUI.EndDisabledGroup();
 
@@ -89,12 +108,42 @@ public class AnimalControllerEditor : Editor
         // 기존 리스트 초기화
         entriesProp.ClearArray();
 
+        // 매핑 JSON 에 있는 관절만 포함
+        var mappingPath = Path.GetFullPath(
+            Path.Combine(Application.dataPath,
+                         $"../../python/data/mappings/{_animal}_mapping.json"));
+        var allowedJoints = new HashSet<string>();
+        if (File.Exists(mappingPath))
+        {
+            string mapRaw = File.ReadAllText(mappingPath);
+            // "mapping" 키 아래 joint_id 추출 (간이 파싱)
+            int mStart = mapRaw.IndexOf("\"mapping\"");
+            int mBrace = mapRaw.IndexOf('{', mStart + 9);
+            int depth2 = 0; int pos = mBrace;
+            while (pos < mapRaw.Length)
+            {
+                if (mapRaw[pos] == '{') depth2++;
+                else if (mapRaw[pos] == '}') { depth2--; if (depth2 == 0) break; }
+                else if (mapRaw[pos] == '"' && depth2 == 1)
+                {
+                    int q2 = mapRaw.IndexOf('"', pos + 1);
+                    if (q2 > pos) { allowedJoints.Add(mapRaw.Substring(pos + 1, q2 - pos - 1)); pos = q2; }
+                }
+                pos++;
+            }
+            Debug.Log($"[AnimalControllerEditor] 매핑 기반 필터: {allowedJoints.Count}개 관절");
+        }
+
         int created = 0, notFound = 0;
         var missing = new List<string>();
 
         foreach (var kv in idToInfo)
         {
             string jointId  = kv.Key;
+            // 매핑에 없는 관절은 스킵
+            if (allowedJoints.Count > 0 && !allowedJoints.Contains(jointId))
+                continue;
+
             string unityPath = kv.Value.unityPath;
             string axisHint  = kv.Value.axis;   // from bone_map
 
@@ -153,6 +202,86 @@ public class AnimalControllerEditor : Editor
         EditorUtility.DisplayDialog("완료", msg, "OK");
     }
 
+    // idToInfo 를 직접 받아 JointEntry 생성 (필터링 후 호출)
+    private void AutoGenerateEntriesFromMap(
+        Dictionary<string, BoneMapEntry> idToInfo,
+        string skeletonPath)
+    {
+        if (idToInfo.Count == 0)
+        {
+            EditorUtility.DisplayDialog("오류", "생성할 관절이 없습니다.", "OK");
+            return;
+        }
+
+        Dictionary<string, JointData> skelData = null;
+        if (skeletonPath != null && File.Exists(skeletonPath))
+            skelData = ParseSkeletonJson(File.ReadAllText(skeletonPath));
+
+        var ctrl       = (AnimalController)target;
+        Transform root = ctrl.transform;
+
+        SerializedObject   so          = new SerializedObject(target);
+        SerializedProperty entriesProp = so.FindProperty("jointEntries");
+        entriesProp.ClearArray();
+
+        int created = 0, notFound = 0;
+        var missing = new List<string>();
+
+        foreach (var kv in idToInfo)
+        {
+            string jointId   = kv.Key;
+            string unityPath = kv.Value.unityPath;
+            string axisHint  = kv.Value.axis;
+
+            Transform bone = root.Find(unityPath);
+            if (bone == null)
+            {
+                int slash = unityPath.IndexOf('/');
+                if (slash >= 0) bone = root.Find(unityPath.Substring(slash + 1));
+            }
+
+            bool  axX = false, axY = false, axZ = false;
+            float minA = -45f, maxA = 45f;
+
+            if (skelData != null && skelData.TryGetValue(jointId, out var jd))
+            {
+                axX = jd.axis == "X"; axY = jd.axis == "Y"; axZ = jd.axis == "Z";
+                minA = jd.minAngle; maxA = jd.maxAngle;
+            }
+            else if (!string.IsNullOrEmpty(axisHint))
+            {
+                string ax = axisHint.ToUpper();
+                axX = ax == "X"; axY = ax == "Y"; axZ = ax == "Z";
+            }
+
+            entriesProp.InsertArrayElementAtIndex(entriesProp.arraySize);
+            SerializedProperty entry = entriesProp.GetArrayElementAtIndex(entriesProp.arraySize - 1);
+            entry.FindPropertyRelative("jointName").stringValue                = jointId;
+            entry.FindPropertyRelative("jointTransform").objectReferenceValue  = bone;
+            entry.FindPropertyRelative("axisX").boolValue                      = axX;
+            entry.FindPropertyRelative("axisY").boolValue                      = axY;
+            entry.FindPropertyRelative("axisZ").boolValue                      = axZ;
+            entry.FindPropertyRelative("minAngle").floatValue                  = minA;
+            entry.FindPropertyRelative("maxAngle").floatValue                  = maxA;
+
+            if (bone != null) created++;
+            else { notFound++; missing.Add($"{jointId} ({unityPath})"); }
+        }
+
+        so.FindProperty("autoInferAxes").boolValue = false;
+        so.ApplyModifiedProperties();
+        EditorUtility.SetDirty(target);
+
+        string msg = $"JointEntry {created + notFound}개 생성\n" +
+                     $"  Transform 연결됨: {created}개\n" +
+                     $"  Transform 없음: {notFound}개";
+        if (notFound > 0)
+            msg += "\n\n경로 불일치:\n" + string.Join("\n", missing);
+
+        Debug.Log($"[AnimalControllerEditor] {msg}");
+        EditorUtility.DisplayDialog("완료", msg, "OK");
+    }
+
     // ── JSON 경로 계산 ────────────────────────────────────────────
     private static string ResolveJsonPath(string animal)
     {
@@ -166,6 +295,37 @@ public class AnimalControllerEditor : Editor
         return Path.GetFullPath(
             Path.Combine(Application.dataPath,
                          $"../../python/data/animal_skeletons/bone_map_{animal}.json"));
+    }
+
+    private static string ResolveMappingPath(string animal)
+    {
+        return Path.GetFullPath(
+            Path.Combine(Application.dataPath,
+                         $"../../python/data/mappings/{animal}_mapping.json"));
+    }
+
+    private static HashSet<string> ParseMappingJointIds(string json)
+    {
+        var ids = new HashSet<string>();
+        int mStart = json.IndexOf("\"mapping\"");
+        if (mStart < 0) return ids;
+        int braceStart = json.IndexOf('{', mStart + 9);
+        if (braceStart < 0) return ids;
+
+        int depth = 0, pos = braceStart;
+        while (pos < json.Length)
+        {
+            char c = json[pos];
+            if      (c == '{') depth++;
+            else if (c == '}') { depth--; if (depth == 0) break; }
+            else if (c == '"' && depth == 1)
+            {
+                int q2 = json.IndexOf('"', pos + 1);
+                if (q2 > pos) { ids.Add(json.Substring(pos + 1, q2 - pos - 1)); pos = q2; }
+            }
+            pos++;
+        }
+        return ids;
     }
 
     // bone_map JSON 파싱: joint_id → {unity_path, axis}  (AutoGenerateEntries 용)

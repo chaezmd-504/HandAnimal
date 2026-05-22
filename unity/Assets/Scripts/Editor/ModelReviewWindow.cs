@@ -12,6 +12,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -25,6 +26,7 @@ public class ModelReviewWindow : EditorWindow
         public string jointId;
         public string detectedSide;    // "left" | "right" | "center"
         public string overrideSide;    // null = detectedSide 사용
+        public bool   included = true; // false = JointEntry 생성 제외
 
         // 체인 루트 손가락 배정 (비체인 루트는 null)
         public string detectedFinger;  // "index" | "middle" | "ring" | "pinky" | null
@@ -87,6 +89,7 @@ public class ModelReviewWindow : EditorWindow
 
         // ── 헤더 ─────────────────────────────────────────────────
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+        EditorGUILayout.LabelField("Include",     EditorStyles.toolbarButton, GUILayout.Width(52));
         EditorGUILayout.LabelField("Joint ID",    EditorStyles.toolbarButton, GUILayout.Width(190));
         EditorGUILayout.LabelField("Side Auto",   EditorStyles.toolbarButton, GUILayout.Width(58));
         EditorGUILayout.LabelField("Side",        EditorStyles.toolbarButton, GUILayout.Width(80));
@@ -106,11 +109,15 @@ public class ModelReviewWindow : EditorWindow
             if (changed) anyOverride = true;
 
             var prevBg = GUI.backgroundColor;
-            if (changed) GUI.backgroundColor = OverrideColor;
+            if (!e.included) GUI.backgroundColor = new Color(0.7f, 0.7f, 0.7f);
+            else if (changed) GUI.backgroundColor = OverrideColor;
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = prevBg;
 
-            EditorGUILayout.LabelField(e.jointId, GUILayout.Width(190));
+            e.included = EditorGUILayout.Toggle(e.included, GUILayout.Width(52));
+
+            var labelStyle = e.included ? EditorStyles.label : new GUIStyle(EditorStyles.label) { normal = { textColor = Color.gray } };
+            EditorGUILayout.LabelField(e.jointId, labelStyle, GUILayout.Width(190));
 
             // ── 좌/우 ──────────────────────────────────────────
             EditorGUILayout.LabelField(e.detectedSide, GUILayout.Width(58));
@@ -144,10 +151,15 @@ public class ModelReviewWindow : EditorWindow
 
         EditorGUILayout.Space(4);
         EditorGUILayout.BeginHorizontal();
+        int excluded = _entries.Count(e => !e.included);
+        if (excluded > 0)
+            EditorGUILayout.HelpBox($"{excluded}개 관절 제외됨 — JointEntry 미생성.", MessageType.Info);
+
         if (GUILayout.Button("Confirm & Generate", GUILayout.Height(32)))
         {
-            SaveOverrides(_animal, _entries);
-            _onConfirm?.Invoke(_entries);
+            var included = _entries.Where(e => e.included).ToList();
+            SaveOverrides(_animal, included);
+            _onConfirm?.Invoke(included);
             Close();
         }
         if (GUILayout.Button("Cancel", GUILayout.Height(32), GUILayout.Width(80)))

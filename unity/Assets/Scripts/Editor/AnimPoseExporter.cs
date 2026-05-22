@@ -258,7 +258,7 @@ public class AnimPoseExporter : EditorWindow
         restClip.SampleAnimation(go, 0f);
         var restEulers2 = RecordAllEulers(go);
 
-        var allPoses = new List<Dictionary<string, float>>();
+        var allPoses = new List<(Dictionary<string, float> joints, string anim, int frame)>();
         foreach (var kv in clips)
         {
             float dur = kv.Value.length;
@@ -268,7 +268,7 @@ public class AnimPoseExporter : EditorWindow
                 float t = dur * i / Mathf.Max(1, _samplesPerClip - 1);
                 kv.Value.SampleAnimation(go, t);
                 var pose = SamplePose(go, jointInfos, restEulers2);
-                allPoses.Add(pose);
+                allPoses.Add((pose, kv.Key, i));
             }
         }
         DestroyImmediate(go);
@@ -395,19 +395,17 @@ public class AnimPoseExporter : EditorWindow
         return sb.ToString();
     }
 
-    private string PosesToJson(List<Dictionary<string, float>> poses)
+    private string PosesToJson(List<(Dictionary<string, float> joints, string anim, int frame)> poses)
     {
         var sb = new StringBuilder();
         sb.AppendLine("[");
         for (int i = 0; i < poses.Count; i++)
         {
             sb.Append("  {");
-            bool first = true;
-            foreach (var kv in poses[i])
+            sb.Append($"\"_anim\": \"{poses[i].anim}\", \"_frame\": {poses[i].frame}");
+            foreach (var kv in poses[i].joints)
             {
-                if (!first) sb.Append(", ");
-                sb.Append($"\"{kv.Key}\": {kv.Value:F2}");
-                first = false;
+                sb.Append($", \"{kv.Key}\": {kv.Value:F2}");
             }
             sb.Append(i < poses.Count - 1 ? "},\n" : "}\n");
         }
@@ -521,15 +519,16 @@ public class AnimPoseExporter : EditorWindow
         return var / list.Count;
     }
 
-    private List<Dictionary<string, float>> DeduplicatePoses(List<Dictionary<string, float>> poses)
+    private List<(Dictionary<string, float>, string, int)> DeduplicatePoses(
+        List<(Dictionary<string, float> joints, string anim, int frame)> poses)
     {
         var seen   = new HashSet<string>();
-        var result = new List<Dictionary<string, float>>();
+        var result = new List<(Dictionary<string, float>, string, int)>();
         foreach (var p in poses)
         {
             var sb = new StringBuilder();
-            foreach (var kv in p) sb.Append($"{kv.Key}:{kv.Value:F1};");
-            if (seen.Add(sb.ToString())) result.Add(p);
+            foreach (var kv in p.joints) sb.Append($"{kv.Key}:{kv.Value:F1};");
+            if (seen.Add(sb.ToString())) result.Add((p.joints, p.anim, p.frame));
         }
         return result;
     }

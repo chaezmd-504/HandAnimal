@@ -32,6 +32,19 @@ from typing import Optional
 
 import numpy as np
 
+
+def _load_bone_axes(poses_dir: str, animal: str) -> dict[str, tuple[str, int]]:
+    """bone_map_{animal}.json 에서 axis 읽기. {joint_id: ("x"/"y"/"z", sign)}"""
+    bone_map_path = os.path.join(poses_dir, f"bone_map_{animal}.json")
+    axis_map: dict[str, tuple[str, int]] = {}
+    if not os.path.exists(bone_map_path):
+        return axis_map
+    with open(bone_map_path, encoding="utf-8") as f:
+        bm = json.load(f)
+    for jid, info in bm.get("joint_map", {}).items():
+        axis_map[jid] = (info.get("axis", "Y").lower(), 1)
+    return axis_map
+
 # mapping_engine.py 와 동일한 순서 — hand_tracker.compute_dof_angles() 반환 키
 _HAND_DOF_NAMES = [
     "wrist_flex", "wrist_dev", "wrist_rot",
@@ -81,6 +94,7 @@ class KeyframeMappingEngine:
         self.temperature   = temperature
 
         self._cache: dict[str, dict] = {}
+        self._bone_axes: dict[str, dict[str, tuple[str, int]]] = {}
         self.current_animal: Optional[str] = None
         self._animal_index = 0
         self._last_blend_info: list[tuple[float, str, int]] = []  # (weight, anim, frame)
@@ -106,6 +120,7 @@ class KeyframeMappingEngine:
 
         if animal_name not in self._cache:
             self._cache[animal_name] = self._build_keyframes(animal_name)
+            self._bone_axes[animal_name] = _load_bone_axes(self.poses_dir, animal_name)
 
         self.current_animal = animal_name
         self._animal_index  = self.ANIMALS.index(animal_name)
@@ -221,6 +236,7 @@ class KeyframeMappingEngine:
         for pose in animal_poses:
             all_joints.update(k for k in pose.keys() if not k.startswith("_"))
 
+        axes = self._bone_axes.get(self.current_animal, {})
         for joint_id in all_joints:
             bx = by = bz = 0.0
             for w, pose in zip(weights, animal_poses):
@@ -230,8 +246,12 @@ class KeyframeMappingEngine:
                     by += float(w) * float(v.get("y", 0.0))
                     bz += float(w) * float(v.get("z", 0.0))
                 else:
-                    # 구형 단일 float 포즈 호환
-                    bx += float(w) * float(v)
+                    # float → 올바른 축에 배치
+                    ax, sign = axes.get(joint_id, ("z", 1))
+                    val = float(w) * float(v) * sign
+                    if ax == "x":   bx += val
+                    elif ax == "y": by += val
+                    else:           bz += val
             result[joint_id] = {"x": round(bx, 2), "y": round(by, 2), "z": round(bz, 2)}
 
         return result
