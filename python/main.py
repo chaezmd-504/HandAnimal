@@ -313,6 +313,9 @@ def parse_args():
     p.add_argument("--locomotion", action="store_true",
                    help="로코모션 모듈 활성화: wrist_dev → 방향, 손가락 속도 → 이동. "
                         "활성화 시 wrist_dev 는 관절 매핑에서 제외됨.")
+    p.add_argument("--head-dir", action="store_true",
+                   help="방향 제어를 wrist_dev 대신 머리(얼굴) x위치로 변경. "
+                        "--locomotion 과 함께 사용.")
     return p.parse_args()
 
 
@@ -454,6 +457,19 @@ def main():
 
     server.start()
 
+    # ── 머리 방향 제어 초기화 ─────────────────────────────────
+    _face_detector = None
+    _head_yaw_delta: float = 0.0
+    _HEAD_DEADZONE  = 0.08   # 화면 중심 기준 ±8% 이내는 직진
+    _HEAD_SCALE     = 3.0    # x offset → °/frame 배율
+    _head_ref_x     = 0.5    # 캘리브레이션 후 기준 x (기본 화면 중앙)
+
+    if args.head_dir and args.locomotion:
+        _face_detector = mp.solutions.face_detection.FaceDetection(
+            model_selection=0, min_detection_confidence=0.5
+        )
+        print("[INFO] 머리 방향 제어 활성화 (face_detection)")
+
     options = HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MODEL_PATH),
         running_mode=VisionRunningMode.VIDEO,
@@ -591,8 +607,16 @@ def main():
                                           f"비교관절={len(_cmp)}개  "
                                           f"fraction={_TRIG_FRACTION*100:.0f}%")
 
-                            _vel_ema      = 0.0   # 캘리브 중 누적된 velocity 리셋
+                            _vel_ema      = 0.0
                             _prev_h_right = None
+                            # 머리 방향: 캘리브 시점 얼굴 x를 기준으로 저장
+                            if _face_detector is not None:
+                                _fr = _face_detector.process(
+                                    cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                                if _fr.detections:
+                                    _bb = _fr.detections[0].location_data.relative_bounding_box
+                                    _head_ref_x = _bb.xmin + _bb.width / 2.0
+                                    print(f"[INFO] 머리 기준 x={_head_ref_x:.3f} 저장")
                             print("[INFO] 캘리브레이션 완료")
                             calib_done = True
                             # --no-window 모드: 캘리브 완료 후 창 닫기
@@ -770,6 +794,22 @@ def main():
                 if args.mapping == "blend":
                     _vel_ema *= 0.7
 
+            # ── 머리 방향 감지 ────────────────────────────────
+            if _face_detector is not None:
+                face_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                face_result = _face_detector.process(face_rgb)
+                if face_result.detections:
+                    bbox = face_result.detections[0].location_data.relative_bounding_box
+                    face_cx = bbox.xmin + bbox.width / 2.0
+                    offset = face_cx - _head_ref_x
+                    if abs(offset) < _HEAD_DEADZONE:
+                        _head_yaw_delta = 0.0
+                    else:
+                        sign = 1.0 if offset > 0 else -1.0
+                        _head_yaw_delta = (abs(offset) - _HEAD_DEADZONE) * _HEAD_SCALE * sign * -1.0
+                else:
+                    _head_yaw_delta *= 0.5   # 얼굴 미감지 시 감쇠
+
             # ── 로코모션 계산 (관절 매핑과 독립) ─────────────
             _loco_result: dict | None = None
             if _loco is not None:
@@ -779,8 +819,13 @@ def main():
                     _loco_result["speed"] = round(
                         min(_vel_ema * _VEL_SCALE, 2.0), 4
                     )
+                    # 머리 방향 제어 활성 시 yaw_delta 덮어쓰기
+                    if _face_detector is not None:
+                        _loco_result["yaw_delta"] = round(_head_yaw_delta, 3)
+
                     if frame_count % 30 == 0:
-                        print(f"[LOCO] vel_ema={_vel_ema:.2f}  speed={_loco_result['speed']:.4f}  valid={_loco_result['valid']}")
+                        print(f"[LOCO] vel_ema={_vel_ema:.2f}  speed={_loco_result['speed']:.4f}  "
+                              f"yaw={_loco_result.get('yaw_delta', 0):+.2f}  valid={_loco_result['valid']}")
 
             server.send_frame(
                 joints        = joints,
