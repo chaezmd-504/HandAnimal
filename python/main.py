@@ -805,23 +805,22 @@ def main():
             if _face_detector is not None:
                 _face_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 _faces = _face_detector.detectMultiScale(
-                    _face_gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
+                    _face_gray, scaleFactor=1.05, minNeighbors=2, minSize=(50, 50)
                 )
                 if len(_faces) > 0:
                     _fx, _fy, _fw, _fh = _faces[0]
                     _face_cx = (_fx + _fw / 2.0) / frame.shape[1]
                     _offset  = _face_cx - _head_ref_x
                     if abs(_offset) < _HEAD_DEADZONE:
-                        _head_yaw_delta = 0.0
+                        _target_yaw = 0.0
                     else:
                         _sign = 1.0 if _offset > 0 else -1.0
-                        _head_yaw_delta = (abs(_offset) - _HEAD_DEADZONE) * _HEAD_SCALE * _sign * -1.0
+                        _target_yaw = (abs(_offset) - _HEAD_DEADZONE) * _HEAD_SCALE * _sign * -1.0
+                    # EMA 스무딩 — 튀는 값 완화
+                    _head_yaw_delta = 0.6 * _target_yaw + 0.4 * _head_yaw_delta
                     if frame_count % 30 == 0:
                         print(f"[HEAD] cx={_face_cx:.3f}  offset={_offset:+.3f}  yaw={_head_yaw_delta:+.2f}")
-                else:
-                    _head_yaw_delta *= 0.5
-                    if frame_count % 30 == 0:
-                        print("[HEAD] 얼굴 미감지")
+                # 미감지 시: 이전 값 유지 (스터터 방지)
 
             # ── 로코모션 계산 (관절 매핑과 독립) ─────────────
             _loco_result: dict | None = None

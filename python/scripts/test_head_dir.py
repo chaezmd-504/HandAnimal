@@ -25,7 +25,7 @@ while True:
     h, w = frame.shape[:2]
     gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(
-        gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
+        gray, scaleFactor=1.05, minNeighbors=2, minSize=(50, 50)
     )
 
     yaw = 0.0
@@ -43,11 +43,16 @@ while True:
         cv2.circle(frame, (fx + fw//2, fy + fh//2), 5, (0, 220, 100), -1)
 
         if abs(offset) < HEAD_DEADZONE:
+            target_yaw = 0.0
+        else:
+            sign = 1.0 if offset > 0 else -1.0
+            target_yaw = (abs(offset) - HEAD_DEADZONE) * HEAD_SCALE * sign * -1.0
+        yaw = 0.6 * target_yaw + 0.4 * yaw
+
+        if abs(yaw) < 0.05:
             direction = "STRAIGHT"
             color = (180, 180, 180)
         else:
-            sign = 1.0 if offset > 0 else -1.0
-            yaw  = (abs(offset) - HEAD_DEADZONE) * HEAD_SCALE * sign * -1.0
             if yaw > 0:
                 direction = f"TURNING RIGHT  ({yaw:+.2f})"
                 color = (255, 160, 40)
