@@ -465,10 +465,10 @@ def main():
     _head_ref_x     = 0.5    # 캘리브레이션 후 기준 x (기본 화면 중앙)
 
     if args.head_dir and args.locomotion:
-        _face_detector = mp.solutions.face_detection.FaceDetection(
-            model_selection=0, min_detection_confidence=0.5
+        _face_detector = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         )
-        print("[INFO] 머리 방향 제어 활성화 (face_detection)")
+        print("[INFO] 머리 방향 제어 활성화 (Haar cascade face detection)")
 
     options = HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MODEL_PATH),
@@ -611,12 +611,16 @@ def main():
                             _prev_h_right = None
                             # 머리 방향: 캘리브 시점 얼굴 x를 기준으로 저장
                             if _face_detector is not None:
-                                _fr = _face_detector.process(
-                                    cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                                if _fr.detections:
-                                    _bb = _fr.detections[0].location_data.relative_bounding_box
-                                    _head_ref_x = _bb.xmin + _bb.width / 2.0
+                                _gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                                _faces = _face_detector.detectMultiScale(
+                                    _gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
+                                )
+                                if len(_faces) > 0:
+                                    _fx, _fy, _fw, _fh = _faces[0]
+                                    _head_ref_x = (_fx + _fw / 2.0) / frame.shape[1]
                                     print(f"[INFO] 머리 기준 x={_head_ref_x:.3f} 저장")
+                                else:
+                                    print("[WARN] 캘리브레이션 시 얼굴 미감지 — 기준 x=0.5 사용")
                             print("[INFO] 캘리브레이션 완료")
                             calib_done = True
                             # --no-window 모드: 캘리브 완료 후 창 닫기
@@ -796,11 +800,13 @@ def main():
 
             # ── 머리 방향 감지 ────────────────────────────────
             if _face_detector is not None:
-                face_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                face_result = _face_detector.process(face_rgb)
-                if face_result.detections:
-                    bbox = face_result.detections[0].location_data.relative_bounding_box
-                    face_cx = bbox.xmin + bbox.width / 2.0
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = _face_detector.detectMultiScale(
+                    gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
+                )
+                if len(faces) > 0:
+                    fx, fy, fw, fh = faces[0]
+                    face_cx = (fx + fw / 2.0) / frame.shape[1]   # 0~1 정규화
                     offset = face_cx - _head_ref_x
                     if abs(offset) < _HEAD_DEADZONE:
                         _head_yaw_delta = 0.0
