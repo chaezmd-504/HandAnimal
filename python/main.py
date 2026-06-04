@@ -472,7 +472,7 @@ def main():
     print(f"[INFO] 캘리브레이션 시작 — {_CALIB_DURATION:.0f}초 카운트다운")
 
     # ── 캘리브레이션 상태 ──────────────────────────────────────
-    calib_done            = args.no_window   # 창 없으면 캘리브 스킵
+    calib_done            = False            # --no-window여도 캘리브레이션은 항상 실행
     calib_start           = time.time()
     calib_retry_until     = 0.0             # 재시도 메시지 표시 종료 시각
     calib_reject_msg      = ""              # g* 불일치 거부 메시지
@@ -505,7 +505,7 @@ def main():
                 ):
                     side  = handedness_list[0].category_name.lower()
                     color = HAND_COLOR.get(side, (0, 255, 0))
-                    if not args.no_window:
+                    if not args.no_window or not calib_done:
                         draw_landmarks(frame, landmarks, h, w, color=color)
 
                     # 이미지 좌표: occlusion 핸들러 + 2D DOF 계산용으로 캡처
@@ -593,6 +593,9 @@ def main():
 
                             print("[INFO] 캘리브레이션 완료")
                             calib_done = True
+                            # --no-window 모드: 캘리브 완료 후 창 닫기
+                            if args.no_window:
+                                cv2.destroyAllWindows()
                     else:
                         # 손 미감지 → 카운트다운 재시작
                         calib_start       = time.time()
@@ -600,15 +603,15 @@ def main():
                         calib_reject_msg  = ""
                         print("[WARN] 손 미감지. 캘리브레이션 재시도...")
 
-                if not args.no_window:
-                    _draw_calib_overlay(
-                        frame,
-                        max(0.0, remaining),
-                        bool(hands_angles),
-                        retry=(now < calib_retry_until),
-                        reject_msg=calib_reject_msg if now < calib_retry_until else "",
-                    )
-                    cv2.imshow("HandAvatar", frame)
+                # 캘리브레이션 중엔 --no-window여도 창 표시
+                _draw_calib_overlay(
+                    frame,
+                    max(0.0, remaining),
+                    bool(hands_angles),
+                    retry=(now < calib_retry_until),
+                    reject_msg=calib_reject_msg if now < calib_retry_until else "",
+                )
+                cv2.imshow("HandAvatar", frame)
 
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):
