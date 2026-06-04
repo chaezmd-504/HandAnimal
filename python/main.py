@@ -376,10 +376,10 @@ def main():
     _TRIGGER_HOLD      = 10              # 트리거 발동에 필요한 연속 프레임 수 (노이즈 오발동 방지)
     _anim_state        = "normal"         # "normal" | "trigger"
     _trigger_anim      = None
-    _trigger_frames    = 0                # 남은 트리거 프레임 수
-    _trigger_cursor    = 0.0             # 키프레임 재생 위치
+    _trigger_end_time: float = 0.0       # 트리거 애니메이션 종료 예정 시각 (time.time())
     _cooldown_frames   = 0
     _trigger_hold_cnt: dict[str, int] = {}  # {anim: 조건 유지 프레임 수}
+    _prev_hands_dof:   dict = {}          # 스냅 트리거용 이전 프레임 DOF 값
 
     # 트리거 애니메이션별 피크 프레임 관절 (캘리브레이션 후 채워짐)
     _trigger_peak_joints: dict[str, dict] = {}   # {anim: {jid: {x,y,z}}}
@@ -425,7 +425,9 @@ def main():
         else:
             print(f"[WARN] 트리거 규칙 없음. locomotion_config.json의 '{args.animal}'.triggers 를 확인하세요.")
 
-        print(f"[INFO] blend 설정: base_anim='{args.base_anim}'")
+        # 애니메이션 FPS (트리거 duration 계산용) — locomotion_config.json 의 anim_fps 사용
+        _anim_fps: float = float(_loco_cfg.get(args.animal, {}).get("anim_fps", 30.0))
+        print(f"[INFO] blend 설정: base_anim='{args.base_anim}'  anim_fps={_anim_fps}")
 
     # skeleton ROM 클리핑용
     _skel_path = os.path.join(POSES_DIR, f"{args.animal}.json")
@@ -458,22 +460,28 @@ def main():
     server.start()
 
     # ── 머리 방향 제어 초기화 ─────────────────────────────────
-    _face_detector   = None
-    _head_yaw_delta: float = 0.0
-    _HEAD_DEADZONE   = 0.12   # ±12% 이내 직진 (jitter 흡수)
-    _HEAD_SCALE      = 4.0    # x offset → °/frame
-    _head_ref_x      = 0.5
-    _head_miss_cnt   = 0      # 연속 미감지 프레임 수
-    _HEAD_MISS_RESET = 8      # 이 프레임 이상 미감지 시 yaw=0 리셋
+    _face_detector    = None   # MediaPipe FaceDetector 인스턴스
+    _head_yaw_delta:  float = 0.0
+    _HEAD_DEADZONE    = 0.05   # yaw_ratio deadzone (눈 간격 대비 5%)
+    _HEAD_SCALE       = 5.0    # yaw_ratio → °/frame (줄이려면 낮추세요)
+    _head_ref_yaw     = 0.0    # 기준 yaw_ratio (첫 감지 시 자동 설정)
+    _head_ref_set     = False  # 기준값 설정 여부
+    _head_miss_cnt    = 0      # 연속 미감지 프레임 수
+    _HEAD_MISS_RESET  = 8      # 이 프레임 이상 미감지 시 yaw=0 리셋
 
     if args.head_dir and args.locomotion:
-        _cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-        _face_detector = cv2.CascadeClassifier(_cascade_path)
-        if _face_detector.empty():
-            print(f"[ERROR] Haar cascade 로드 실패: {_cascade_path}")
-            _face_detector = None
-        else:
-            print(f"[INFO] 머리 방향 제어 활성화 — cascade: {_cascade_path}")
+        from tracking.face_tracker import download_face_model, FACE_MODEL_PATH as _FACE_MODEL_PATH
+        from tracking.face_tracker import compute_face_yaw as _compute_face_yaw
+        download_face_model()
+        _FaceDetector = mp.tasks.vision.FaceDetector
+        _FaceDetectorOptions = mp.tasks.vision.FaceDetectorOptions
+        _fd_opts = _FaceDetectorOptions(
+            base_options=mp.tasks.BaseOptions(model_asset_path=_FACE_MODEL_PATH),
+            running_mode=VisionRunningMode.VIDEO,
+            min_detection_confidence=0.5,
+        )
+        _face_detector = _FaceDetector.create_from_options(_fd_opts)
+        print("[INFO] 머리 회전 감지 활성화 (MediaPipe FaceDetector — 코/눈 yaw 비율)")
 
     options = HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MODEL_PATH),
@@ -614,18 +622,20 @@ def main():
 
                             _vel_ema      = 0.0
                             _prev_h_right = None
-                            # 머리 방향: 캘리브 시점 얼굴 x를 기준으로 저장
+                            # 머리 방향: 캘리브 시점 yaw 비율을 기준으로 저장
+                            # 감지 실패 시 _head_ref_set=False 유지 → 메인 루프 첫 감지 시 자동 설정
                             if _face_detector is not None:
-                                _gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                                _faces = _face_detector.detectMultiScale(
-                                    _gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
-                                )
-                                if len(_faces) > 0:
-                                    _fx, _fy, _fw, _fh = _faces[0]
-                                    _head_ref_x = (_fx + _fw / 2.0) / frame.shape[1]
-                                    print(f"[INFO] 머리 기준 x={_head_ref_x:.3f} 저장")
+                                _fd_calib = _face_detector.detect_for_video(mp_image, ts_ms)
+                                if _fd_calib.detections:
+                                    _yaw_r, _ed = _compute_face_yaw(_fd_calib.detections[0])
+                                    if _ed > 1e-4:
+                                        _head_ref_yaw = _yaw_r
+                                        _head_ref_set = True
+                                        print(f"[INFO] 머리 기준 yaw_ratio={_head_ref_yaw:.3f} 저장")
+                                    else:
+                                        print("[WARN] 캘리브레이션 시 눈 간격 너무 좁음 — 메인 루프 첫 감지 시 자동 설정")
                                 else:
-                                    print("[WARN] 캘리브레이션 시 얼굴 미감지 — 기준 x=0.5 사용")
+                                    print("[WARN] 캘리브레이션 시 얼굴 미감지 — 메인 루프 첫 감지 시 자동 설정")
                             print("[INFO] 캘리브레이션 완료")
                             calib_done = True
                             # --no-window 모드: 캘리브 완료 후 창 닫기
@@ -655,6 +665,7 @@ def main():
 
             # ── 정상 동작 단계 ────────────────────────────────
             hand_detected = bool(hands_angles)
+            _in_trigger_this_frame = False   # 이번 프레임 트리거 재생 여부 (loco speed 계산용)
             if hand_detected:
                 try:
                     if args.mapping == "blend":
@@ -681,80 +692,102 @@ def main():
                         if _cooldown_frames > 0:
                             _cooldown_frames -= 1
 
-                        # ── 트리거 진행 중: 키프레임 직접 재생 ───────
-                        if _anim_state == "trigger":
-                            joints = engine.get_sequential_pose(
-                                _trigger_anim, _trigger_cursor
-                            )
-                            _trigger_cursor += 1.0
-                            _trigger_frames -= 1
-                            if _trigger_frames <= 0:
-                                _anim_state      = "normal"
-                                _trigger_anim    = None
-                                _cooldown_frames = 30
-                                print("[BLEND] → normal (trigger ended)")
+                        # ── 트리거 종료 체크 (시간 기반) ─────────────
+                        if _anim_state == "trigger" and time.time() >= _trigger_end_time:
+                            _anim_state      = "normal"
+                            _trigger_anim    = None
+                            _cooldown_frames = 30
+                            _vel_ema         = 0.0
+                            print("[BLEND] → normal (trigger ended)")
 
-                        else:
-                            # ── Walk ROM direct mapping (트리거 비교 전에 먼저 계산) ──
-                            _sk = _walk_skeleton if _walk_skeleton else _skeleton
-                            joints_d = _engine_direct.transform_clamped(hands_angles, _sk)
-                            joints_d = _float_joints_to_xyz(joints_d, _engine_direct.current_animal)
-                            _DEAD = 3.0
-                            for _jid in joints_d:
-                                _v = joints_d[_jid]
-                                joints_d[_jid] = {
-                                    ax: (v if abs(v) >= _DEAD else 0.0)
-                                    for ax, v in _v.items()
-                                }
-                            joints = joints_d
+                        # ── Walk ROM direct mapping (항상 실행 — trigger 중엔 blend용) ──
+                        _sk = _walk_skeleton if _walk_skeleton else _skeleton
+                        joints_d = _engine_direct.transform_clamped(hands_angles, _sk)
+                        joints_d = _float_joints_to_xyz(joints_d, _engine_direct.current_animal)
+                        _DEAD = 3.0
+                        for _jid in joints_d:
+                            _v = joints_d[_jid]
+                            joints_d[_jid] = {
+                                ax: (v if abs(v) >= _DEAD else 0.0)
+                                for ax, v in _v.items()
+                            }
+                        joints = joints_d
+                        _in_trigger_this_frame = (_anim_state == "trigger")
 
-                            # ── 트리거 감지 (DOF delta 직접 비교 + hold) ──
-                            # locomotion_config의 delta = 캘리브 기준 대비 필요 DOF 변화량
-                            # _TRIG_FRACTION 비율만큼 변화하면 발동 (기본 65%)
-                            if _cooldown_frames == 0 and _trigger_rules and _trigger_ref:
-                                _fired_anim = None
-                                for _aname, _rule in _trigger_rules.items():
-                                    _dof          = _rule["dof"]
-                                    _hand         = _rule["hand"]
-                                    _delta_needed = _rule["delta"] * _TRIG_FRACTION
-                                    _ref_v = _trigger_ref.get(_hand, {}).get(_dof, 0.0)
-                                    _cur_v = hands_angles.get(_hand, {}).get(_dof, 0.0)
-                                    _actual = _cur_v - _ref_v
-                                    _ok = (_actual >= _delta_needed) if _delta_needed >= 0 \
-                                          else (_actual <= _delta_needed)
-                                    if _ok:
-                                        _trigger_hold_cnt[_aname] = _trigger_hold_cnt.get(_aname, 0) + 1
-                                        if _trigger_hold_cnt[_aname] >= _TRIGGER_HOLD:
-                                            _fired_anim = _aname
-                                            _trigger_hold_cnt[_aname] = 0
-                                            break
-                                    else:
-                                        _trigger_hold_cnt[_aname] = 0
-                                if _fired_anim is not None:
-                                    _n_kf = engine.anim_frame_count(_fired_anim)
-                                    _anim_state     = "trigger"
-                                    _trigger_anim   = _fired_anim
-                                    _trigger_frames = _n_kf - 1
-                                    _trigger_cursor = 1.0
-                                    print(f"[BLEND] → trigger: {_fired_anim}  frames={_n_kf}")
+                        # ── 트리거 감지 (normal + 쿨다운 없을 때만) ──
+                        # snap_delta : 1프레임 DOF 변화량 기준 → 즉시 발동 (확! 동작)
+                        # delta+hold : 누적 변화량 기준 → N프레임 유지 후 발동 (기존 방식)
+                        if _anim_state == "normal" and _cooldown_frames == 0 and _trigger_rules and _trigger_ref:
+                            _fired_anim = None
+                            for _aname, _rule in _trigger_rules.items():
+                                _dof          = _rule["dof"]
+                                _hand         = _rule["hand"]
+                                _delta_needed = _rule["delta"] * _TRIG_FRACTION
+                                _ref_v  = _trigger_ref.get(_hand, {}).get(_dof, 0.0)
+                                _cur_v  = hands_angles.get(_hand, {}).get(_dof, 0.0)
+                                _actual = _cur_v - _ref_v
+                                _ok = (_actual >= _delta_needed) if _delta_needed >= 0 \
+                                      else (_actual <= _delta_needed)
 
-                            # ── 트리거 진행도 디버그 로그 ────────────
-                            if args.dist_log > 0 and frame_count % args.dist_log == 0 and _trigger_rules and _trigger_ref:
-                                _prog_strs = []
-                                for _aname, _rule in _trigger_rules.items():
-                                    _dof  = _rule["dof"]
-                                    _hand = _rule["hand"]
-                                    _dn   = _rule["delta"] * _TRIG_FRACTION
-                                    _ref_v = _trigger_ref.get(_hand, {}).get(_dof, 0.0)
-                                    _cur_v = hands_angles.get(_hand, {}).get(_dof, 0.0)
-                                    _actual = _cur_v - _ref_v
-                                    _pct = (_actual / _dn * 100) if _dn != 0 else 0.0
-                                    _hold = _trigger_hold_cnt.get(_aname, 0)
-                                    _prog_strs.append(
-                                        f"{_aname}({_hand}.{_dof})={_actual:+.1f}°/{_dn:.1f}°"
-                                        + (f"[{_hold}f]" if _hold > 0 else "")
-                                    )
-                                print(f"[TRIG] " + "  ".join(_prog_strs))
+                                # ① 스냅 트리거: 1프레임 변화량이 snap_delta 이상이면 즉시 발동
+                                _snap_delta = _rule.get("snap_delta", None)
+                                _snapped = False
+                                if _snap_delta is not None and _prev_hands_dof:
+                                    _prev_v      = _prev_hands_dof.get(_hand, {}).get(_dof, _cur_v)
+                                    _frame_delta = _cur_v - _prev_v
+                                    _snapped = (_frame_delta >= _snap_delta) if _rule["delta"] >= 0 \
+                                               else (_frame_delta <= -_snap_delta)
+                                    if _snapped and args.dist_log > 0:
+                                        print(f"[SNAP] {_aname}: {_hand}.{_dof}  "
+                                              f"Δ/frame={_frame_delta:+.1f}°  "
+                                              f"threshold={_snap_delta:.1f}°")
+
+                                # ② hold 트리거: 기존 누적 방식
+                                if _ok:
+                                    _trigger_hold_cnt[_aname] = _trigger_hold_cnt.get(_aname, 0) + 1
+                                else:
+                                    _trigger_hold_cnt[_aname] = 0
+
+                                if _snapped or _trigger_hold_cnt.get(_aname, 0) >= _TRIGGER_HOLD:
+                                    _fired_anim = _aname
+                                    _trigger_hold_cnt[_aname] = 0
+                                    break
+
+                            if _fired_anim is not None:
+                                # Python duration: locomotion_config 명시값 우선, 없으면 샘플수/fps 근사
+                                # → Unity는 AnimationClip.length 로 실제 duration 을 자동 사용
+                                #   Python 값은 speed=0 게이트 타이머용 근사치로만 쓰임
+                                _rule_dur = _trigger_rules[_fired_anim].get("duration", None)
+                                if _rule_dur:
+                                    _duration = float(_rule_dur)
+                                else:
+                                    _n_kf     = engine.anim_frame_count(_fired_anim)
+                                    _duration = _n_kf / _anim_fps
+                                server.send_trigger(_fired_anim, _duration)
+                                _anim_state      = "trigger"
+                                _trigger_anim    = _fired_anim
+                                _trigger_end_time = time.time() + _duration
+                                _vel_ema         = 0.0
+                                _prev_h_right    = None
+                                print(f"[BLEND] → trigger: {_fired_anim}  "
+                                      f"kf={_n_kf}  duration={_duration:.2f}s")
+
+                        # ── 트리거 진행도 디버그 로그 ────────────
+                        if args.dist_log > 0 and frame_count % args.dist_log == 0 and _trigger_rules and _trigger_ref:
+                            _prog_strs = []
+                            for _aname, _rule in _trigger_rules.items():
+                                _dof  = _rule["dof"]
+                                _hand = _rule["hand"]
+                                _dn   = _rule["delta"] * _TRIG_FRACTION
+                                _ref_v = _trigger_ref.get(_hand, {}).get(_dof, 0.0)
+                                _cur_v = hands_angles.get(_hand, {}).get(_dof, 0.0)
+                                _actual = _cur_v - _ref_v
+                                _hold = _trigger_hold_cnt.get(_aname, 0)
+                                _prog_strs.append(
+                                    f"{_aname}({_hand}.{_dof})={_actual:+.1f}°/{_dn:.1f}°"
+                                    + (f"[{_hold}f]" if _hold > 0 else "")
+                                )
+                            print(f"[TRIG] " + "  ".join(_prog_strs))
                     else:
                         joints = engine.transform_clamped(hands_angles, _skeleton)
                         # direct 모드: float → {x,y,z} 변환 (애니메이션 데이터에서 축 자동 계산)
@@ -766,6 +799,9 @@ def main():
                         for _bj in _body_mapping:
                             if _bj not in joints:
                                 joints[_bj] = {"x": 0.0, "y": 0.0, "z": 0.0}
+
+                    # 스냅 트리거용 이전 프레임 DOF 저장
+                    _prev_hands_dof = {s: dict(d) for s, d in hands_angles.items()}
                 except Exception as e:
                     print(f"[WARN] 변환 오류: {e}")
                     joints = {}
@@ -803,26 +839,31 @@ def main():
                 if args.mapping == "blend":
                     _vel_ema *= 0.7
 
-            # ── 머리 방향 감지 ────────────────────────────────
+            # ── 머리 방향 감지 (FaceDetector yaw) ───────────────
             if _face_detector is not None:
-                _face_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                _faces = _face_detector.detectMultiScale(
-                    _face_gray, scaleFactor=1.05, minNeighbors=2, minSize=(50, 50)
-                )
-                if len(_faces) > 0:
+                _fd_result = _face_detector.detect_for_video(mp_image, ts_ms)
+                if _fd_result.detections:
                     _head_miss_cnt = 0
-                    _fx, _fy, _fw, _fh = _faces[0]
-                    _face_cx = (_fx + _fw / 2.0) / frame.shape[1]
-                    _offset  = _face_cx - _head_ref_x
-                    if abs(_offset) < _HEAD_DEADZONE:
-                        _target_yaw = 0.0
-                    else:
-                        _sign = 1.0 if _offset > 0 else -1.0
-                        _target_yaw = (abs(_offset) - _HEAD_DEADZONE) * _HEAD_SCALE * _sign * -1.0
-                    # 강한 EMA — jitter 억제
-                    _head_yaw_delta = 0.3 * _target_yaw + 0.7 * _head_yaw_delta
-                    if frame_count % 30 == 0:
-                        print(f"[HEAD] cx={_face_cx:.3f}  offset={_offset:+.3f}  yaw={_head_yaw_delta:+.2f}")
+                    _yaw_r, _ed = _compute_face_yaw(_fd_result.detections[0])
+                    if _ed > 1e-4:
+                        # 첫 감지 시 자동으로 기준값 설정 (캘리브레이션에서 실패한 경우)
+                        if not _head_ref_set:
+                            _head_ref_yaw = _yaw_r
+                            _head_ref_set = True
+                            _head_yaw_delta = 0.0
+                            print(f"[HEAD] 기준 yaw 자동 설정={_head_ref_yaw:.3f}")
+
+                        _offset = _yaw_r - _head_ref_yaw
+                        if abs(_offset) < _HEAD_DEADZONE:
+                            _target_yaw = 0.0
+                        else:
+                            _sign = 1.0 if _offset > 0 else -1.0
+                            _target_yaw = (abs(_offset) - _HEAD_DEADZONE) * _HEAD_SCALE * _sign
+                        # 강한 EMA — jitter 억제
+                        _head_yaw_delta = 0.3 * _target_yaw + 0.7 * _head_yaw_delta
+                        if frame_count % 30 == 0:
+                            print(f"[HEAD] yaw_r={_yaw_r:+.3f}  ref={_head_ref_yaw:+.3f}  "
+                                  f"offset={_offset:+.3f}  yaw_delta={_head_yaw_delta:+.2f}")
                 else:
                     _head_miss_cnt += 1
                     if _head_miss_cnt >= _HEAD_MISS_RESET:
@@ -834,16 +875,21 @@ def main():
                 _loco_result = _loco.update(hands_angles, hand_detected, engine)
                 # blend 모드: cursor 기반 speed → velocity 기반 speed로 교체
                 if args.mapping == "blend" and _loco_result is not None:
-                    _loco_result["speed"] = round(
-                        min(_vel_ema * _VEL_SCALE, 2.0), 4
-                    )
+                    # 트리거 재생 중(이번 프레임 포함 마지막 프레임까지)엔 이동 없음
+                    if _anim_state == "trigger" or _in_trigger_this_frame:
+                        _loco_result["speed"] = 0.0
+                    else:
+                        _loco_result["speed"] = round(
+                            min(_vel_ema * _VEL_SCALE, 2.0), 4
+                        )
                     # 머리 방향 제어 활성 시 yaw_delta 덮어쓰기
                     if _face_detector is not None:
                         _loco_result["yaw_delta"] = round(_head_yaw_delta, 3)
 
                     if frame_count % 30 == 0:
                         print(f"[LOCO] vel_ema={_vel_ema:.2f}  speed={_loco_result['speed']:.4f}  "
-                              f"yaw={_loco_result.get('yaw_delta', 0):+.2f}  valid={_loco_result['valid']}")
+                              f"yaw={_loco_result.get('yaw_delta', 0):+.2f}  "
+                              f"state={_anim_state}  valid={_loco_result['valid']}")
 
             server.send_frame(
                 joints        = joints,
@@ -879,7 +925,8 @@ def main():
                 _hud_y = 145 if _loco_result is not None else 125
                 if args.mapping == "blend":
                     if _anim_state == "trigger":
-                        state_txt   = f"TRIGGER: {_trigger_anim}  [{_trigger_frames}f]"
+                        _trig_remain = max(0.0, _trigger_end_time - time.time())
+                        state_txt   = f"TRIGGER: {_trigger_anim}  [{_trig_remain:.1f}s]"
                         state_color = (0, 100, 255)
                     else:
                         state_txt   = f"normal  vel={_vel_ema:.2f}"
@@ -911,6 +958,8 @@ def main():
                 break
 
     cap.release()
+    if _face_detector is not None:
+        _face_detector.close()
     if not args.no_window:
         cv2.destroyAllWindows()
     server.stop()

@@ -1,11 +1,15 @@
 // AnimalController.cs
+// [수정 2026-06]
+//   Walk 애니메이션 통합:
+//   - 손 감지 + 실제 이동 중일 때만 Walk 애니메이션 재생 (locomotion.IsMoving 참조)
+//   - locomotion 연결 없으면 손 감지 시 항상 Walk 재생
+//   - LateUpdate에서 Walk 포즈 위에 손 입력 블렌딩 (walkHandBlend)
+//   - 손 없거나 정지 시 Animator 비활성화 → Direct 매핑으로 폴백
+//
 // [수정 2026-04]
-//   핵심 버그 수정:
-//   1. Rest-pose 보존: Awake에서 초기 localRotation 저장,
-//      이후 회전은 restPose * Quaternion.Euler(delta) 방식으로 적용
-//      → 기존: Quaternion.Euler(angle)로 절대 회전 세팅 → 다리 축 처짐
-//   2. ROM 클램핑: 관절 타입(_base/_mid/_tip)별 각도 한계 적용
-//   3. 다축 회전 지원 + 관절명 패턴 축 자동 추론 유지
+//   1. Rest-pose 보존: restPose * Quaternion.Euler(delta) 방식으로 적용
+//   2. ROM 클램핑
+//   3. 다축 회전 지원
 
 using System;
 using System.Collections.Generic;
@@ -28,7 +32,6 @@ public class AnimalController : MonoBehaviour
         public float minAngle = -30f;
         public float maxAngle =  30f;
 
-        // 런타임 전용 — Inspector에 노출 안 함
         [NonSerialized] public Quaternion restRotation;
     }
 
@@ -41,16 +44,34 @@ public class AnimalController : MonoBehaviour
     [Header("Idle 애니메이션")]
     [SerializeField] private Animator idleAnimator;
 
+    [Header("Walk 애니메이션")]
+    [Tooltip("이동 중 재생할 Walk 상태 이름. 비워두면 항상 Direct 매핑만 사용.")]
+    [SerializeField] private string walkAnimName = "Walk";
+    [Tooltip("Walk 중 손 입력 반영 비율 (0=애니메이션만, 1=손만)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float walkHandBlend = 0f;
+
+    [Header("트리거 중 손 블렌딩")]
+    [Tooltip("트리거 애니메이션 재생 중 손 입력 반영 비율")]
+    [Range(0f, 1f)]
+    [SerializeField] private float triggerHandBlend = 0.3f;
+
+    // Walk 활성 여부 (WebSocketClient에서 locomotion.speed 기반으로 설정)
+    private bool _walkActive = false;
+
     [Header("축 / ROM 자동 채우기")]
-    [Tooltip("true = Inspector 하단 버튼으로 skeleton.json 에서 축/ROM 자동 세팅 필요.\n" +
-             "AnimPoseExporter 로 skeleton.json 을 먼저 생성한 뒤 Editor 버튼을 누르세요.")]
     [SerializeField] public bool autoInferAxes = true;
 
     private Dictionary<string, JointEntry> _jointMap;
     private Dictionary<string, Vector3> _targetAngles = new Dictionary<string, Vector3>();
     private bool _isIdle = true;
     private int _applyCount = 0;
-    private float _triggerTimer = 0f;   // 0이면 일반 모드, >0이면 트리거 애니메이션 재생 중
+    private float _triggerTimer = 0f;
+
+    private bool UseWalkAnim => !string.IsNullOrEmpty(walkAnimName) && idleAnimator != null;
+
+    // 현재 Walk 모드인지 (Animator 활성 + Walk 재생 중)
+    private bool _inWalkMode = false;
 
     private void Awake()
     {
@@ -59,32 +80,18 @@ public class AnimalController : MonoBehaviour
         {
             if (string.IsNullOrEmpty(entry.jointName) || entry.jointTransform == null)
                 continue;
-
-            // ── 핵심: Rest-pose 저장 ──────────────────────────────
-            // 이후 모든 회전은 이 값을 기준으로 delta 적용
             entry.restRotation = entry.jointTransform.localRotation;
-
             _jointMap[entry.jointName] = entry;
         }
 
         if (autoInferAxes)
-            Debug.LogWarning("[AnimalController] autoInferAxes=true — Inspector 하단 버튼으로 skeleton.json 에서 축/ROM을 채워주세요.");
+            Debug.LogWarning("[AnimalController] autoInferAxes=true — skeleton.json 축/ROM을 채워주세요.");
 
-        Debug.Log($"[AnimalController] 관절 {_jointMap.Count}개 로드됨");
-        foreach (var kv in _jointMap)
-        {
-            var e = kv.Value;
-            string axes = $"{(e.axisX?"X":"")}{(e.axisY?"Y":"")}{(e.axisZ?"Z":"")}";
-            if (string.IsNullOrEmpty(axes)) axes = "none";
-            Debug.Log($"  {kv.Key}: 축={axes}  ROM=[{e.minAngle:F0}°, {e.maxAngle:F0}°]  " +
-                      $"rest=({e.restRotation.x:F3},{e.restRotation.y:F3}," +
-                      $"{e.restRotation.z:F3},{e.restRotation.w:F3})");
-        }
+        Debug.Log($"[AnimalController] 관절 {_jointMap.Count}개  walkAnimName='{walkAnimName}'");
     }
 
     private void Update()
     {
-        // 트리거 애니메이션 재생 중: 타이머만 감소, 관절 직접 제어 스킵
         if (_triggerTimer > 0f)
         {
             _triggerTimer -= Time.deltaTime;
@@ -93,6 +100,10 @@ public class AnimalController : MonoBehaviour
 
         if (_isIdle) return;
 
+        // Walk 모드 (Animator 활성): Direct 뼈 제어 스킵 (LateUpdate에서 blend)
+        if (_inWalkMode) return;
+
+        // Direct 모드: Update에서 직접 뼈 회전
         foreach (var kv in _targetAngles)
         {
             if (!_jointMap.TryGetValue(kv.Key, out var entry)) continue;
@@ -105,43 +116,99 @@ public class AnimalController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Python blend 모드 트리거 이벤트 수신 시 호출.
-    /// Animator로 해당 애니메이션을 재생하고 duration 동안 관절 직접 제어를 중단한다.
-    /// </summary>
-    public void PlayTriggerAnim(string animName, float duration)
+    private void LateUpdate()
+    {
+        float blend;
+        if (_triggerTimer > 0f)
+            blend = triggerHandBlend;
+        else if (_inWalkMode && !_isIdle)
+            blend = walkHandBlend;
+        else
+            return;
+
+        if (blend <= 0f) return;
+        if (_targetAngles.Count == 0) return;
+
+        float t = Mathf.Clamp01(blend * lerpSpeed * Time.deltaTime);
+        foreach (var kv in _targetAngles)
+        {
+            if (!_jointMap.TryGetValue(kv.Key, out var entry)) continue;
+            if (entry.jointTransform == null) continue;
+
+            Quaternion animPose = entry.jointTransform.localRotation;
+            Quaternion handPose = BuildRotation(entry, kv.Value);
+            entry.jointTransform.localRotation = Quaternion.Slerp(animPose, handPose, t);
+        }
+    }
+
+    public void PlayTriggerAnim(string animName, float durationHint)
     {
         if (idleAnimator == null)
         {
             Debug.LogWarning("[AnimalController] PlayTriggerAnim: idleAnimator가 없습니다.");
             return;
         }
+
+        float clipDuration = durationHint;
+        var clips = idleAnimator.runtimeAnimatorController?.animationClips;
+        if (clips != null)
+        {
+            foreach (var clip in clips)
+            {
+                if (clip.name == animName) { clipDuration = clip.length; break; }
+            }
+        }
+
         idleAnimator.enabled = true;
         idleAnimator.Play(animName, 0, 0f);
-        _triggerTimer = duration;
-        _isIdle = true;   // 타이머 종료 후 ApplyJoints가 restRotation을 재캡처하도록
-        Debug.Log($"[AnimalController] 트리거 재생: {animName}  ({duration:F1}s)");
+        _triggerTimer  = clipDuration;
+        _isIdle        = true;
+        _inWalkMode    = false;
+        Debug.Log($"[AnimalController] 트리거 재생: {animName}  ({clipDuration:F2}s)");
     }
 
     public void ApplyJoints(Dictionary<string, JointRotation> joints)
     {
-        if (_triggerTimer > 0f) return;   // 트리거 재생 중 → 무시
+        if (_triggerTimer > 0f)
+        {
+            foreach (var kv in joints)
+                _targetAngles[kv.Key] = new Vector3(kv.Value.x, kv.Value.y, kv.Value.z);
+            return;
+        }
 
-        bool wasIdle = _isIdle;
+        bool wasIdle  = _isIdle;
         _isIdle = false;
 
-        if (idleAnimator != null && idleAnimator.enabled)
-        {
-            idleAnimator.enabled = false;
+        bool shouldWalk = UseWalkAnim && _walkActive;
 
-            // 첫 전환 시 Animator가 적용한 Idle 포즈를 restRotation으로 재캡처
-            // (Awake에서는 Animator가 아직 포즈를 적용하기 전이라 T-포즈 기준이 됨)
-            if (wasIdle)
+        if (idleAnimator != null)
+        {
+            if (shouldWalk)
             {
-                foreach (var entry in _jointMap.Values)
-                    if (entry.jointTransform != null)
-                        entry.restRotation = entry.jointTransform.localRotation;
-                Debug.Log("[AnimalController] restRotation을 Idle 포즈 기준으로 재캡처");
+                // Walk 모드: Animator 켜고 Walk 재생
+                if (!idleAnimator.enabled) idleAnimator.enabled = true;
+                var info = idleAnimator.GetCurrentAnimatorStateInfo(0);
+                if (!info.IsName(walkAnimName))
+                {
+                    idleAnimator.Play(walkAnimName);
+                    if (!_inWalkMode) Debug.Log($"[AnimalController] Walk 시작: '{walkAnimName}'");
+                }
+                _inWalkMode = true;
+            }
+            else
+            {
+                // Direct 모드: Animator 끔
+                if (idleAnimator.enabled) idleAnimator.enabled = false;
+
+                if (_inWalkMode || wasIdle)
+                {
+                    // Walk→Direct 전환 시 restRotation 재캡처
+                    foreach (var entry in _jointMap.Values)
+                        if (entry.jointTransform != null)
+                            entry.restRotation = entry.jointTransform.localRotation;
+                    Debug.Log("[AnimalController] Direct 모드: restRotation 재캡처");
+                }
+                _inWalkMode = false;
             }
         }
 
@@ -151,9 +218,8 @@ public class AnimalController : MonoBehaviour
         _applyCount++;
         if (_applyCount <= 5)
         {
-            var sbApplied  = new System.Text.StringBuilder();
-            var sbMissing  = new System.Text.StringBuilder();
-
+            var sbApplied = new System.Text.StringBuilder();
+            var sbMissing = new System.Text.StringBuilder();
             foreach (var kv in joints)
             {
                 if (_jointMap.ContainsKey(kv.Key))
@@ -161,81 +227,56 @@ public class AnimalController : MonoBehaviour
                 else
                     sbMissing.Append($"{kv.Key} ");
             }
-
             Debug.Log($"[AnimalController] ApplyJoints #{_applyCount}\n" +
-                      $"  ✅ 적용됨 ({CountApplied(joints)}개): {sbApplied}\n" +
-                      $"  ❌ Transform 없음 ({CountMissing(joints)}개): {sbMissing}");
+                      $"  ✅ ({CountApplied(joints)}개): {sbApplied}\n" +
+                      $"  ❌ ({CountMissing(joints)}개): {sbMissing}");
         }
     }
 
     private int CountApplied(Dictionary<string, JointRotation> joints)
-    {
-        int n = 0;
-        foreach (var k in joints.Keys) if (_jointMap.ContainsKey(k)) n++;
-        return n;
-    }
+    { int n = 0; foreach (var k in joints.Keys) if (_jointMap.ContainsKey(k)) n++; return n; }
 
     private int CountMissing(Dictionary<string, JointRotation> joints)
+    { int n = 0; foreach (var k in joints.Keys) if (!_jointMap.ContainsKey(k)) n++; return n; }
+
+    /// <summary>WebSocketClient에서 locomotion.speed &gt; 0 여부를 전달해 Walk 재생 제어.</summary>
+    public void SetWalkActive(bool active)
     {
-        int n = 0;
-        foreach (var k in joints.Keys) if (!_jointMap.ContainsKey(k)) n++;
-        return n;
+        _walkActive = active;
     }
 
     public void SetIdle()
     {
-        if (_triggerTimer > 0f) return;   // 트리거 재생 중 → 무시
+        if (_triggerTimer > 0f) return;
         if (_isIdle) return;
         _isIdle = true;
-        // 마지막 포즈 유지 — Idle 애니메이션 재생 안 함
+
+        if (idleAnimator != null && idleAnimator.enabled)
+            idleAnimator.enabled = false;
+
+        _inWalkMode = false;
     }
 
-    /// <summary>
-    /// Rest-pose 기준 delta 회전을 적용한 Quaternion 반환.
-    ///
-    /// 계산:
-    ///   1. angle을 ROM [minAngle, maxAngle]으로 클램핑
-    ///   2. delta = Quaternion.Euler(clampedAngle * axis * sign)
-    ///   3. result = restRotation * delta
-    ///
-    /// restRotation을 곱하는 이유:
-    ///   본이 프리팹에서 가지는 초기 쿼터니언(비-identity)을 보존하면서
-    ///   그 위에 손가락 각도만큼의 추가 회전을 얹는 구조.
-    ///   → 기존 절대 Euler 방식의 "축 처짐" 버그 수정
-    /// </summary>
     private static Quaternion BuildRotation(JointEntry entry, Vector3 rot)
     {
         float ax = entry.axisX ? Mathf.Clamp(rot.x, entry.minAngle, entry.maxAngle) : 0f;
         float ay = entry.axisY ? Mathf.Clamp(rot.y, entry.minAngle, entry.maxAngle) : 0f;
         float az = entry.axisZ ? Mathf.Clamp(rot.z, entry.minAngle, entry.maxAngle) : 0f;
 
-        Quaternion delta = Quaternion.Euler(ax, ay, az);
-        return entry.restRotation * delta;
+        return entry.restRotation * Quaternion.Euler(ax, ay, az);
     }
 
-    // ── 포즈 캡처 (AvatarPoseSender 전용) ──────────────────────────
-
-    /// <summary>
-    /// 현재 각 관절의 Rest 기준 델타 각도를 반환한다.
-    /// AvatarPoseSender가 Python으로 전송하는 데 사용한다.
-    /// </summary>
     public Dictionary<string, JointRotation> GetCurrentAngles()
     {
         var result = new Dictionary<string, JointRotation>();
         foreach (var entry in jointEntries)
         {
             if (entry.jointTransform == null) continue;
-
-            // rest 기준 delta 회전 → Euler 변환
-            Quaternion delta = Quaternion.Inverse(entry.restRotation)
-                               * entry.jointTransform.localRotation;
+            Quaternion delta = Quaternion.Inverse(entry.restRotation) * entry.jointTransform.localRotation;
             Vector3 e = delta.eulerAngles;
-
-            // 0..360 → -180..180
             float x = e.x > 180f ? e.x - 360f : e.x;
             float y = e.y > 180f ? e.y - 360f : e.y;
             float z = e.z > 180f ? e.z - 360f : e.z;
-
             result[entry.jointName] = new JointRotation
             {
                 x = Mathf.Round(x * 10f) / 10f,
@@ -246,36 +287,21 @@ public class AnimalController : MonoBehaviour
         return result;
     }
 
-    // ── 디버그 헬퍼 ──────────────────────────────────────────────
-
-    /// <summary>
-    /// 특정 관절의 축/ROM/반전을 런타임에 변경한다.
-    /// </summary>
     public void SetJointAxes(string jointName,
                               bool axisX = false, bool axisY = false, bool axisZ = false,
                               float minAngle = -45f, float maxAngle = 45f)
     {
         if (!_jointMap.TryGetValue(jointName, out var entry))
-        {
-            Debug.LogWarning($"[AnimalController] 관절 없음: {jointName}");
-            return;
-        }
+        { Debug.LogWarning($"[AnimalController] 관절 없음: {jointName}"); return; }
         entry.axisX = axisX; entry.axisY = axisY; entry.axisZ = axisZ;
         entry.minAngle = minAngle; entry.maxAngle = maxAngle;
-        Debug.Log($"[AnimalController] {jointName} 변경: 축={( axisX?"X":"")}{(axisY?"Y":"")}{(axisZ?"Z":"")} " +
-                  $"ROM=[{minAngle},{maxAngle}]");
     }
 
-    /// <summary>
-    /// 모든 관절을 Rest-pose로 즉시 복귀.
-    /// </summary>
     public void ResetToRestPose()
     {
         foreach (var entry in jointEntries)
-        {
             if (entry.jointTransform != null)
                 entry.jointTransform.localRotation = entry.restRotation;
-        }
         _targetAngles.Clear();
         Debug.Log("[AnimalController] Rest-pose로 복귀");
     }

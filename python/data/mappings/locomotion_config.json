@@ -3,6 +3,7 @@
   "_hint": "python main.py --locomotion 실행 시 시작 로그에 사용 가능한 anim 목록이 출력됨.",
   "spider": {
     "base_anim": "Walk",
+    "anim_fps": 30,
     "speed_scale": 0.04,
     "dir_scale": 0.15,
     "dir_deadzone": 8,
@@ -13,12 +14,16 @@
       "Attack1": {
         "dof": "index_pip",
         "hand": "right",
-        "delta": 50.0
+        "delta": 50.0,
+        "snap_delta": 15.0,
+        "_duration_hint": "Unity Inspector에서 클립 길이 확인 후 입력"
       },
       "Attack2": {
         "dof": "index_mcp",
         "hand": "right",
-        "delta": 34.9
+        "delta": 34.9,
+        "snap_delta": 12.0,
+        "_duration_hint": "Unity Inspector에서 클립 길이 확인 후 입력"
       }
     }
   },

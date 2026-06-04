@@ -184,13 +184,17 @@ public class WebSocketClient : MonoBehaviour
                 ctrl?.SetIdle();
 
             // 로코모션 적용 (Python --locomotion 플래그 활성 시에만 data.locomotion 존재)
-            if (animalLocomotion != null && data.locomotion != null)
+            if (data.locomotion != null)
             {
-                animalLocomotion.ApplyLocomotion(
+                animalLocomotion?.ApplyLocomotion(
                     data.locomotion.speed,
                     data.locomotion.yaw_delta,
                     data.locomotion.valid
                 );
+
+                // 이동 중일 때만 Walk 애니메이션 재생
+                bool moving = data.locomotion.speed > 0.001f;
+                ctrl?.SetWalkActive(moving);
             }
         }
     }

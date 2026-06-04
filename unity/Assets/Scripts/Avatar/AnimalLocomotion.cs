@@ -46,6 +46,9 @@ public class AnimalLocomotion : MonoBehaviour
     private bool  _valid;
     private float _moveSpeed;   // OnGUI 표시용
 
+    /// <summary>실제로 이동 중인지 (AnimalController Walk 판단용)</summary>
+    public bool IsMoving => _moveSpeed > 0.001f;
+
     // ──────────────────────────────────────────────────────────
     // 외부 API — WebSocketClient 에서 호출
     // ──────────────────────────────────────────────────────────
@@ -70,9 +73,8 @@ public class AnimalLocomotion : MonoBehaviour
     {
         if (!_valid)
         {
-            // 손 미감지: 속도 감쇠
-            _speed    *= speedDecay;
-            _yawDelta  = 0f;
+            // 손 미감지: 속도 감쇠 (yaw 는 그대로 유지 — head-dir 모드에서 계속 회전 필요)
+            _speed *= speedDecay;
         }
 
         // 회전 (Y 축)
@@ -136,14 +138,14 @@ public class AnimalLocomotion : MonoBehaviour
         // 방향 상태
         string dirLabel = "";
         Color  dirColor = Color.white;
-        if (_yawDelta > 0.5f)
+        if (_yawDelta > 0.1f)
         {
-            dirLabel = "TURNING RIGHT";
+            dirLabel = $"TURNING RIGHT  ({_yawDelta:+0.00})";
             dirColor = new Color(0.4f, 0.8f, 1f);   // 하늘색
         }
-        else if (_yawDelta < -0.5f)
+        else if (_yawDelta < -0.1f)
         {
-            dirLabel = "TURNING LEFT";
+            dirLabel = $"TURNING LEFT   ({_yawDelta:+0.00})";
             dirColor = new Color(1f, 0.8f, 0.2f);   // 노란색
         }
 
