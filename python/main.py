@@ -591,6 +591,8 @@ def main():
                                           f"비교관절={len(_cmp)}개  "
                                           f"fraction={_TRIG_FRACTION*100:.0f}%")
 
+                            _vel_ema      = 0.0   # 캘리브 중 누적된 velocity 리셋
+                            _prev_h_right = None
                             print("[INFO] 캘리브레이션 완료")
                             calib_done = True
                             # --no-window 모드: 캘리브 완료 후 창 닫기
@@ -756,6 +758,9 @@ def main():
                           f"r_bone_006={_jxyz('r_bone_006')}")
             else:
                 joints = {}
+                # 손 미감지 시 velocity EMA 감쇠 (안 하면 이전 값이 유지되어 계속 이동)
+                if args.mapping == "blend":
+                    _vel_ema *= 0.7
 
             # ── 로코모션 계산 (관절 매핑과 독립) ─────────────
             _loco_result: dict | None = None
@@ -764,7 +769,7 @@ def main():
                 # blend 모드: cursor 기반 speed → velocity 기반 speed로 교체
                 if args.mapping == "blend" and _loco_result is not None:
                     _loco_result["speed"] = round(
-                        min(_vel_ema * _VEL_SCALE, _loco_result.get("speed_max", 2.0)), 4
+                        min(_vel_ema * _VEL_SCALE, 2.0), 4
                     )
 
             server.send_frame(

@@ -53,7 +53,9 @@ public class AnimalLocomotion : MonoBehaviour
     /// </summary>
     public void ApplyLocomotion(float speed, float yawDelta, bool valid)
     {
-        _speed    = speed;
+        // valid=false(손 미감지)이면 Python 값 무시 — Update()에서 decay
+        if (valid)
+            _speed = speed;
         _yawDelta = yawDelta;
         _valid    = valid;
     }
