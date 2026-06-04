@@ -23,9 +23,9 @@ public class AnimalLocomotion : MonoBehaviour
     [Tooltip("이산 속도 모드 활성화 — 속도를 0/Normal/Fast 3단계로 양자화")]
     [SerializeField] private bool useDiscreteSpeed = true;
     [Tooltip("Python speed 이 이 값 미만이면 정지 (idle)")]
-    [SerializeField] private float idleThreshold  = 0.01f;
+    [SerializeField] private float idleThreshold  = 0.05f;
     [Tooltip("Python speed 이 이 값 이상이면 Fast 속도 사용")]
-    [SerializeField] private float fastThreshold  = 1.0f;
+    [SerializeField] private float fastThreshold  = 0.15f;
     [Tooltip("Normal 이동 속도 (Unity units/s)")]
     [SerializeField] private float normalSpeed    = 20f;
     [Tooltip("Fast 이동 속도 (Unity units/s)")]
