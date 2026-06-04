@@ -370,7 +370,7 @@ def main():
     # blend 모드 상태머신 초기화
     _TRIGGER_ANIMS     = set(args.action_anims.split(",")) if args.mapping == "blend" else set()
     _TRIG_FRACTION     = args.threshold / 100.0  # 피크값 도달 비율 (--threshold 65 → 65%)
-    _TRIGGER_HOLD      = 3               # 트리거 발동에 필요한 연속 프레임 수
+    _TRIGGER_HOLD      = 10              # 트리거 발동에 필요한 연속 프레임 수 (노이즈 오발동 방지)
     _anim_state        = "normal"         # "normal" | "trigger"
     _trigger_anim      = None
     _trigger_frames    = 0                # 남은 트리거 프레임 수
@@ -635,8 +635,12 @@ def main():
                         _VEL_DEADZONE = 12.0
                         if _prev_h_right is not None:
                             _vel_raw = float(np.linalg.norm(h_right - _prev_h_right))
-                            _vel = max(0.0, _vel_raw - _VEL_DEADZONE)
-                            _vel_ema = 0.3 * _vel + 0.7 * _vel_ema
+                            if _vel_raw < _VEL_DEADZONE:
+                                # 실제 움직임 없음 → 빠르게 감쇠
+                                _vel_ema *= 0.4
+                            else:
+                                _vel = _vel_raw - _VEL_DEADZONE
+                                _vel_ema = 0.4 * _vel + 0.6 * _vel_ema
                         _prev_h_right = h_right.copy()
 
                         # ── 쿨다운 감소 ──────────────────────────────

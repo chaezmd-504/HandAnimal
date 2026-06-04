@@ -89,8 +89,7 @@ public class AnimalLocomotion : MonoBehaviour
         float moveSpeed = 0f;
         if (useDiscreteSpeed)
         {
-            if      (_speed >= fastThreshold)  moveSpeed = fastSpeed;
-            else if (_speed >= idleThreshold)  moveSpeed = normalSpeed;
+            if (_speed >= idleThreshold) moveSpeed = normalSpeed;
         }
         else
         {
@@ -123,12 +122,7 @@ public class AnimalLocomotion : MonoBehaviour
         // 속도 상태
         string speedLabel;
         Color  speedColor;
-        if (_moveSpeed >= fastSpeed - 0.01f)
-        {
-            speedLabel = "FAST SPEED";
-            speedColor = new Color(1f, 0.4f, 0f);   // 주황
-        }
-        else if (_moveSpeed >= normalSpeed - 0.01f)
+        if (_moveSpeed >= normalSpeed - 0.01f)
         {
             speedLabel = "NORMAL SPEED";
             speedColor = new Color(0.2f, 1f, 0.2f); // 초록
