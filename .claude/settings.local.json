@@ -54,7 +54,8 @@
       "Bash(xargs grep:*)",
       "Bash(grep -E \"\\\\.\\(anim|controller|fbx|FBX\\)$\")",
       "Bash(git -C \"C:/Program Files \\(x86\\)/GitHub/HandAnimal\" show 5a2c4264:python/data/animal_skeletons/spider.json)",
-      "Bash(ls \"/c/Program Files \\(x86\\)/GitHub/HandAnimal/python/data/\"*.npy)"
+      "Bash(ls \"/c/Program Files \\(x86\\)/GitHub/HandAnimal/python/data/\"*.npy)",
+      "Bash(conda env:*)"
     ]
   }
 }
