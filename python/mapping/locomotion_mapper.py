@@ -196,7 +196,7 @@ class LocomotionMapper:
             yaw_delta = 0.0
         else:
             sign      = 1.0 if raw_dev > 0 else -1.0
-            yaw_delta = (abs(raw_dev) - dz) * cfg["dir_scale"] * sign
+            yaw_delta = (abs(raw_dev) - dz) * cfg["dir_scale"] * sign * -1.0
 
         # 방향 디버그: 30프레임마다 출력 (turning 문제 진단용)
         if not hasattr(self, '_dir_log_cnt'):
