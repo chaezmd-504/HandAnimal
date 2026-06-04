@@ -328,7 +328,7 @@ def main():
     occlusion       = {"left": OcclusionHandler(), "right": OcclusionHandler()}
     occlusion_world = {"left": OcclusionHandler(), "right": OcclusionHandler()}
     _dof_ema: dict[str, dict[str, float]] = {}   # DOF 각도 EMA 스무딩 상태
-    _EMA_ALPHA = 0.55  # 낮을수록 더 강한 스무딩 (0.2~0.5 권장)
+    _EMA_ALPHA = 0.7   # 높을수록 반응 빠름, 낮을수록 부드러움 (0.5~0.8 권장)
     server    = WebSocketServer(port=args.port)
 
     if args.mapping == "keyframe":
@@ -636,11 +636,12 @@ def main():
                         if _prev_h_right is not None:
                             _vel_raw = float(np.linalg.norm(h_right - _prev_h_right))
                             if _vel_raw < _VEL_DEADZONE:
-                                # 실제 움직임 없음 → 빠르게 감쇠
-                                _vel_ema *= 0.4
+                                # 실제 움직임 없음 → 즉시 감쇠
+                                _vel_ema *= 0.2
                             else:
                                 _vel = _vel_raw - _VEL_DEADZONE
-                                _vel_ema = 0.4 * _vel + 0.6 * _vel_ema
+                                # 빠른 반응: 새 값 70% 반영
+                                _vel_ema = 0.7 * _vel + 0.3 * _vel_ema
                         _prev_h_right = h_right.copy()
 
                         # ── 쿨다운 감소 ──────────────────────────────

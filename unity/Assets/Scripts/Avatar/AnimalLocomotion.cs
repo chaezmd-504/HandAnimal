@@ -34,7 +34,7 @@ public class AnimalLocomotion : MonoBehaviour
     [Header("감쇠 설정")]
     [Tooltip("손 미감지 시 속도 감쇠 계수 (0=즉시 멈춤, 1=감쇠 없음)")]
     [Range(0f, 1f)]
-    [SerializeField] private float speedDecay = 0.85f;
+    [SerializeField] private float speedDecay = 0f;
 
     [Header("디버그")]
     [SerializeField] private bool showDebugLog = false;
