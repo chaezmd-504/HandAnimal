@@ -458,11 +458,13 @@ def main():
     server.start()
 
     # ── 머리 방향 제어 초기화 ─────────────────────────────────
-    _face_detector = None
+    _face_detector   = None
     _head_yaw_delta: float = 0.0
-    _HEAD_DEADZONE  = 0.08   # 화면 중심 기준 ±8% 이내는 직진
-    _HEAD_SCALE     = 3.0    # x offset → °/frame 배율
-    _head_ref_x     = 0.5    # 캘리브레이션 후 기준 x (기본 화면 중앙)
+    _HEAD_DEADZONE   = 0.12   # ±12% 이내 직진 (jitter 흡수)
+    _HEAD_SCALE      = 4.0    # x offset → °/frame
+    _head_ref_x      = 0.5
+    _head_miss_cnt   = 0      # 연속 미감지 프레임 수
+    _HEAD_MISS_RESET = 8      # 이 프레임 이상 미감지 시 yaw=0 리셋
 
     if args.head_dir and args.locomotion:
         _cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -808,6 +810,7 @@ def main():
                     _face_gray, scaleFactor=1.05, minNeighbors=2, minSize=(50, 50)
                 )
                 if len(_faces) > 0:
+                    _head_miss_cnt = 0
                     _fx, _fy, _fw, _fh = _faces[0]
                     _face_cx = (_fx + _fw / 2.0) / frame.shape[1]
                     _offset  = _face_cx - _head_ref_x
@@ -816,11 +819,14 @@ def main():
                     else:
                         _sign = 1.0 if _offset > 0 else -1.0
                         _target_yaw = (abs(_offset) - _HEAD_DEADZONE) * _HEAD_SCALE * _sign * -1.0
-                    # EMA 스무딩 — 튀는 값 완화
-                    _head_yaw_delta = 0.6 * _target_yaw + 0.4 * _head_yaw_delta
+                    # 강한 EMA — jitter 억제
+                    _head_yaw_delta = 0.3 * _target_yaw + 0.7 * _head_yaw_delta
                     if frame_count % 30 == 0:
                         print(f"[HEAD] cx={_face_cx:.3f}  offset={_offset:+.3f}  yaw={_head_yaw_delta:+.2f}")
-                # 미감지 시: 이전 값 유지 (스터터 방지)
+                else:
+                    _head_miss_cnt += 1
+                    if _head_miss_cnt >= _HEAD_MISS_RESET:
+                        _head_yaw_delta = 0.0   # 일정 프레임 이상 미감지 → 리셋
 
             # ── 로코모션 계산 (관절 매핑과 독립) ─────────────
             _loco_result: dict | None = None
