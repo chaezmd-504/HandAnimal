@@ -38,11 +38,13 @@ public class AnimalLocomotion : MonoBehaviour
 
     [Header("디버그")]
     [SerializeField] private bool showDebugLog = false;
+    [SerializeField] private bool showHUD      = true;
 
     // 현재 상태 (외부에서 ApplyLocomotion 으로 갱신)
     private float _speed;
     private float _yawDelta;
     private bool  _valid;
+    private float _moveSpeed;   // OnGUI 표시용
 
     // ──────────────────────────────────────────────────────────
     // 외부 API — WebSocketClient 에서 호출
@@ -94,6 +96,7 @@ public class AnimalLocomotion : MonoBehaviour
         {
             moveSpeed = _speed;
         }
+        _moveSpeed = moveSpeed;
 
         if (moveSpeed > 0f)
         {
@@ -106,6 +109,73 @@ public class AnimalLocomotion : MonoBehaviour
         if (showDebugLog && (_speed > 0.001f || Mathf.Abs(_yawDelta) > 0.01f))
         {
             Debug.Log($"[AnimalLocomotion] rawSpeed={_speed:F3}  moveSpeed={moveSpeed:F1}  yaw={_yawDelta:+0.0;-0.0}°  valid={_valid}");
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // HUD
+    // ──────────────────────────────────────────────────────────
+
+    private void OnGUI()
+    {
+        if (!showHUD) return;
+
+        // 속도 상태
+        string speedLabel;
+        Color  speedColor;
+        if (_moveSpeed >= fastSpeed - 0.01f)
+        {
+            speedLabel = "FAST SPEED";
+            speedColor = new Color(1f, 0.4f, 0f);   // 주황
+        }
+        else if (_moveSpeed >= normalSpeed - 0.01f)
+        {
+            speedLabel = "NORMAL SPEED";
+            speedColor = new Color(0.2f, 1f, 0.2f); // 초록
+        }
+        else
+        {
+            speedLabel = "STOP";
+            speedColor = new Color(0.6f, 0.6f, 0.6f); // 회색
+        }
+
+        // 방향 상태
+        string dirLabel = "";
+        Color  dirColor = Color.white;
+        if (_yawDelta > 0.5f)
+        {
+            dirLabel = "TURNING RIGHT";
+            dirColor = new Color(0.4f, 0.8f, 1f);   // 하늘색
+        }
+        else if (_yawDelta < -0.5f)
+        {
+            dirLabel = "TURNING LEFT";
+            dirColor = new Color(1f, 0.8f, 0.2f);   // 노란색
+        }
+
+        var style = new GUIStyle(GUI.skin.label)
+        {
+            fontSize  = 28,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.UpperLeft,
+        };
+
+        int x = 20, y = 20;
+
+        // 속도
+        style.normal.textColor = Color.black;
+        GUI.Label(new Rect(x + 2, y + 2, 400, 50), speedLabel, style);
+        style.normal.textColor = speedColor;
+        GUI.Label(new Rect(x, y, 400, 50), speedLabel, style);
+
+        // 방향 (있을 때만)
+        if (dirLabel != "")
+        {
+            y += 42;
+            style.normal.textColor = Color.black;
+            GUI.Label(new Rect(x + 2, y + 2, 400, 50), dirLabel, style);
+            style.normal.textColor = dirColor;
+            GUI.Label(new Rect(x, y, 400, 50), dirLabel, style);
         }
     }
 
