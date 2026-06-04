@@ -22,13 +22,26 @@ public class JointRotation
 }
 
 [Serializable]
+public class LocomotionData
+{
+    public float speed;
+    public float yaw_delta;
+    public float cursor;
+    public bool  valid;
+}
+
+[Serializable]
 public class FrameData
 {
     public string type;
     public string animal;
     public System.Collections.Generic.Dictionary<string, JointRotation> joints;
-    public bool hand_detected;
-    public string gesture;
+    public bool          hand_detected;
+    public string        gesture;
+    public LocomotionData locomotion;   // null if --locomotion not enabled on Python side
+    // trigger 전용
+    public string anim;
+    public float  duration;
 }
 
 public class WebSocketClient : MonoBehaviour
@@ -42,6 +55,8 @@ public class WebSocketClient : MonoBehaviour
     [SerializeField] private AnimalSwitcher   animalSwitcher;
     [Tooltip("AnimalSwitcher가 없을 때만 사용하는 폴백 컨트롤러")]
     [SerializeField] private AnimalController animalController;
+    [Tooltip("(선택) 로코모션 컴포넌트 — Python --locomotion 플래그 사용 시 연결")]
+    [SerializeField] private AnimalLocomotion animalLocomotion;
 
     private WebSocket _ws;
     private int _retryCount;
@@ -53,6 +68,11 @@ public class WebSocketClient : MonoBehaviour
 
     private void Start()
     {
+        // AnimalSwitcher의 초기 동물 locomotion을 가져온다.
+        // Inspector에 직접 연결하지 않아도 AnimalSwitcher 경유로 자동 설정됨.
+        if (animalLocomotion == null && animalSwitcher != null)
+            animalLocomotion = animalSwitcher.GetCurrentLocomotion();
+
         Connect();
     }
 
@@ -142,6 +162,15 @@ public class WebSocketClient : MonoBehaviour
         if (data.type == "switch_animal")
         {
             animalSwitcher?.SwitchTo(data.animal);
+            // 동물 전환 시 현재 활성 동물의 locomotion 컴포넌트로 교체
+            animalLocomotion = animalSwitcher?.GetCurrentLocomotion() ?? animalLocomotion;
+            return;
+        }
+
+        if (data.type == "trigger")
+        {
+            var ctrl = animalSwitcher?.GetCurrentController() ?? animalController;
+            ctrl?.PlayTriggerAnim(data.anim, data.duration > 0f ? data.duration : 2.0f);
             return;
         }
 
@@ -153,6 +182,16 @@ public class WebSocketClient : MonoBehaviour
                 ctrl?.ApplyJoints(data.joints);
             else
                 ctrl?.SetIdle();
+
+            // 로코모션 적용 (Python --locomotion 플래그 활성 시에만 data.locomotion 존재)
+            if (animalLocomotion != null && data.locomotion != null)
+            {
+                animalLocomotion.ApplyLocomotion(
+                    data.locomotion.speed,
+                    data.locomotion.yaw_delta,
+                    data.locomotion.valid
+                );
+            }
         }
     }
 }

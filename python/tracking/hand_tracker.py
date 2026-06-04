@@ -58,9 +58,79 @@ def calculate_bend_angle(p1: tuple, p2: tuple, p3: tuple) -> float:
     return float(np.degrees(np.arccos(cos_angle)))
 
 
-def compute_dof_angles(filtered_coords: list[tuple]) -> dict[str, float]:
+def _palm_local_landmarks(lm: list) -> list:
+    """
+    21개 world-frame 랜드마크를 palm-local 3D 좌표계로 변환한다.
+    엄지 각도 계산에 사용 (엄지는 palm 평면 밖으로 움직임).
+
+    palm-local 좌표계:
+      origin : wrist(0)
+      x축    : wrist → index_MCP(5)
+      z축    : palm 법선
+      y축    : z × x
+
+    변환 실패(특이행렬 등) 시 원본 lm 반환.
+    """
+    origin = lm[0]
+    v_x = lm[5] - lm[0]
+    x_len = np.linalg.norm(v_x)
+    if x_len < 1e-8:
+        return lm
+
+    v_x = v_x / x_len
+    v_z = np.cross(lm[5] - lm[0], lm[17] - lm[0])
+    z_len = np.linalg.norm(v_z)
+    if z_len < 1e-8:
+        return lm
+
+    v_z = v_z / z_len
+    v_y = np.cross(v_z, v_x)
+    R = np.column_stack([v_x, v_y, v_z])
+    return [R.T @ (p - origin) for p in lm]
+
+
+def _img_palm_local_2d(img_lm: list) -> list:
+    """
+    2D 이미지 좌표 랜드마크를 palm-local 2D 좌표계로 변환 후 (x, y, 0) 반환.
+
+    2D 이미지 좌표(screen space)는 3D world 추정보다 훨씬 안정적이다.
+    손가락 굴신각(MCP/PIP/DIP)은 이 2D palm-local 좌표에서 계산한다.
+
+    palm-local 2D:
+      origin : wrist(0)의 이미지 xy
+      x축    : wrist → index_MCP(5) 방향 (이미지 평면)
+      y축    : x축에 수직 (CCW 90°)
+
+    변환 실패 시 원본 xy를 그대로 (x, y, 0)으로 반환.
+    """
+    pts = [np.array([float(p[0]), float(p[1])]) for p in img_lm]
+    origin = pts[0]
+    v_x = pts[5] - pts[0]
+    x_len = np.linalg.norm(v_x)
+    if x_len < 1e-8:
+        return [(float(p[0]), float(p[1]), 0.0) for p in img_lm]
+
+    v_x /= x_len
+    v_y = np.array([-v_x[1], v_x[0]])   # CCW 90°
+    R2 = np.column_stack([v_x, v_y])     # (2, 2)
+
+    result = []
+    for p in pts:
+        local = R2.T @ (p - origin)
+        result.append((float(local[0]), float(local[1]), 0.0))
+    return result
+
+
+def compute_dof_angles(filtered_coords: list[tuple],
+                       img_coords: list[tuple] | None = None) -> dict[str, float]:
     """
     필터링된 21개 관절 좌표에서 20-DOF 각도를 직접 계산한다.
+
+    Args:
+        filtered_coords : world-frame 3D 좌표 (21개 tuple). 손목 DOF 계산에 사용.
+        img_coords      : 2D 이미지 좌표 (21개 tuple, optional).
+                          제공 시 손가락 굴신각(엄지 제외)을 2D palm-local에서 계산.
+                          3D world 추정보다 훨씬 안정적이므로 항상 제공 권장.
 
     반환 키는 mapping_optimizer.HAND_DOFS 의 name 필드와 1:1 대응:
       wrist_flex, wrist_dev, wrist_rot          (손목 방향 3)
@@ -73,13 +143,13 @@ def compute_dof_angles(filtered_coords: list[tuple]) -> dict[str, float]:
     굴신 DOF: 180 - geometric_angle (0°=완전 신전, 양수=굴신)
     손목 DOF: 양방향 (음수~양수, 0°=중립)
     """
-    lm = [np.array(p) for p in filtered_coords]  # (21, 3)
+    lm_w = [np.array(p) for p in filtered_coords]  # world frame (21, 3)
     result: dict[str, float] = {}
 
-    # ── 1. 손목 방향 (3 DOF) ──────────────────────────────────
+    # ── 1. 손목 방향 (3 DOF) — world frame ───────────────────
     # 손바닥 법선: wrist(0), index_MCP(5), pinky_MCP(17)
-    v_idx = lm[5]  - lm[0]
-    v_pnk = lm[17] - lm[0]
+    v_idx = lm_w[5]  - lm_w[0]
+    v_pnk = lm_w[17] - lm_w[0]
     palm_n = np.cross(v_idx, v_pnk)
     n_len = np.linalg.norm(palm_n)
     if n_len > 1e-8:
@@ -96,94 +166,106 @@ def compute_dof_angles(filtered_coords: list[tuple]) -> dict[str, float]:
         -25, 25
     ))
     # wrist_rot: index_MCP-pinky_MCP 벡터의 이미지 평면 회전각 → 전완 회전 근사
-    v_side = lm[5][:2] - lm[17][:2]  # xy 평면 (z 제외, 더 안정적)
+    v_side = lm_w[5][:2] - lm_w[17][:2]
     result["wrist_rot"] = float(np.clip(
         np.degrees(np.arctan2(-v_side[1], v_side[0])),
         -90, 90
     ))
 
-    # ── 2. 엄지 (4 DOF) ──────────────────────────────────────
-    # thumb_cmc: CMC(1) 굴신 = angle at CMC between wrist(0) and MCP(2) → 180-
+    # ── 손가락 각도용 좌표 준비 ──────────────────────────────
+    # 엄지: 3D palm-local (엄지는 palm 평면 밖으로 움직임)
+    lm_3d = _palm_local_landmarks(lm_w)
+    c3 = [tuple(p.tolist()) for p in lm_3d]
+
+    # 검지~소지: 2D 이미지 좌표 palm-local (img_coords 제공 시)
+    #   → 3D world 깊이 추정 오차 완전 제거, 손목 방향 무관하게 안정적
+    # img_coords 없으면 3D palm-local → xy 투영으로 fallback
+    if img_coords is not None:
+        c2 = _img_palm_local_2d(img_coords)
+    else:
+        c2 = [tuple(float(v) for v in (p[0], p[1], 0.0)) for p in lm_3d]
+
+    # ── 2. 엄지 (4 DOF) — 3D ─────────────────────────────────
     result["thumb_cmc"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[1], filtered_coords[2]),
-        0, 60
+        180.0 - calculate_bend_angle(c3[0], c3[1], c3[2]), 0, 60
     ))
-    # thumb_abd: wrist(0) 에서 index_MCP(5)와 thumb_CMC(1) 사이 각도 (직접 사용)
     result["thumb_abd"] = float(np.clip(
-        calculate_bend_angle(filtered_coords[5], filtered_coords[0], filtered_coords[1]),
-        0, 70
+        calculate_bend_angle(c3[5], c3[0], c3[1]), 0, 70
     ))
-    # thumb_mcp: angle at MCP(2) between CMC(1) and IP(3) → 180-
     result["thumb_mcp"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[1], filtered_coords[2], filtered_coords[3]),
-        0, 60
+        180.0 - calculate_bend_angle(c3[1], c3[2], c3[3]), 0, 60
     ))
-    # thumb_ip: angle at IP(3) between MCP(2) and TIP(4) → 180-
     result["thumb_ip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[2], filtered_coords[3], filtered_coords[4]),
-        0, 80
+        180.0 - calculate_bend_angle(c3[2], c3[3], c3[4]), 0, 80
     ))
 
-    # ── 3. 검지 (3 DOF) ──────────────────────────────────────
+    # ── 3. 검지 (3 DOF) — palm 평면 투영 ────────────────────
     result["index_mcp"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[5], filtered_coords[6]),
-        0, 90
+        180.0 - calculate_bend_angle(c2[0], c2[5], c2[6]), 0, 90
     ))
     result["index_pip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[5], filtered_coords[6], filtered_coords[7]),
-        0, 110
+        180.0 - calculate_bend_angle(c2[5], c2[6], c2[7]), 0, 110
     ))
     result["index_dip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[6], filtered_coords[7], filtered_coords[8]),
-        0, 90
+        180.0 - calculate_bend_angle(c2[6], c2[7], c2[8]), 0, 90
     ))
 
-    # ── 4. 중지 (3 DOF) ──────────────────────────────────────
+    # ── 4. 중지 (3 DOF) — palm 평면 투영 ────────────────────
     result["middle_mcp"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[9], filtered_coords[10]),
-        0, 90
+        180.0 - calculate_bend_angle(c2[0], c2[9], c2[10]), 0, 90
     ))
     result["middle_pip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[9], filtered_coords[10], filtered_coords[11]),
-        0, 110
+        180.0 - calculate_bend_angle(c2[9], c2[10], c2[11]), 0, 110
     ))
     result["middle_dip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[10], filtered_coords[11], filtered_coords[12]),
-        0, 90
+        180.0 - calculate_bend_angle(c2[10], c2[11], c2[12]), 0, 90
     ))
 
-    # ── 5. 약지 (3 DOF) ──────────────────────────────────────
+    # ── 5. 약지 (3 DOF) — palm 평면 투영 ────────────────────
     result["ring_mcp"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[13], filtered_coords[14]),
-        0, 90
+        180.0 - calculate_bend_angle(c2[0], c2[13], c2[14]), 0, 90
     ))
     result["ring_pip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[13], filtered_coords[14], filtered_coords[15]),
-        0, 110
+        180.0 - calculate_bend_angle(c2[13], c2[14], c2[15]), 0, 110
     ))
     result["ring_dip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[14], filtered_coords[15], filtered_coords[16]),
-        0, 90
+        180.0 - calculate_bend_angle(c2[14], c2[15], c2[16]), 0, 90
     ))
 
-    # ── 6. 소지 (4 DOF) ──────────────────────────────────────
-    # pinky_cmc: 손바닥 굽힘(cup) = ring_MCP(13), pinky_MCP(17), pinky_PIP(18) 각도 → 180-
+    # ── 6. 소지 (4 DOF) — palm 평면 투영 ────────────────────
     result["pinky_cmc"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[13], filtered_coords[17], filtered_coords[18]),
-        0, 30
+        180.0 - calculate_bend_angle(c2[13], c2[17], c2[18]), 0, 30
     ))
     result["pinky_mcp"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[0], filtered_coords[17], filtered_coords[18]),
-        0, 80
+        180.0 - calculate_bend_angle(c2[0], c2[17], c2[18]), 0, 80
     ))
     result["pinky_pip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[17], filtered_coords[18], filtered_coords[19]),
-        0, 100
+        180.0 - calculate_bend_angle(c2[17], c2[18], c2[19]), 0, 100
     ))
     result["pinky_dip"] = float(np.clip(
-        180.0 - calculate_bend_angle(filtered_coords[18], filtered_coords[19], filtered_coords[20]),
-        0, 80
+        180.0 - calculate_bend_angle(c2[18], c2[19], c2[20]), 0, 80
     ))
+
+    # ── 손가락 커플링 적용 (검지~소지) ──────────────────────
+    # 생체역학적으로 MCP/PIP/DIP는 힘줄로 연결되어 독립적으로 움직이지 않음.
+    # 세 관절 측정값을 weighted composite로 합산 후 커플링 비율로 재분배.
+    # 효과: ① 독립 노이즈 평균화  ② 물리적으로 일관된 관절각 보장
+    #
+    # 자연 굴신 기준 커플링 비율 (Power grip 연구 기반):
+    #   PIP ≈ MCP × 1.5   |   DIP ≈ MCP × 0.8
+    _PIP_K = 1.5
+    _DIP_K = 0.8
+    for _fn in ("index", "middle", "ring", "pinky"):
+        _mcp = result[f"{_fn}_mcp"]
+        _pip = result[f"{_fn}_pip"]
+        _dip = result[f"{_fn}_dip"]
+        # MCP 스케일로 정규화 후 weighted 평균
+        _flex = (_mcp        * 0.55
+                 + _pip / _PIP_K * 0.30
+                 + _dip / _DIP_K * 0.15)
+        result[f"{_fn}_mcp"] = float(np.clip(_flex,            0,  90))
+        result[f"{_fn}_pip"] = float(np.clip(_flex * _PIP_K,   0, 110))
+        result[f"{_fn}_dip"] = float(np.clip(_flex * _DIP_K,   0,  90))
 
     return result
 
@@ -255,9 +337,9 @@ def run_tracker():
                     color = HAND_COLOR.get(side, (0, 255, 0))
                     draw_landmarks(frame, landmarks, h, w, color=color)
 
-                    occlusion_handlers[side].process(landmarks)  # 그리기 일관성용
+                    img_filtered   = occlusion_handlers[side].process(landmarks)
                     world_filtered = occlusion_world[side].process(world_landmarks)
-                    hands_angles[side] = compute_dof_angles(world_filtered)
+                    hands_angles[side] = compute_dof_angles(world_filtered, img_filtered)
 
                 print("\n--- 20-DOF 각도 ---")
                 for side in ("left", "right"):

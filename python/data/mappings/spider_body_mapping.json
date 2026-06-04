@@ -1,0 +1,20 @@
+{
+  "animal": "spider",
+  "description": "몸통 본 수동 매핑 — wrist DOF 고정 배정. spider_mapping.json과 별도로 로드해서 합산.\n  ※ wrist_dev(bodyik_001)는 LocomotionMapper가 독점 사용 — 여기서 제거됨.",
+  "mapping": {
+    "bone": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 2.5,
+      "hand": "right",
+      "axis": "X"
+    },
+    "atack1": {
+      "hand_dof_idx": 2,
+      "hand_dof_name": "wrist_rot",
+      "scale_factor": 2.5,
+      "hand": "right",
+      "axis": "Y"
+    }
+  }
+}

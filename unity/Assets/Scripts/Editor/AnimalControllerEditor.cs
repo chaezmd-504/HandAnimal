@@ -49,11 +49,18 @@ public class AnimalControllerEditor : Editor
             string bmpRaw   = File.ReadAllText(boneMapPath);
             var    idToInfo = ParseBoneMapFull(bmpRaw);
 
-            // 매핑 JSON 에 있는 관절만 남기기
+            // 매핑 JSON 에 있는 관절만 남기기 (body_mapping 도 포함)
             string mappingPath = ResolveMappingPath(_animal);
             if (File.Exists(mappingPath))
             {
                 var allowed = ParseMappingJointIds(File.ReadAllText(mappingPath));
+
+                // body_mapping 도 합산
+                string bodyMappingPath = ResolveBodyMappingPath(_animal);
+                if (File.Exists(bodyMappingPath))
+                    foreach (var id in ParseMappingJointIds(File.ReadAllText(bodyMappingPath)))
+                        allowed.Add(id);
+
                 var filtered = new Dictionary<string, BoneMapEntry>();
                 foreach (var kv in idToInfo)
                     if (allowed.Contains(kv.Key)) filtered[kv.Key] = kv.Value;
@@ -302,6 +309,13 @@ public class AnimalControllerEditor : Editor
         return Path.GetFullPath(
             Path.Combine(Application.dataPath,
                          $"../../python/data/mappings/{animal}_mapping.json"));
+    }
+
+    private static string ResolveBodyMappingPath(string animal)
+    {
+        return Path.GetFullPath(
+            Path.Combine(Application.dataPath,
+                         $"../../python/data/mappings/{animal}_body_mapping.json"));
     }
 
     private static HashSet<string> ParseMappingJointIds(string json)

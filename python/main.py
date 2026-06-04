@@ -21,6 +21,7 @@ import math
 import os
 import sys
 import time
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -39,6 +40,7 @@ from tracking.hand_tracker import (
 from tracking.occlusion_handler import OcclusionHandler
 from mapping.mapping_engine import MappingEngine
 from mapping.keyframe_engine import KeyframeMappingEngine
+from mapping.locomotion_mapper import LocomotionMapper
 from communication.websocket_server import WebSocketServer
 
 BaseOptions           = mp.tasks.BaseOptions
@@ -290,16 +292,27 @@ def _draw_calib_overlay(
 def parse_args():
     p = argparse.ArgumentParser(description="HandAvatar 파이프라인")
     p.add_argument("--animal", default="spider",
-                   choices=["spider", "butterfly", "fish"],
+                   choices=["spider", "butterfly", "fish", "horse"],
                    help="동물 선택 (기본값: spider)")
     p.add_argument("--port", type=int, default=8765,
                    help="WebSocket 포트 (기본값: 8765)")
     p.add_argument("--no-window", action="store_true",
                    help="OpenCV 미리보기 창 비활성화")
-    p.add_argument("--mapping", choices=["keyframe", "direct"], default="keyframe",
-                   help="매핑 방식: keyframe=키프레임 블렌딩(기본), direct=직접 각도 매핑(wobbly)")
+    p.add_argument("--mapping", choices=["keyframe", "direct", "blend"], default="keyframe",
+                   help="매핑 방식: keyframe=키프레임 블렌딩, direct=직접 매핑, blend=동적 α 블렌딩(권장)")
     p.add_argument("--temperature", type=float, default=8.0,
                    help="[keyframe] 소프트맥스 온도. 높을수록 스냅, 낮을수록 부드럽게 (기본 8.0)")
+    p.add_argument("--threshold", type=float, default=40.0,
+                   help="[blend] 트리거 min_distance 임계값 (기본 40.0, 낮을수록 예민)")
+    p.add_argument("--action-anims", type=str, default="Attack1,Attack2,Death",
+                   help="[blend] 트리거 애니메이션 목록, 쉼표 구분 (기본 Attack1,Attack2,Death)")
+    p.add_argument("--dist-log", type=int, default=0,
+                   help="[blend] N프레임마다 anim 거리 콘솔 출력 (0=비활성, 권장 30)")
+    p.add_argument("--base-anim", type=str, default="Walk",
+                   help="[blend] Walk ROM 기준 애니메이션 이름 (기본 Walk)")
+    p.add_argument("--locomotion", action="store_true",
+                   help="로코모션 모듈 활성화: wrist_dev → 방향, 손가락 속도 → 이동. "
+                        "활성화 시 wrist_dev 는 관절 매핑에서 제외됨.")
     return p.parse_args()
 
 
@@ -315,7 +328,7 @@ def main():
     occlusion       = {"left": OcclusionHandler(), "right": OcclusionHandler()}
     occlusion_world = {"left": OcclusionHandler(), "right": OcclusionHandler()}
     _dof_ema: dict[str, dict[str, float]] = {}   # DOF 각도 EMA 스무딩 상태
-    _EMA_ALPHA = 0.35  # 낮을수록 더 강한 스무딩 (0.2~0.5 권장)
+    _EMA_ALPHA = 0.55  # 낮을수록 더 강한 스무딩 (0.2~0.5 권장)
     server    = WebSocketServer(port=args.port)
 
     if args.mapping == "keyframe":
@@ -323,17 +336,93 @@ def main():
             MAPPINGS_DIR, POSES_DIR, temperature=args.temperature
         )
         print(f"[INFO] 매핑 모드: keyframe (temperature={args.temperature})")
+    elif args.mapping == "blend":
+        engine = KeyframeMappingEngine(
+            MAPPINGS_DIR, POSES_DIR, temperature=args.temperature
+        )
+        _engine_direct = MappingEngine(MAPPINGS_DIR)
+        print(f"[INFO] 매핑 모드: blend (Direct + Sequential, temperature={args.temperature})")
     else:
         engine = MappingEngine(MAPPINGS_DIR)
         print("[INFO] 매핑 모드: direct (연속 각도 매핑)")
 
     try:
         engine.set_animal(args.animal)
+        if args.mapping == "blend":
+            _engine_direct.set_animal(args.animal)
     except FileNotFoundError as e:
         print(f"[ERROR] {e}")
         print("[HINT] python scripts/generate_mappings.py 와 "
               "extract_avatar_poses.py 를 먼저 실행하세요.")
         sys.exit(1)
+
+    # ── 로코모션 모듈 초기화 ──────────────────────────────────
+    _loco: LocomotionMapper | None = None
+    if args.locomotion:
+        if not isinstance(engine, KeyframeMappingEngine):
+            print("[WARN] --locomotion 은 keyframe/blend 모드에서만 동작합니다. "
+                  "direct 모드에서는 비활성.")
+        else:
+            _loco = LocomotionMapper(args.animal, MAPPINGS_DIR)
+            _loco.print_available_anims(engine)
+            print(f"[INFO] 로코모션 활성  reserved_dofs={LocomotionMapper.RESERVED_DOFS}")
+
+    # blend 모드 상태머신 초기화
+    _TRIGGER_ANIMS     = set(args.action_anims.split(",")) if args.mapping == "blend" else set()
+    _TRIG_FRACTION     = args.threshold / 100.0  # 피크값 도달 비율 (--threshold 65 → 65%)
+    _TRIGGER_HOLD      = 3               # 트리거 발동에 필요한 연속 프레임 수
+    _anim_state        = "normal"         # "normal" | "trigger"
+    _trigger_anim      = None
+    _trigger_frames    = 0                # 남은 트리거 프레임 수
+    _trigger_cursor    = 0.0             # 키프레임 재생 위치
+    _cooldown_frames   = 0
+    _trigger_hold_cnt: dict[str, int] = {}  # {anim: 조건 유지 프레임 수}
+
+    # 트리거 애니메이션별 피크 프레임 관절 (캘리브레이션 후 채워짐)
+    _trigger_peak_joints: dict[str, dict] = {}   # {anim: {jid: {x,y,z}}}
+    _trigger_cmp_joints:  dict[str, list] = {}   # {anim: [비교할 joint_id 목록]}
+
+    # Walk ROM 추출 (blend 모드)
+    _walk_skeleton: dict = {}
+    _prev_h_right:  Optional[np.ndarray] = None
+    _vel_ema:       float = 0.0
+    _VEL_SCALE:     float = 0.05         # velocity → speed 배율
+
+    # rule-based 트리거 규칙 로드 (locomotion_config.json에서)
+    # {anim: {"dof": str, "hand": str, "delta": float}}
+    _trigger_rules: dict = {}
+    # 캘리브레이션 완료 후 채워질 기준값 {hand: {dof: ref_val}}
+    _trigger_ref:   dict = {}
+
+    if args.mapping == "blend":
+        _walk_rom = engine.get_walk_rom(args.base_anim)
+        if _walk_rom:
+            _walk_skeleton = {
+                "joints": [
+                    {"id": jid, "min_angle": mn, "max_angle": mx}
+                    for jid, (mn, mx) in _walk_rom.items()
+                ]
+            }
+            print(f"[INFO] Walk ROM 로드: {len(_walk_rom)}개 관절 "
+                  f"(anim='{args.base_anim}')")
+        else:
+            print(f"[WARN] Walk ROM 추출 실패 — base_anim='{args.base_anim}'이 "
+                  f"poses.json에 없는지 확인. 전체 skeleton ROM 사용.")
+
+        # 트리거 규칙 로드
+        from mapping.locomotion_mapper import load_config as _load_loco_cfg
+        _loco_cfg = _load_loco_cfg(MAPPINGS_DIR)
+        _trigger_rules = _loco_cfg.get(args.animal, {}).get("triggers", {})
+        # _comment 키 제거
+        _trigger_rules = {k: v for k, v in _trigger_rules.items()
+                          if not k.startswith("_") and isinstance(v, dict)}
+        if _trigger_rules:
+            _rule_summary = {k: f"{v['hand']}.{v['dof']} Δ{v['delta']}°" for k, v in _trigger_rules.items()}
+            print(f"[INFO] 트리거 규칙 로드: {_rule_summary}")
+        else:
+            print(f"[WARN] 트리거 규칙 없음. locomotion_config.json의 '{args.animal}'.triggers 를 확인하세요.")
+
+        print(f"[INFO] blend 설정: base_anim='{args.base_anim}'")
 
     # skeleton ROM 클리핑용
     _skel_path = os.path.join(POSES_DIR, f"{args.animal}.json")
@@ -342,6 +431,26 @@ def main():
         with open(_skel_path, encoding="utf-8") as _f:
             _skeleton = json.load(_f)
         print(f"[INFO] skeleton ROM 로드: {_skel_path}")
+
+    # 별도 body mapping 로드 (있으면)
+    _body_mapping  = None
+    _body_ref_H    = {}
+    _body_map_path = os.path.join(MAPPINGS_DIR, f"{args.animal}_body_mapping.json")
+    if os.path.exists(_body_map_path):
+        with open(_body_map_path, encoding="utf-8") as _f:
+            _body_mapping = json.load(_f).get("mapping", {})
+        # reference_pose_H는 메인 mapping.json에서 읽음
+        _main_map_path = os.path.join(MAPPINGS_DIR, f"{args.animal}_mapping.json")
+        if os.path.exists(_main_map_path):
+            with open(_main_map_path, encoding="utf-8") as _f:
+                _main_map = json.load(_f)
+            ref = _main_map.get("reference_pose_H", {})
+            # bilateral 구조면 {"left": {...}, "right": {...}}, flat이면 그대로
+            if isinstance(ref, dict) and "right" in ref:
+                _body_ref_H = ref["right"]
+            else:
+                _body_ref_H = ref
+        print(f"[INFO] body mapping 로드: {_body_map_path}  ({len(_body_mapping)}관절)")
 
     server.start()
 
@@ -399,12 +508,14 @@ def main():
                     if not args.no_window:
                         draw_landmarks(frame, landmarks, h, w, color=color)
 
-                    # 이미지 좌표: occlusion 핸들러만 유지 (그리기 일관성)
-                    occlusion[side].process(landmarks)
+                    # 이미지 좌표: occlusion 핸들러 + 2D DOF 계산용으로 캡처
+                    img_filtered   = occlusion[side].process(landmarks)
 
-                    # 월드 좌표로 DOF 계산 (손목 원점 기준 미터 단위 → 위치 이동 무영향)
+                    # 월드 좌표: 손목 DOF 계산용
                     world_filtered = occlusion_world[side].process(world_landmarks)
-                    raw_angles     = compute_dof_angles(world_filtered)
+
+                    # 손가락 굴신각은 2D 이미지 좌표에서 계산 (손목 방향 무관하게 안정적)
+                    raw_angles     = compute_dof_angles(world_filtered, img_filtered)
 
                     # EMA 스무딩: 손가락 위치 노이즈 추가 억제
                     prev = _dof_ema.get(side, raw_angles)
@@ -430,6 +541,56 @@ def main():
                             calib_reject_msg  = _calib_feedback(calib_warnings)
                             print(f"[WARN] 캘리브레이션 거부. 재시도...")
                         else:
+                            # blend 모드: direct 엔진도 동일한 캘리브레이션 적용
+                            if args.mapping == "blend":
+                                _engine_direct.calibrate(hands_angles)
+                                # 트리거 기준값 저장 (현재 손 DOF)
+                                _trigger_ref = {
+                                    side: dict(dofs)
+                                    for side, dofs in hands_angles.items()
+                                }
+                                if _trigger_rules:
+                                    print("[INFO] 트리거 기준값 저장:")
+                                    for anim, rule in _trigger_rules.items():
+                                        ref_val = _trigger_ref.get(
+                                            rule["hand"], {}
+                                        ).get(rule["dof"], 0.0)
+                                        print(f"  {anim}: {rule['hand']}.{rule['dof']} "
+                                              f"ref={ref_val:.1f}°  → trigger at "
+                                              f"{ref_val + rule['delta']:.1f}°")
+                            # 로코모션 캘리브레이션
+                            if _loco is not None:
+                                _loco.calibrate(hands_angles)
+
+                            # 트리거 피크 포즈 계산 (animal joint 공간)
+                            if args.mapping == "blend" and _trigger_rules:
+                                _MIN_PEAK_DEG = 8.0
+                                for _anim_t in _trigger_rules:
+                                    _n_kf = engine.anim_frame_count(_anim_t)
+                                    if _n_kf == 0:
+                                        continue
+                                    # 피크 프레임 탐색
+                                    _best_fi, _best_mag = 0, 0.0
+                                    for _fi in range(_n_kf):
+                                        _p = engine.get_sequential_pose(_anim_t, float(_fi))
+                                        _mag = sum(
+                                            abs(v.get("x", 0)) + abs(v.get("y", 0)) + abs(v.get("z", 0))
+                                            for v in _p.values()
+                                        )
+                                        if _mag > _best_mag:
+                                            _best_mag, _best_fi = _mag, _fi
+                                    _peak = engine.get_sequential_pose(_anim_t, float(_best_fi))
+                                    # 직접 매핑 가능하고 충분히 움직이는 관절만 비교
+                                    _cmp = [
+                                        jid for jid, xyz in _peak.items()
+                                        if max(abs(xyz.get("x", 0)), abs(xyz.get("y", 0)), abs(xyz.get("z", 0))) > _MIN_PEAK_DEG
+                                    ]
+                                    _trigger_peak_joints[_anim_t] = _peak
+                                    _trigger_cmp_joints[_anim_t]  = _cmp
+                                    print(f"[INFO] {_anim_t} 피크=frame{_best_fi}  "
+                                          f"비교관절={len(_cmp)}개  "
+                                          f"fraction={_TRIG_FRACTION*100:.0f}%")
+
                             print("[INFO] 캘리브레이션 완료")
                             calib_done = True
                     else:
@@ -458,10 +619,107 @@ def main():
             hand_detected = bool(hands_angles)
             if hand_detected:
                 try:
-                    joints = engine.transform_clamped(hands_angles, _skeleton)
-                    # direct 모드: float → {x,y,z} 변환 (애니메이션 데이터에서 축 자동 계산)
-                    if joints and not isinstance(next(iter(joints.values())), dict):
-                        joints = _float_joints_to_xyz(joints, engine.current_animal)
+                    if args.mapping == "blend":
+                        # ── 손 벡터 ──────────────────────────────────
+                        from mapping.keyframe_engine import _dof_dict_to_vec
+                        h_left  = _dof_dict_to_vec(hands_angles.get("left",  {}))
+                        h_right = _dof_dict_to_vec(hands_angles.get("right", {}))
+
+                        # ── 속도(velocity) 계산 ───────────────────────
+                        if _prev_h_right is not None:
+                            _vel = float(np.linalg.norm(h_right - _prev_h_right))
+                            _vel_ema = 0.3 * _vel + 0.7 * _vel_ema
+                        _prev_h_right = h_right.copy()
+
+                        # ── 쿨다운 감소 ──────────────────────────────
+                        if _cooldown_frames > 0:
+                            _cooldown_frames -= 1
+
+                        # ── 트리거 진행 중: 키프레임 직접 재생 ───────
+                        if _anim_state == "trigger":
+                            joints = engine.get_sequential_pose(
+                                _trigger_anim, _trigger_cursor
+                            )
+                            _trigger_cursor += 1.0
+                            _trigger_frames -= 1
+                            if _trigger_frames <= 0:
+                                _anim_state      = "normal"
+                                _trigger_anim    = None
+                                _cooldown_frames = 30
+                                print("[BLEND] → normal (trigger ended)")
+
+                        else:
+                            # ── Walk ROM direct mapping (트리거 비교 전에 먼저 계산) ──
+                            _sk = _walk_skeleton if _walk_skeleton else _skeleton
+                            joints_d = _engine_direct.transform_clamped(hands_angles, _sk)
+                            joints_d = _float_joints_to_xyz(joints_d, _engine_direct.current_animal)
+                            _DEAD = 3.0
+                            for _jid in joints_d:
+                                _v = joints_d[_jid]
+                                joints_d[_jid] = {
+                                    ax: (v if abs(v) >= _DEAD else 0.0)
+                                    for ax, v in _v.items()
+                                }
+                            joints = joints_d
+
+                            # ── 트리거 감지 (DOF delta 직접 비교 + hold) ──
+                            # locomotion_config의 delta = 캘리브 기준 대비 필요 DOF 변화량
+                            # _TRIG_FRACTION 비율만큼 변화하면 발동 (기본 65%)
+                            if _cooldown_frames == 0 and _trigger_rules and _trigger_ref:
+                                _fired_anim = None
+                                for _aname, _rule in _trigger_rules.items():
+                                    _dof          = _rule["dof"]
+                                    _hand         = _rule["hand"]
+                                    _delta_needed = _rule["delta"] * _TRIG_FRACTION
+                                    _ref_v = _trigger_ref.get(_hand, {}).get(_dof, 0.0)
+                                    _cur_v = hands_angles.get(_hand, {}).get(_dof, 0.0)
+                                    _actual = _cur_v - _ref_v
+                                    _ok = (_actual >= _delta_needed) if _delta_needed >= 0 \
+                                          else (_actual <= _delta_needed)
+                                    if _ok:
+                                        _trigger_hold_cnt[_aname] = _trigger_hold_cnt.get(_aname, 0) + 1
+                                        if _trigger_hold_cnt[_aname] >= _TRIGGER_HOLD:
+                                            _fired_anim = _aname
+                                            _trigger_hold_cnt[_aname] = 0
+                                            break
+                                    else:
+                                        _trigger_hold_cnt[_aname] = 0
+                                if _fired_anim is not None:
+                                    _n_kf = engine.anim_frame_count(_fired_anim)
+                                    _anim_state     = "trigger"
+                                    _trigger_anim   = _fired_anim
+                                    _trigger_frames = _n_kf - 1
+                                    _trigger_cursor = 1.0
+                                    print(f"[BLEND] → trigger: {_fired_anim}  frames={_n_kf}")
+
+                            # ── 트리거 진행도 디버그 로그 ────────────
+                            if args.dist_log > 0 and frame_count % args.dist_log == 0 and _trigger_rules and _trigger_ref:
+                                _prog_strs = []
+                                for _aname, _rule in _trigger_rules.items():
+                                    _dof  = _rule["dof"]
+                                    _hand = _rule["hand"]
+                                    _dn   = _rule["delta"] * _TRIG_FRACTION
+                                    _ref_v = _trigger_ref.get(_hand, {}).get(_dof, 0.0)
+                                    _cur_v = hands_angles.get(_hand, {}).get(_dof, 0.0)
+                                    _actual = _cur_v - _ref_v
+                                    _pct = (_actual / _dn * 100) if _dn != 0 else 0.0
+                                    _hold = _trigger_hold_cnt.get(_aname, 0)
+                                    _prog_strs.append(
+                                        f"{_aname}({_hand}.{_dof})={_actual:+.1f}°/{_dn:.1f}°"
+                                        + (f"[{_hold}f]" if _hold > 0 else "")
+                                    )
+                                print(f"[TRIG] " + "  ".join(_prog_strs))
+                    else:
+                        joints = engine.transform_clamped(hands_angles, _skeleton)
+                        # direct 모드: float → {x,y,z} 변환 (애니메이션 데이터에서 축 자동 계산)
+                        if joints and not isinstance(next(iter(joints.values())), dict):
+                            joints = _float_joints_to_xyz(joints, engine.current_animal)
+
+                    # body joints를 항상 0으로 명시 전송 (Unity가 이전 값을 유지하는 것 방지)
+                    if _body_mapping:
+                        for _bj in _body_mapping:
+                            if _bj not in joints:
+                                joints[_bj] = {"x": 0.0, "y": 0.0, "z": 0.0}
                 except Exception as e:
                     print(f"[WARN] 변환 오류: {e}")
                     joints = {}
@@ -474,27 +732,43 @@ def main():
                         r = hands_angles["right"]
                         print(f"  right: index_mcp={r.get('index_mcp',0):.1f}  "
                               f"middle_mcp={r.get('middle_mcp',0):.1f}  "
-                              f"thumb_ip={r.get('thumb_ip',0):.1f}  "
-                              f"pinky_pip={r.get('pinky_pip',0):.1f}")
+                              f"wrist_rot={r.get('wrist_rot',0):.1f}  "
+                              f"wrist_flex={r.get('wrist_flex',0):.1f}")
                     if "left" in hands_angles:
                         l = hands_angles["left"]
                         print(f"  left:  index_mcp={l.get('index_mcp',0):.1f}  "
                               f"middle_mcp={l.get('middle_mcp',0):.1f}  "
-                              f"thumb_ip={l.get('thumb_ip',0):.1f}  "
-                              f"pinky_pip={l.get('pinky_pip',0):.1f}")
+                              f"wrist_rot={l.get('wrist_rot',0):.1f}  "
+                              f"wrist_flex={l.get('wrist_flex',0):.1f}")
                     def _jv(jid, ax):
                         v = joints.get(jid, {})
                         return v.get(ax, 0.0) if isinstance(v, dict) else float(v)
-                    print(f"  → r_leg=Y{_jv('r_leg','y'):.1f}  "
-                          f"l_leg=Y{_jv('l_leg','y'):.1f}  "
-                          f"r_bone_006=Y{_jv('r_bone_006','y'):.1f}")
+                    def _jxyz(jid):
+                        v = joints.get(jid, {})
+                        if isinstance(v, dict):
+                            return f"X{v.get('x',0):.1f}/Y{v.get('y',0):.1f}/Z{v.get('z',0):.1f}"
+                        return f"{float(v):.1f}"
+                    print(f"  → r_leg={_jxyz('r_leg')}  "
+                          f"l_leg={_jxyz('l_leg')}  "
+                          f"r_bone_006={_jxyz('r_bone_006')}")
             else:
                 joints = {}
+
+            # ── 로코모션 계산 (관절 매핑과 독립) ─────────────
+            _loco_result: dict | None = None
+            if _loco is not None:
+                _loco_result = _loco.update(hands_angles, hand_detected, engine)
+                # blend 모드: cursor 기반 speed → velocity 기반 speed로 교체
+                if args.mapping == "blend" and _loco_result is not None:
+                    _loco_result["speed"] = round(
+                        min(_vel_ema * _VEL_SCALE, _loco_result.get("speed_max", 2.0)), 4
+                    )
 
             server.send_frame(
                 joints        = joints,
                 animal        = engine.current_animal,
                 hand_detected = hand_detected,
+                locomotion    = _loco_result,
             )
 
             frame_count += 1
@@ -509,14 +783,36 @@ def main():
                 cv2.putText(frame,
                             f"Unity clients: {server.client_count}", (10, 90),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+                # 로코모션 HUD
+                if _loco_result is not None:
+                    _spd = _loco_result.get("speed", 0.0)
+                    _yaw = _loco_result.get("yaw_delta", 0.0)
+                    _cur = _loco_result.get("cursor", 0.0)
+                    _arrow = ("→" if _yaw > 1 else "←" if _yaw < -1 else "↑")
+                    cv2.putText(frame,
+                                f"Loco: spd={_spd:.3f}  yaw={_yaw:+.1f}  cur={_cur:.1f} {_arrow}",
+                                (10, 115),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (180, 255, 100), 1)
+
+                # blend 모드 상태 표시 (locomotion HUD 아래로 내림)
+                _hud_y = 145 if _loco_result is not None else 125
+                if args.mapping == "blend":
+                    if _anim_state == "trigger":
+                        state_txt   = f"TRIGGER: {_trigger_anim}  [{_trigger_frames}f]"
+                        state_color = (0, 100, 255)
+                    else:
+                        state_txt   = f"normal  vel={_vel_ema:.2f}"
+                        state_color = (0, 220, 100)
+                    cv2.putText(frame, state_txt, (10, _hud_y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.65, state_color, 2)
 
                 # 키프레임 블렌드 정보
                 blend_info = getattr(engine, "_last_blend_info", [])
-                if blend_info:
+                if blend_info and args.mapping != "blend":
                     top = blend_info[0]
                     cv2.putText(frame,
                                 f"[{top[1]} f{top[2]}] {top[0]*100:.0f}%",
-                                (10, 125),
+                                (10, _hud_y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 180), 2)
                     for idx, (w, anim, frm) in enumerate(blend_info[1:4]):
                         if w < 0.03:

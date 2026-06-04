@@ -10,11 +10,11 @@
     },
     "bodyik_001": {
       "unity_path": "Spider/BodyIK.001",
-      "axis": "Z"
+      "axis": "X"
     },
     "bone": {
       "unity_path": "Spider/Bone",
-      "axis": "Z"
+      "axis": "X"
     },
     "l_leg_ik_005": {
       "unity_path": "Spider/L.LEG_IK.005",

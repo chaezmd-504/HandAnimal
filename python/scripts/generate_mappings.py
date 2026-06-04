@@ -51,6 +51,15 @@ BETA_MAP = {
     "fish":       0.0,
 }
 
+# 동물별 메인 매핑에서 제외할 관절 (body_mapping 또는 IK 타겟)
+# body_mapping.json 에 있는 관절은 자동으로 추가됨
+EXCLUDE_EXTRA = {
+    # IK 타겟 본, 보조 뼈 등 손가락으로 제어하지 않을 것들
+    "spider": {"l_leg_ik_005", "l_leg_ik_008", "l_leg_ik_011", "l_legik_015",
+               "r_leg_ik_005", "r_leg_ik_008", "r_leg_ik_011",
+               "ass", "bone_002", "l_bone_014", "r_bone_014"},
+}
+
 SKELETONS_DIR = os.path.join(PYTHON_DIR, "data", "animal_skeletons")
 POSES_10K     = os.path.join(PYTHON_DIR, "data", "hand_poses", "poses_10k.npy")
 POSES_SUB     = os.path.join(PYTHON_DIR, "data", "hand_poses", "poses_1000_comfortable.npy")
@@ -134,6 +143,19 @@ def main():
 
         try:
             opt = MappingOptimizer(skeleton_path, POSES_10K)
+
+            # body_mapping.json 관절 자동 제외
+            body_map_path = os.path.join(MAPPINGS_DIR, f"{animal}_body_mapping.json")
+            exclude = set(EXCLUDE_EXTRA.get(animal, set()))
+            if os.path.exists(body_map_path):
+                with open(body_map_path, encoding="utf-8") as _f:
+                    _bm = json.load(_f)
+                exclude |= set(_bm.get("mapping", {}).keys())
+            if exclude:
+                opt.joints = [j for j in opt.joints if j["id"] not in exclude]
+                opt.n_animal = len(opt.joints)
+                opt._joint_idx = {j["id"]: i for i, j in enumerate(opt.joints)}
+                print(f"  제외 관절 ({len(exclude)}개): {sorted(exclude)}")
 
             poses_arg = avatar_poses_path if os.path.exists(avatar_poses_path) else None
             sub_arg   = POSES_SUB if os.path.exists(POSES_SUB) else None

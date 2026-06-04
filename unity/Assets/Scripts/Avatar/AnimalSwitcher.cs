@@ -6,6 +6,7 @@
 //   2. animalName: "spider", "butterfly" 등 Python과 동일한 이름
 //   3. rootObject: 해당 동물의 루트 GameObject 드래그 앤 드롭
 //   4. controller: 해당 동물의 AnimalController 컴포넌트
+//   5. locomotion: (선택) 해당 동물의 AnimalLocomotion 컴포넌트
 
 using System;
 using System.Collections;
@@ -18,9 +19,10 @@ public class AnimalSwitcher : MonoBehaviour
     [Serializable]
     public class AnimalEntry
     {
-        public string         animalName;
-        public GameObject     rootObject;
+        public string           animalName;
+        public GameObject       rootObject;
         public AnimalController controller;
+        public AnimalLocomotion locomotion;   // null 허용 — locomotion 비활성 동물
     }
 
     [Header("동물 목록")]
@@ -94,6 +96,7 @@ public class AnimalSwitcher : MonoBehaviour
         {
             prev.rootObject?.SetActive(false);
             prev.controller?.SetIdle();
+            prev.locomotion?.ResetLocomotion();
         }
 
         // 다음 동물 활성화
@@ -145,6 +148,16 @@ public class AnimalSwitcher : MonoBehaviour
     {
         if (_current != null && _map.TryGetValue(_current, out var entry))
             return entry.controller;
+        return null;
+    }
+
+    /// <summary>
+    /// 현재 동물의 AnimalLocomotion을 반환한다. 없으면 null.
+    /// </summary>
+    public AnimalLocomotion GetCurrentLocomotion()
+    {
+        if (_current != null && _map.TryGetValue(_current, out var entry))
+            return entry.locomotion;
         return null;
     }
 }

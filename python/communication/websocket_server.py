@@ -121,6 +121,7 @@ class WebSocketServer:
         animal: str,
         hand_detected: bool,
         gesture: Optional[str] = None,
+        locomotion: Optional[dict] = None,
     ):
         """
         매 프레임 관절 데이터를 Unity로 전송한다.
@@ -130,15 +131,36 @@ class WebSocketServer:
             animal:       현재 동물 이름 ("spider" 등)
             hand_detected: 손이 감지됐는지 여부
             gesture:      감지된 제스처 이름 또는 None
+            locomotion:   이동 파라미터 dict 또는 None
+                          {"speed": float, "yaw_delta": float, "cursor": float, "valid": bool}
         """
         payload = {
-            "type":         "frame",
-            "animal":       animal,
-            "joints":       joints,
+            "type":          "frame",
+            "animal":        animal,
+            "joints":        joints,
             "hand_detected": hand_detected,
-            "gesture":      gesture,
+            "gesture":       gesture,
+        }
+        if locomotion is not None:
+            payload["locomotion"] = locomotion
+        self._broadcast(json.dumps(payload))
+
+    def send_trigger(self, anim: str, duration: float = 2.0):
+        """
+        트리거 이벤트를 Unity로 전송한다.
+        Unity는 해당 Animator 상태를 재생하고 duration 동안 관절 데이터를 무시한다.
+
+        Args:
+            anim:     재생할 애니메이션 이름 ("Attack1", "Attack2", "Death" 등)
+            duration: 애니메이션 지속 시간 (초) — Unity 타이머에 전달
+        """
+        payload = {
+            "type":     "trigger",
+            "anim":     anim,
+            "duration": round(duration, 2),
         }
         self._broadcast(json.dumps(payload))
+        print(f"[WebSocketServer] 트리거 전송: {anim} ({duration:.1f}s)")
 
     def send_switch(self, animal: str):
         """

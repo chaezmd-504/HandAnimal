@@ -240,10 +240,32 @@ public class AnimPoseExporter : EditorWindow
         foreach (var j in jointInfos)
             Log($"     {j.jointId:30} axis={j.axis}  ROM=[{j.minAngle:F1}, {j.maxAngle:F1}]  stddev={j.stdDev:F1}°");
 
-        // ── 5. skeleton.json 저장 ─────────────────────────────
+        // ── 5. skeleton.json 저장 (기존 chains 보존) ─────────────
         Directory.CreateDirectory(_outputDir);
         string skelPath = Path.Combine(_outputDir, $"{_animalName}.json");
-        File.WriteAllText(skelPath, BuildSkeletonJson(jointInfos), new UTF8Encoding(false));
+        string existingChains = "[]";
+        if (File.Exists(skelPath))
+        {
+            string existing = File.ReadAllText(skelPath, new UTF8Encoding(false));
+            int ci = existing.IndexOf("\"chains\"");
+            if (ci >= 0)
+            {
+                int arrStart = existing.IndexOf('[', ci);
+                if (arrStart >= 0)
+                {
+                    // 중첩 배열 depth 추적으로 올바른 닫는 ] 찾기
+                    int depth = 0, arrEnd = -1;
+                    for (int k = arrStart; k < existing.Length; k++)
+                    {
+                        if      (existing[k] == '[') depth++;
+                        else if (existing[k] == ']') { depth--; if (depth == 0) { arrEnd = k; break; } }
+                    }
+                    if (arrEnd > arrStart)
+                        existingChains = existing.Substring(arrStart, arrEnd - arrStart + 1);
+                }
+            }
+        }
+        File.WriteAllText(skelPath, BuildSkeletonJson(jointInfos, existingChains), new UTF8Encoding(false));
         Log($"\n[OK] skeleton.json 저장: {skelPath}");
 
         // ── 6. bone_map.json 저장 ─────────────────────────────
@@ -344,7 +366,7 @@ public class AnimPoseExporter : EditorWindow
     // JSON 빌더
     // ──────────────────────────────────────────────────────────
 
-    private string BuildSkeletonJson(List<JointInfo> joints)
+    private string BuildSkeletonJson(List<JointInfo> joints, string chainsJson = "[]")
     {
         var sb = new StringBuilder();
         sb.AppendLine("{");
@@ -367,7 +389,7 @@ public class AnimPoseExporter : EditorWindow
             sb.AppendLine($"    }}{comma}");
         }
         sb.AppendLine("  ],");
-        sb.AppendLine("  \"chains\": []");
+        sb.AppendLine($"  \"chains\": {chainsJson}");
         sb.Append("}");
         return sb.ToString();
     }

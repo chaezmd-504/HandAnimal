@@ -50,6 +50,7 @@ public class AnimalController : MonoBehaviour
     private Dictionary<string, Vector3> _targetAngles = new Dictionary<string, Vector3>();
     private bool _isIdle = true;
     private int _applyCount = 0;
+    private float _triggerTimer = 0f;   // 0이면 일반 모드, >0이면 트리거 애니메이션 재생 중
 
     private void Awake()
     {
@@ -83,6 +84,13 @@ public class AnimalController : MonoBehaviour
 
     private void Update()
     {
+        // 트리거 애니메이션 재생 중: 타이머만 감소, 관절 직접 제어 스킵
+        if (_triggerTimer > 0f)
+        {
+            _triggerTimer -= Time.deltaTime;
+            return;
+        }
+
         if (_isIdle) return;
 
         foreach (var kv in _targetAngles)
@@ -95,15 +103,47 @@ public class AnimalController : MonoBehaviour
             entry.jointTransform.localRotation =
                 Quaternion.Lerp(current, target, lerpSpeed * Time.deltaTime);
         }
+    }
 
+    /// <summary>
+    /// Python blend 모드 트리거 이벤트 수신 시 호출.
+    /// Animator로 해당 애니메이션을 재생하고 duration 동안 관절 직접 제어를 중단한다.
+    /// </summary>
+    public void PlayTriggerAnim(string animName, float duration)
+    {
+        if (idleAnimator == null)
+        {
+            Debug.LogWarning("[AnimalController] PlayTriggerAnim: idleAnimator가 없습니다.");
+            return;
+        }
+        idleAnimator.enabled = true;
+        idleAnimator.Play(animName, 0, 0f);
+        _triggerTimer = duration;
+        _isIdle = true;   // 타이머 종료 후 ApplyJoints가 restRotation을 재캡처하도록
+        Debug.Log($"[AnimalController] 트리거 재생: {animName}  ({duration:F1}s)");
     }
 
     public void ApplyJoints(Dictionary<string, JointRotation> joints)
     {
+        if (_triggerTimer > 0f) return;   // 트리거 재생 중 → 무시
+
+        bool wasIdle = _isIdle;
         _isIdle = false;
 
         if (idleAnimator != null && idleAnimator.enabled)
+        {
             idleAnimator.enabled = false;
+
+            // 첫 전환 시 Animator가 적용한 Idle 포즈를 restRotation으로 재캡처
+            // (Awake에서는 Animator가 아직 포즈를 적용하기 전이라 T-포즈 기준이 됨)
+            if (wasIdle)
+            {
+                foreach (var entry in _jointMap.Values)
+                    if (entry.jointTransform != null)
+                        entry.restRotation = entry.jointTransform.localRotation;
+                Debug.Log("[AnimalController] restRotation을 Idle 포즈 기준으로 재캡처");
+            }
+        }
 
         foreach (var kv in joints)
             _targetAngles[kv.Key] = new Vector3(kv.Value.x, kv.Value.y, kv.Value.z);
@@ -144,10 +184,10 @@ public class AnimalController : MonoBehaviour
 
     public void SetIdle()
     {
+        if (_triggerTimer > 0f) return;   // 트리거 재생 중 → 무시
         if (_isIdle) return;
         _isIdle = true;
-        if (idleAnimator != null)
-            idleAnimator.enabled = true;
+        // 마지막 포즈 유지 — Idle 애니메이션 재생 안 함
     }
 
     /// <summary>

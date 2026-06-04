@@ -1,0 +1,129 @@
+{
+  "_comment": "동물별 로코모션 설정. base_anim 은 해당 동물의 poses.json 에 있는 _anim 이름과 일치해야 함.",
+  "_hint": "python main.py --locomotion 실행 시 시작 로그에 사용 가능한 anim 목록이 출력됨.",
+  "spider": {
+    "base_anim": "Walk",
+    "speed_scale": 0.04,
+    "dir_scale": 0.15,
+    "dir_deadzone": 8,
+    "speed_max": 2,
+    "ema_alpha": 0.3,
+    "proximity_scale": 0.03,
+    "triggers": {
+      "Attack1": {
+        "dof": "index_pip",
+        "hand": "right",
+        "delta": 50.0
+      },
+      "Attack2": {
+        "dof": "index_mcp",
+        "hand": "right",
+        "delta": 34.9
+      }
+    }
+  },
+  "horse": {
+    "base_anim": "Horse_001_walk",
+    "speed_scale": 0.06,
+    "dir_scale": 0.8,
+    "dir_deadzone": 5,
+    "speed_max": 3,
+    "ema_alpha": 0.3,
+    "proximity_scale": 0.03,
+    "triggers": {
+      "Horse_001_idle": {
+        "dof": "index_mcp",
+        "hand": "right",
+        "delta": 37.6
+      },
+      "Horse_001_run": {
+        "dof": "ring_pip",
+        "hand": "right",
+        "delta": 50.0
+      },
+      "Horse_001_eat": {
+        "dof": "ring_pip",
+        "hand": "right",
+        "delta": 50.0
+      }
+    }
+  },
+  "butterfly": {
+    "base_anim": "",
+    "speed_scale": 0.02,
+    "dir_scale": 1,
+    "dir_deadzone": 5,
+    "speed_max": 1.5,
+    "ema_alpha": 0.25,
+    "proximity_scale": 0.03
+  },
+  "fish": {
+    "base_anim": "",
+    "speed_scale": 0.03,
+    "dir_scale": 0.8,
+    "dir_deadzone": 5,
+    "speed_max": 2,
+    "ema_alpha": 0.3,
+    "proximity_scale": 0.03,
+    "triggers": {
+      "swim_left": {
+        "dof": "wrist_rot",
+        "hand": "right",
+        "delta": 45.0
+      },
+      "idle": {
+        "dof": "wrist_flex",
+        "hand": "left",
+        "delta": 23.6
+      },
+      "idle_right": {
+        "dof": "wrist_flex",
+        "hand": "left",
+        "delta": 22.1
+      },
+      "tpose": {
+        "dof": "wrist_rot",
+        "hand": "right",
+        "delta": -50.0
+      },
+      "idle_left": {
+        "dof": "wrist_flex",
+        "hand": "left",
+        "delta": 22.1
+      },
+      "swim_right": {
+        "dof": "wrist_flex",
+        "hand": "left",
+        "delta": 35.7
+      },
+      "bite": {
+        "dof": "wrist_flex",
+        "hand": "left",
+        "delta": -43.3
+      },
+      "swim": {
+        "dof": "wrist_flex",
+        "hand": "left",
+        "delta": 38.9
+      }
+    }
+  },
+  "octopus": {
+    "base_anim": "",
+    "speed_scale": 0.03,
+    "dir_scale": 0.8,
+    "dir_deadzone": 5,
+    "speed_max": 1.5,
+    "ema_alpha": 0.3,
+    "proximity_scale": 0.03
+  },
+  "snake": {
+    "base_anim": "",
+    "speed_scale": 0.02,
+    "dir_scale": 1,
+    "dir_deadzone": 5,
+    "speed_max": 1.5,
+    "ema_alpha": 0.25,
+    "proximity_scale": 0.03
+  }
+}

@@ -295,30 +295,160 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 420778, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
   m_PrefabInstance: {fileID: 84474228}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &294681465 stripped
+--- !u!4 &300000001 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 3860617159931090939, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
+  m_CorrespondingSourceObject: {fileID: 7298246114395246867, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000002 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2528958883001148611, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000003 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4700360898507440999, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000004 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4493673964413131213, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000005 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8548660240726590425, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000006 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1371885249827115338, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000007 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6984684568153632686, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000008 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5445476186001928700, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000009 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1507487337633368320, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000010 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3531259485882598279, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000011 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 703589887730652286, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000012 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1150168113521596859, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000013 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5486129884514750935, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000014 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7690409655010498008, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000015 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8429374816491420111, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000016 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2777391811757894396, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000017 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1308184363403349226, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000018 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4088834757019254624, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000019 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 336702469840794366, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000020 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6653120782144514349, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000021 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6589826546687291908, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000022 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 271404997736459012, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000023 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9048855689707377349, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000024 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1991488867073836281, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000025 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6596548679905400774, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000026 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3193580492075701427, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000027 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2694395883818412133, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000028 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2370903377307619760, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &300000029 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4510568115982409423, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &431830878 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8774027497164719145, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
   m_PrefabInstance: {fileID: 731406558}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &439933770 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8336464443961249715, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &486895659 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3478121568917374666, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
   m_PrefabInstance: {fileID: 1370443062}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &531764882 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 279277913817615149, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &586957744
 GameObject:
@@ -364,25 +494,10 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &634993155 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4236021772625791834, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &641222880 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1715898406860877614, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &649112977 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 445814, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
   m_PrefabInstance: {fileID: 84474228}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &692604670 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7154114536173711353, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &731406558
 PrefabInstance:
@@ -462,6 +577,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 894869245}
+    - targetCorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 894869247}
   m_SourcePrefab: {fileID: 100100000, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
 --- !u!4 &731406559 stripped
 Transform:
@@ -583,11 +701,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3712094126828431753, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
   m_PrefabInstance: {fileID: 731406558}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &850989690 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6280833692872053691, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &884200884
 GameObject:
   m_ObjectHideFlags: 0
@@ -599,6 +712,8 @@ GameObject:
   - component: {fileID: 884200887}
   - component: {fileID: 884200886}
   - component: {fileID: 884200885}
+  - component: {fileID: 884200889}
+  - component: {fileID: 884200888}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -680,6 +795,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &884200888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884200884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81c42d9a136244f4d8908db2cd09bc82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 894869246}
+  distanceBack: 5
+  height: 3
+  positionSmoothing: 6
+  rotationSmoothing: 6
+--- !u!114 &884200889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884200884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1 &894869239 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5128811620208064792, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
@@ -703,266 +879,189 @@ MonoBehaviour:
     axisX: 0
     axisY: 1
     axisZ: 0
-    minAngle: -157.8
+    minAngle: -157.7
     maxAngle: 5
   - jointName: bodyik_001
     jointTransform: {fileID: 1820091474}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -142.1
+    minAngle: -141.9
     maxAngle: 5
   - jointName: bone
     jointTransform: {fileID: 1865950476}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -181.6
-    maxAngle: 178
-  - jointName: l_leg_ik_005
-    jointTransform: {fileID: 294681465}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -82.2
-    maxAngle: 5.2
-  - jointName: l_leg_ik_008
-    jointTransform: {fileID: 1051651098}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -82.3
-    maxAngle: 5.3
-  - jointName: l_leg_ik_011
-    jointTransform: {fileID: 2098813148}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -82.4
-    maxAngle: 5
-  - jointName: l_legik_015
-    jointTransform: {fileID: 850989690}
-    axisX: 0
-    axisY: 0
-    axisZ: 1
-    minAngle: -184.3
-    maxAngle: 5
-  - jointName: r_leg_ik_005
-    jointTransform: {fileID: 439933770}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -80.2
-    maxAngle: 5.2
-  - jointName: r_leg_ik_008
-    jointTransform: {fileID: 531764882}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -80.9
-    maxAngle: 5.2
-  - jointName: r_leg_ik_011
-    jointTransform: {fileID: 692604670}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -81.3
-    maxAngle: 5
-  - jointName: ass
-    jointTransform: {fileID: 641222880}
-    axisX: 1
-    axisY: 0
-    axisZ: 0
-    minAngle: -5
-    maxAngle: 51
-  - jointName: bone_002
-    jointTransform: {fileID: 634993155}
-    axisX: 0
-    axisY: 1
-    axisZ: 0
-    minAngle: -9.4
-    maxAngle: 33.4
+    minAngle: -180.1
+    maxAngle: 184.1
   - jointName: l_leg
     jointTransform: {fileID: 731406573}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -68.6
-    maxAngle: 40.5
+    minAngle: -69.3
+    maxAngle: 46.6
   - jointName: l_leg_001
     jointTransform: {fileID: 731406576}
     axisX: 0
     axisY: 0
     axisZ: 1
     minAngle: -24.1
-    maxAngle: 57.5
+    maxAngle: 56.8
   - jointName: l_leg_002
     jointTransform: {fileID: 731406579}
     axisX: 0
     axisY: 1
     axisZ: 0
     minAngle: -21.7
-    maxAngle: 92.3
+    maxAngle: 91.3
   - jointName: l_leg_003
     jointTransform: {fileID: 731406582}
     axisX: 0
     axisY: 1
     axisZ: 0
     minAngle: -27.7
-    maxAngle: 39.2
+    maxAngle: 39
   - jointName: r_leg
     jointTransform: {fileID: 731406561}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -40.2
-    maxAngle: 76.6
+    minAngle: -40.5
+    maxAngle: 76.8
   - jointName: r_leg_001
     jointTransform: {fileID: 731406564}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -31.9
+    minAngle: -31.8
     maxAngle: 21
   - jointName: r_leg_002
     jointTransform: {fileID: 731406567}
     axisX: 0
     axisY: 1
     axisZ: 0
-    minAngle: -26.1
+    minAngle: -26.3
     maxAngle: 5
   - jointName: r_leg_003
     jointTransform: {fileID: 731406570}
     axisX: 0
     axisY: 1
     axisZ: 0
-    minAngle: -45.2
+    minAngle: -45.1
     maxAngle: 35.9
-  - jointName: l_bone_014
-    jointTransform: {fileID: 1249902811}
-    axisX: 0
-    axisY: 1
-    axisZ: 0
-    minAngle: -24.6
-    maxAngle: 5
-  - jointName: r_bone_014
-    jointTransform: {fileID: 1762438718}
-    axisX: 0
-    axisY: 1
-    axisZ: 0
-    minAngle: -5
-    maxAngle: 30.1
   - jointName: l_bone_009
     jointTransform: {fileID: 731406575}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -49.8
-    maxAngle: 15
+    minAngle: -50.8
+    maxAngle: 14.3
   - jointName: l_bone_006
     jointTransform: {fileID: 731406578}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -61.6
+    minAngle: -64.9
     maxAngle: 7.4
   - jointName: l_bone_003
     jointTransform: {fileID: 731406581}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -66.7
+    minAngle: -67.7
     maxAngle: 9.8
   - jointName: l_bone_012
     jointTransform: {fileID: 731406572}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -44.2
-    maxAngle: 22.9
+    minAngle: -45.2
+    maxAngle: 23
   - jointName: r_bone_009
     jointTransform: {fileID: 731406563}
     axisX: 0
     axisY: 1
     axisZ: 0
     minAngle: -23.8
-    maxAngle: 25.9
+    maxAngle: 26.2
   - jointName: r_bone_006
     jointTransform: {fileID: 731406566}
     axisX: 0
     axisY: 0
     axisZ: 1
     minAngle: -54
-    maxAngle: 83.6
+    maxAngle: 84.4
   - jointName: r_bone_003
     jointTransform: {fileID: 731406569}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -18.9
-    maxAngle: 30
+    minAngle: -18.5
+    maxAngle: 30.4
   - jointName: r_bone_012
     jointTransform: {fileID: 731406560}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -23.2
-    maxAngle: 57.2
+    minAngle: -23.3
+    maxAngle: 57.1
   - jointName: l_bone_010
     jointTransform: {fileID: 731406574}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -45
+    minAngle: -45.9
     maxAngle: 15.9
   - jointName: l_bone_007
     jointTransform: {fileID: 731406577}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -49.8
+    minAngle: -48.4
     maxAngle: 13.2
   - jointName: l_bone_004
     jointTransform: {fileID: 731406580}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -52.5
-    maxAngle: 19.2
+    minAngle: -52.8
+    maxAngle: 19.1
   - jointName: l_bone_013
     jointTransform: {fileID: 731406571}
     axisX: 1
     axisY: 0
     axisZ: 0
     minAngle: -26.5
-    maxAngle: 38.9
+    maxAngle: 40
   - jointName: r_bone_010
     jointTransform: {fileID: 731406562}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -28.7
-    maxAngle: 21.6
+    minAngle: -27.9
+    maxAngle: 21.5
   - jointName: r_bone_007
     jointTransform: {fileID: 731406565}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -102.8
-    maxAngle: 40.7
+    minAngle: -102.6
+    maxAngle: 39.3
   - jointName: r_bone_004
     jointTransform: {fileID: 731406568}
     axisX: 0
     axisY: 0
     axisZ: 1
-    minAngle: -23.7
-    maxAngle: 36.1
+    minAngle: -24.7
+    maxAngle: 36.2
   - jointName: r_bone_013
     jointTransform: {fileID: 731406559}
     axisX: 1
     axisY: 0
     axisZ: 0
-    minAngle: -26.7
+    minAngle: -25.1
     maxAngle: 51.6
   lerpSpeed: 12
   idleAnimator: {fileID: 894869245}
@@ -1001,6 +1100,27 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!4 &894869246 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5505336437074420642, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
+  m_PrefabInstance: {fileID: 731406558}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &894869247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 894869239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88664c34320ab3348a9440b2397030a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speedMultiplier: 50
+  rotationMultiplier: 1
+  speedDecay: 0.85
+  showDebugLog: 0
 --- !u!1 &976849675
 GameObject:
   m_ObjectHideFlags: 0
@@ -1035,6 +1155,7 @@ MonoBehaviour:
   retryDelay: 3
   animalSwitcher: {fileID: 1685436418}
   animalController: {fileID: 894869241}
+  animalLocomotion: {fileID: 0}
 --- !u!4 &976849677
 Transform:
   m_ObjectHideFlags: 0
@@ -1055,16 +1176,310 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 455730, guid: be999fe03c257ec4cb0a3a4b5ca72217, type: 3}
   m_PrefabInstance: {fileID: 84474228}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1051651098 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7658709368846877173, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
+--- !u!1001 &1330000430
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3851015956068934392, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3851015956068934393, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3851015956068934394, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_Name
+      value: Horse_001
+      objectReference: {fileID: 0}
+    - target: {fileID: 3851015956068934395, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3851015956068934398, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4483999970917742656, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 3851015956068934395, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+    - {fileID: 3851015956068934392, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+    - {fileID: 3851015956068934393, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+    - {fileID: 3851015956068934398, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3851015956068934394, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1330000432}
+  m_SourcePrefab: {fileID: 100100000, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+--- !u!1 &1330000431 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3851015956068934394, guid: dfb23d60f30c46847ba7815aa09e2567, type: 3}
+  m_PrefabInstance: {fileID: 1330000430}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1249902811 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8056283531185043717, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
+--- !u!114 &1330000432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1330000431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2f227ad29a90774c871a53e704ec1e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jointEntries:
+  - jointName: shoulder_l
+    jointTransform: {fileID: 300000001}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -12.3
+    maxAngle: 20.2
+  - jointName: shoulder_r
+    jointTransform: {fileID: 300000002}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -14.2
+    maxAngle: 19.3
+  - jointName: thigh_l
+    jointTransform: {fileID: 300000003}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -137.8
+    maxAngle: 38.8
+  - jointName: thigh_r
+    jointTransform: {fileID: 300000004}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -160.3
+    maxAngle: 14.5
+  - jointName: spine_003
+    jointTransform: {fileID: 300000005}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -22.3
+    maxAngle: 5
+  - jointName: spine_007
+    jointTransform: {fileID: 300000006}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -12.6
+    maxAngle: 5.6
+  - jointName: shin_l
+    jointTransform: {fileID: 300000007}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -9.2
+    maxAngle: 59.5
+  - jointName: shin_r
+    jointTransform: {fileID: 300000008}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -123.8
+    maxAngle: 7.5
+  - jointName: spine_002
+    jointTransform: {fileID: 300000009}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -15.4
+    maxAngle: 8.6
+  - jointName: front_shoulder_l
+    jointTransform: {fileID: 300000010}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -13.2
+    maxAngle: 37.2
+  - jointName: front_shoulder_r
+    jointTransform: {fileID: 300000011}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -30
+    maxAngle: 22.9
+  - jointName: spine_008
+    jointTransform: {fileID: 300000012}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -87.6
+    maxAngle: 5
+  - jointName: foot_l
+    jointTransform: {fileID: 300000013}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -17.1
+    maxAngle: 16
+  - jointName: foot_r
+    jointTransform: {fileID: 300000014}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -9.9
+    maxAngle: 20.5
+  - jointName: spine_001
+    jointTransform: {fileID: 300000015}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -20.5
+    maxAngle: 15.3
+  - jointName: front_thigh_l
+    jointTransform: {fileID: 300000016}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -10.7
+    maxAngle: 132.7
+  - jointName: front_thigh_r
+    jointTransform: {fileID: 300000017}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -134.9
+    maxAngle: 13.7
+  - jointName: toe_l
+    jointTransform: {fileID: 300000018}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -79.7
+    maxAngle: 33.7
+  - jointName: toe_r
+    jointTransform: {fileID: 300000019}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -89.8
+    maxAngle: 9.1
+  - jointName: spine
+    jointTransform: {fileID: 300000020}
+    axisX: 0
+    axisY: 0
+    axisZ: 1
+    minAngle: -15.3
+    maxAngle: 21.3
+  - jointName: front_shin_l
+    jointTransform: {fileID: 300000021}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -7.3
+    maxAngle: 16.9
+  - jointName: front_shin_r
+    jointTransform: {fileID: 300000022}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -13.2
+    maxAngle: 11.7
+  - jointName: front_foot_l
+    jointTransform: {fileID: 300000023}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -183.7
+    maxAngle: 182.7
+  - jointName: front_foot_r
+    jointTransform: {fileID: 300000024}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -156.6
+    maxAngle: 5.4
+  - jointName: scull
+    jointTransform: {fileID: 300000025}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -7.7
+    maxAngle: 52.2
+  - jointName: front_toe_l
+    jointTransform: {fileID: 300000026}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -107.2
+    maxAngle: 16.9
+  - jointName: front_toe_r
+    jointTransform: {fileID: 300000027}
+    axisX: 1
+    axisY: 0
+    axisZ: 0
+    minAngle: -90.8
+    maxAngle: 15.7
+  - jointName: ear_l
+    jointTransform: {fileID: 300000028}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -181.4
+    maxAngle: 144.8
+  - jointName: ear_r
+    jointTransform: {fileID: 300000029}
+    axisX: 0
+    axisY: 1
+    axisZ: 0
+    minAngle: -5.6
+    maxAngle: 184
+  lerpSpeed: 12
+  idleAnimator: {fileID: 0}
+  autoInferAxes: 1
 --- !u!1001 &1370443062
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1247,6 +1662,7 @@ MonoBehaviour:
   - animalName: spider
     rootObject: {fileID: 894869239}
     controller: {fileID: 894869241}
+    locomotion: {fileID: 894869247}
   animalNameText: {fileID: 0}
   useFade: 1
   fadeDuration: 0.5
@@ -1266,11 +1682,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1762438718 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7220422535144821765, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1820091474 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4930062812761643764, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
@@ -1285,11 +1696,6 @@ Transform:
 Transform:
   m_CorrespondingSourceObject: {fileID: 3152085545950965018, guid: 89c7d56787878bd45a97b081a69b5b43, type: 3}
   m_PrefabInstance: {fileID: 1370443062}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &2098813148 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 114667378948721686, guid: e42dce10de392fb46b7cf553d7658cf4, type: 3}
-  m_PrefabInstance: {fileID: 731406558}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2102382508
 GameObject:
@@ -1424,3 +1830,4 @@ SceneRoots:
   - {fileID: 731406558}
   - {fileID: 84474228}
   - {fileID: 1370443062}
+  - {fileID: 1330000430}

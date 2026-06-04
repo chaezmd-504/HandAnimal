@@ -3,218 +3,218 @@
   "mode": "bilateral",
   "mapping": {
     "tentacle_1_base": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "middle_mcp",
-      "scale_factor": 2.0,
-      "Q_score": 4.3918,
-      "hand": "left"
-    },
-    "tentacle_1_mid": {
-      "hand_dof_idx": 11,
-      "hand_dof_name": "middle_pip",
-      "scale_factor": 1.6364,
-      "Q_score": 3.9961,
-      "hand": "left"
-    },
-    "tentacle_1_tip": {
-      "hand_dof_idx": 12,
-      "hand_dof_name": "middle_dip",
-      "scale_factor": 2.0,
-      "Q_score": 4.4558,
-      "hand": "left"
-    },
-    "tentacle_2_base": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 2.0,
-      "Q_score": 4.3518,
-      "hand": "left"
-    },
-    "tentacle_2_mid": {
-      "hand_dof_idx": 14,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 1.6364,
-      "Q_score": 4.0408,
-      "hand": "left"
-    },
-    "tentacle_2_tip": {
-      "hand_dof_idx": 15,
-      "hand_dof_name": "ring_dip",
-      "scale_factor": 2.0,
-      "Q_score": 4.4718,
-      "hand": "left"
-    },
-    "tentacle_3_base": {
       "hand_dof_idx": 3,
       "hand_dof_name": "thumb_cmc",
       "scale_factor": 3.0,
-      "Q_score": 4.6225,
+      "Q_score": 4.5983,
+      "hand": "left"
+    },
+    "tentacle_1_mid": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.8679,
+      "hand": "left"
+    },
+    "tentacle_1_tip": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.9072,
+      "hand": "left"
+    },
+    "tentacle_2_base": {
+      "hand_dof_idx": 7,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 2.0,
+      "Q_score": 4.3098,
+      "hand": "left"
+    },
+    "tentacle_2_mid": {
+      "hand_dof_idx": 8,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 1.6364,
+      "Q_score": 4.0759,
+      "hand": "left"
+    },
+    "tentacle_2_tip": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 2.0,
+      "Q_score": 4.3417,
+      "hand": "left"
+    },
+    "tentacle_3_base": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.9667,
       "hand": "left"
     },
     "tentacle_3_mid": {
-      "hand_dof_idx": 5,
-      "hand_dof_name": "thumb_mcp",
-      "scale_factor": 3.0,
-      "Q_score": 4.4981,
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.8679,
       "hand": "left"
     },
     "tentacle_3_tip": {
       "hand_dof_idx": 6,
       "hand_dof_name": "thumb_ip",
       "scale_factor": 2.25,
-      "Q_score": 4.4461,
+      "Q_score": 4.4183,
       "hand": "left"
     },
     "tentacle_4_base": {
       "hand_dof_idx": 0,
       "hand_dof_name": "wrist_flex",
       "scale_factor": 1.2857,
-      "Q_score": 6.1004,
+      "Q_score": 5.9811,
       "hand": "left"
     },
     "tentacle_4_mid": {
       "hand_dof_idx": 1,
       "hand_dof_name": "wrist_dev",
       "scale_factor": 3.6,
-      "Q_score": 5.1112,
+      "Q_score": 5.0192,
       "hand": "left"
     },
     "tentacle_4_tip": {
       "hand_dof_idx": 2,
       "hand_dof_name": "wrist_rot",
       "scale_factor": 1.0,
-      "Q_score": 6.4003,
+      "Q_score": 6.3303,
       "hand": "left"
     },
     "tentacle_5_base": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "middle_mcp",
-      "scale_factor": 2.0,
-      "Q_score": 4.3918,
-      "hand": "right"
-    },
-    "tentacle_5_mid": {
-      "hand_dof_idx": 11,
-      "hand_dof_name": "middle_pip",
-      "scale_factor": 1.6364,
-      "Q_score": 3.9961,
-      "hand": "right"
-    },
-    "tentacle_5_tip": {
-      "hand_dof_idx": 12,
-      "hand_dof_name": "middle_dip",
-      "scale_factor": 2.0,
-      "Q_score": 4.4558,
-      "hand": "right"
-    },
-    "tentacle_6_base": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 2.0,
-      "Q_score": 4.3518,
-      "hand": "right"
-    },
-    "tentacle_6_mid": {
-      "hand_dof_idx": 14,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 1.6364,
-      "Q_score": 4.0408,
-      "hand": "right"
-    },
-    "tentacle_6_tip": {
-      "hand_dof_idx": 15,
-      "hand_dof_name": "ring_dip",
-      "scale_factor": 2.0,
-      "Q_score": 4.4718,
-      "hand": "right"
-    },
-    "tentacle_7_base": {
       "hand_dof_idx": 3,
       "hand_dof_name": "thumb_cmc",
       "scale_factor": 3.0,
-      "Q_score": 4.6225,
+      "Q_score": 4.5983,
+      "hand": "right"
+    },
+    "tentacle_5_mid": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.8679,
+      "hand": "right"
+    },
+    "tentacle_5_tip": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.9072,
+      "hand": "right"
+    },
+    "tentacle_6_base": {
+      "hand_dof_idx": 7,
+      "hand_dof_name": "index_mcp",
+      "scale_factor": 2.0,
+      "Q_score": 4.3098,
+      "hand": "right"
+    },
+    "tentacle_6_mid": {
+      "hand_dof_idx": 8,
+      "hand_dof_name": "index_pip",
+      "scale_factor": 1.6364,
+      "Q_score": 4.0759,
+      "hand": "right"
+    },
+    "tentacle_6_tip": {
+      "hand_dof_idx": 9,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 2.0,
+      "Q_score": 4.3417,
+      "hand": "right"
+    },
+    "tentacle_7_base": {
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.9667,
       "hand": "right"
     },
     "tentacle_7_mid": {
-      "hand_dof_idx": 5,
-      "hand_dof_name": "thumb_mcp",
-      "scale_factor": 3.0,
-      "Q_score": 4.4981,
+      "hand_dof_idx": 0,
+      "hand_dof_name": "wrist_flex",
+      "scale_factor": 1.2857,
+      "Q_score": 5.8679,
       "hand": "right"
     },
     "tentacle_7_tip": {
       "hand_dof_idx": 6,
       "hand_dof_name": "thumb_ip",
       "scale_factor": 2.25,
-      "Q_score": 4.4461,
+      "Q_score": 4.4183,
       "hand": "right"
     },
     "tentacle_8_base": {
       "hand_dof_idx": 0,
       "hand_dof_name": "wrist_flex",
       "scale_factor": 1.2857,
-      "Q_score": 6.1004,
+      "Q_score": 5.9811,
       "hand": "right"
     },
     "tentacle_8_mid": {
       "hand_dof_idx": 1,
       "hand_dof_name": "wrist_dev",
       "scale_factor": 3.6,
-      "Q_score": 5.1112,
+      "Q_score": 5.0192,
       "hand": "right"
     },
     "tentacle_8_tip": {
       "hand_dof_idx": 2,
       "hand_dof_name": "wrist_rot",
       "scale_factor": 1.0,
-      "Q_score": 6.4003,
+      "Q_score": 6.3303,
       "hand": "right"
     }
   },
   "reference_pose_H": {
     "left": {
-      "wrist_flex": 10.71,
-      "wrist_dev": 3.44,
-      "wrist_rot": 2.12,
-      "thumb_cmc": 31.78,
-      "thumb_abd": 15.0,
-      "thumb_mcp": 32.88,
-      "thumb_ip": 35.11,
-      "index_mcp": 10.0,
-      "index_pip": 10.0,
-      "index_dip": 10.0,
-      "middle_mcp": 38.27,
-      "middle_pip": 89.15,
-      "middle_dip": 34.78,
-      "ring_mcp": 60.68,
-      "ring_pip": 58.59,
-      "ring_dip": 45.46,
-      "pinky_cmc": 5.0,
       "pinky_mcp": 10.0,
+      "pinky_dip": 10.0,
       "pinky_pip": 10.0,
-      "pinky_dip": 10.0
+      "thumb_mcp": 20.0,
+      "pinky_cmc": 5.0,
+      "index_pip": 78.41,
+      "ring_mcp": 10.0,
+      "wrist_dev": -4.8,
+      "ring_pip": 10.0,
+      "index_mcp": 50.12,
+      "ring_dip": 10.0,
+      "middle_mcp": 10.0,
+      "thumb_cmc": 29.88,
+      "index_dip": 42.05,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "thumb_abd": 15.0,
+      "thumb_ip": 32.72,
+      "wrist_flex": 2.04,
+      "wrist_rot": -8.95
     },
     "right": {
-      "wrist_flex": 10.71,
-      "wrist_dev": 3.44,
-      "wrist_rot": 2.12,
-      "thumb_cmc": 31.78,
-      "thumb_abd": 15.0,
-      "thumb_mcp": 32.88,
-      "thumb_ip": 35.11,
-      "index_mcp": 10.0,
-      "index_pip": 10.0,
-      "index_dip": 10.0,
-      "middle_mcp": 38.27,
-      "middle_pip": 89.15,
-      "middle_dip": 34.78,
-      "ring_mcp": 60.68,
-      "ring_pip": 58.59,
-      "ring_dip": 45.46,
-      "pinky_cmc": 5.0,
       "pinky_mcp": 10.0,
+      "pinky_dip": 10.0,
       "pinky_pip": 10.0,
-      "pinky_dip": 10.0
+      "thumb_mcp": 20.0,
+      "pinky_cmc": 5.0,
+      "index_pip": 78.41,
+      "ring_mcp": 10.0,
+      "wrist_dev": -4.8,
+      "ring_pip": 10.0,
+      "index_mcp": 50.12,
+      "ring_dip": 10.0,
+      "middle_mcp": 10.0,
+      "thumb_cmc": 29.88,
+      "index_dip": 42.05,
+      "middle_pip": 10.0,
+      "middle_dip": 10.0,
+      "thumb_abd": 15.0,
+      "thumb_ip": 32.72,
+      "wrist_flex": 2.04,
+      "wrist_rot": -8.95
     }
   },
   "reference_pose_A": {
@@ -243,7 +243,7 @@
     "tentacle_8_mid": 0.0,
     "tentacle_8_tip": 0.0
   },
-  "Q_score_reference": 14.8809,
+  "Q_score_reference": 17.4721,
   "bilateral_balance": {
     "n_left": 12,
     "n_right": 12,
