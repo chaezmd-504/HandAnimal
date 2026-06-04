@@ -465,10 +465,13 @@ def main():
     _head_ref_x     = 0.5    # 캘리브레이션 후 기준 x (기본 화면 중앙)
 
     if args.head_dir and args.locomotion:
-        _face_detector = cv2.CascadeClassifier(
-            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-        )
-        print("[INFO] 머리 방향 제어 활성화 (Haar cascade face detection)")
+        _cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        _face_detector = cv2.CascadeClassifier(_cascade_path)
+        if _face_detector.empty():
+            print(f"[ERROR] Haar cascade 로드 실패: {_cascade_path}")
+            _face_detector = None
+        else:
+            print(f"[INFO] 머리 방향 제어 활성화 — cascade: {_cascade_path}")
 
     options = HandLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=MODEL_PATH),
@@ -800,21 +803,25 @@ def main():
 
             # ── 머리 방향 감지 ────────────────────────────────
             if _face_detector is not None:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                faces = _face_detector.detectMultiScale(
-                    gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
+                _face_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                _faces = _face_detector.detectMultiScale(
+                    _face_gray, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60)
                 )
-                if len(faces) > 0:
-                    fx, fy, fw, fh = faces[0]
-                    face_cx = (fx + fw / 2.0) / frame.shape[1]   # 0~1 정규화
-                    offset = face_cx - _head_ref_x
-                    if abs(offset) < _HEAD_DEADZONE:
+                if len(_faces) > 0:
+                    _fx, _fy, _fw, _fh = _faces[0]
+                    _face_cx = (_fx + _fw / 2.0) / frame.shape[1]
+                    _offset  = _face_cx - _head_ref_x
+                    if abs(_offset) < _HEAD_DEADZONE:
                         _head_yaw_delta = 0.0
                     else:
-                        sign = 1.0 if offset > 0 else -1.0
-                        _head_yaw_delta = (abs(offset) - _HEAD_DEADZONE) * _HEAD_SCALE * sign * -1.0
+                        _sign = 1.0 if _offset > 0 else -1.0
+                        _head_yaw_delta = (abs(_offset) - _HEAD_DEADZONE) * _HEAD_SCALE * _sign * -1.0
+                    if frame_count % 30 == 0:
+                        print(f"[HEAD] cx={_face_cx:.3f}  offset={_offset:+.3f}  yaw={_head_yaw_delta:+.2f}")
                 else:
-                    _head_yaw_delta *= 0.5   # 얼굴 미감지 시 감쇠
+                    _head_yaw_delta *= 0.5
+                    if frame_count % 30 == 0:
+                        print("[HEAD] 얼굴 미감지")
 
             # ── 로코모션 계산 (관절 매핑과 독립) ─────────────
             _loco_result: dict | None = None
