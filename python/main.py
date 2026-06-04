@@ -631,8 +631,11 @@ def main():
                         h_right = _dof_dict_to_vec(hands_angles.get("right", {}))
 
                         # ── 속도(velocity) 계산 ───────────────────────
+                        # deadzone: 노이즈(~10-15) 이하는 0으로 처리
+                        _VEL_DEADZONE = 12.0
                         if _prev_h_right is not None:
-                            _vel = float(np.linalg.norm(h_right - _prev_h_right))
+                            _vel_raw = float(np.linalg.norm(h_right - _prev_h_right))
+                            _vel = max(0.0, _vel_raw - _VEL_DEADZONE)
                             _vel_ema = 0.3 * _vel + 0.7 * _vel_ema
                         _prev_h_right = h_right.copy()
 
@@ -771,6 +774,8 @@ def main():
                     _loco_result["speed"] = round(
                         min(_vel_ema * _VEL_SCALE, 2.0), 4
                     )
+                    if frame_count % 30 == 0:
+                        print(f"[LOCO] vel_ema={_vel_ema:.2f}  speed={_loco_result['speed']:.4f}  valid={_loco_result['valid']}")
 
             server.send_frame(
                 joints        = joints,
