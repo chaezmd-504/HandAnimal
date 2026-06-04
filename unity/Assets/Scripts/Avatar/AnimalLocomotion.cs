@@ -16,11 +16,20 @@ using UnityEngine;
 public class AnimalLocomotion : MonoBehaviour
 {
     [Header("이동 배율")]
-    [Tooltip("Python speed 값에 곱해지는 이동 배율 (기본 1.0)")]
-    [SerializeField] private float speedMultiplier = 1.0f;
-
     [Tooltip("yaw_delta 에 곱해지는 회전 배율 (기본 1.0)")]
     [SerializeField] private float rotationMultiplier = 1.0f;
+
+    [Header("이산 속도 (Discrete Speed)")]
+    [Tooltip("이산 속도 모드 활성화 — 속도를 0/Normal/Fast 3단계로 양자화")]
+    [SerializeField] private bool useDiscreteSpeed = true;
+    [Tooltip("Python speed 이 이 값 미만이면 정지 (idle)")]
+    [SerializeField] private float idleThreshold  = 0.01f;
+    [Tooltip("Python speed 이 이 값 이상이면 Fast 속도 사용")]
+    [SerializeField] private float fastThreshold  = 1.0f;
+    [Tooltip("Normal 이동 속도 (Unity units/s)")]
+    [SerializeField] private float normalSpeed    = 20f;
+    [Tooltip("Fast 이동 속도 (Unity units/s)")]
+    [SerializeField] private float fastSpeed      = 30f;
 
     [Header("감쇠 설정")]
     [Tooltip("손 미감지 시 속도 감쇠 계수 (0=즉시 멈춤, 1=감쇠 없음)")]
@@ -73,17 +82,28 @@ public class AnimalLocomotion : MonoBehaviour
         }
 
         // 전진 이동
-        if (_speed > 0.001f)
+        float moveSpeed = 0f;
+        if (useDiscreteSpeed)
+        {
+            if      (_speed >= fastThreshold)  moveSpeed = fastSpeed;
+            else if (_speed >= idleThreshold)  moveSpeed = normalSpeed;
+        }
+        else
+        {
+            moveSpeed = _speed;
+        }
+
+        if (moveSpeed > 0f)
         {
             transform.Translate(
-                Vector3.forward * _speed * speedMultiplier * Time.deltaTime,
+                Vector3.forward * moveSpeed * Time.deltaTime,
                 Space.Self
             );
         }
 
         if (showDebugLog && (_speed > 0.001f || Mathf.Abs(_yawDelta) > 0.01f))
         {
-            Debug.Log($"[AnimalLocomotion] speed={_speed:F3}  yaw={_yawDelta:+0.0;-0.0}°  valid={_valid}");
+            Debug.Log($"[AnimalLocomotion] rawSpeed={_speed:F3}  moveSpeed={moveSpeed:F1}  yaw={_yawDelta:+0.0;-0.0}°  valid={_valid}");
         }
     }
 
