@@ -198,6 +198,14 @@ class LocomotionMapper:
             sign      = 1.0 if raw_dev > 0 else -1.0
             yaw_delta = (abs(raw_dev) - dz) * cfg["dir_scale"] * sign
 
+        # 방향 디버그: 30프레임마다 출력 (turning 문제 진단용)
+        if not hasattr(self, '_dir_log_cnt'):
+            self._dir_log_cnt = 0
+        self._dir_log_cnt += 1
+        if self._dir_log_cnt % 30 == 0:
+            print(f"[DIR] wd_r={wd_r:.1f}  ref={self._ref_wd_r:.1f}  "
+                  f"raw_dev={raw_dev:+.1f}  yaw={yaw_delta:+.2f}")
+
         # ── 2. 속도: base_anim cursor 변화량 ─────────────────
         base_anim = cfg["base_anim"]
         h_left  = _to_vec(hands_dofs.get("left",  {}))
