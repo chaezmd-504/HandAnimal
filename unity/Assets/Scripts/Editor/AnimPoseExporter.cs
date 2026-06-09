@@ -280,7 +280,7 @@ public class AnimPoseExporter : EditorWindow
         restClip.SampleAnimation(go, 0f);
         var restEulers2 = RecordAllEulers(go);
 
-        var allPoses = new List<(Dictionary<string, float> joints, string anim, int frame)>();
+        var allPoses = new List<(Dictionary<string, Vector3> joints, string anim, int frame)>();
         foreach (var kv in clips)
         {
             float dur = kv.Value.length;
@@ -330,34 +330,42 @@ public class AnimPoseExporter : EditorWindow
             if (t == root.transform) continue;
             string path = GetRelativePath(root.transform, t);
             if (!restEulers.TryGetValue(path, out Vector3 rest)) continue;
-            Vector3 cur   = NormalizeEuler(t.localEulerAngles);
-            Vector3 delta = NormalizeEuler(cur - rest);
+            Quaternion rQ = Quaternion.Euler(rest.x, rest.y, rest.z);
+            Quaternion dQ = Quaternion.Inverse(rQ) * t.localRotation;
+            Vector3 delta = NormalizeEuler(dQ.eulerAngles);
             if (!anglesByBone.ContainsKey(path))
                 anglesByBone[path] = new List<Vector3>();
             anglesByBone[path].Add(delta);
         }
     }
 
-    /// jointInfos 기준으로 현재 프레임 포즈 dict 반환
-    private Dictionary<string, float> SamplePose(
+    /// jointInfos 기준으로 현재 프레임 포즈 dict 반환 (xyz 전체)
+    private Dictionary<string, Vector3> SamplePose(
         GameObject root,
         List<JointInfo> joints,
         Dictionary<string, Vector3> restEulers)
     {
-        var result = new Dictionary<string, float>();
+        var result = new Dictionary<string, Vector3>();
         foreach (var j in joints)
         {
             string bonePath = StripRoot(j.unityPath, root.name);
             Transform bone  = root.transform.Find(bonePath)
                            ?? root.transform.Find(j.unityPath);
-            if (bone == null) { result[j.jointId] = 0f; continue; }
+            if (bone == null) { result[j.jointId] = Vector3.zero; continue; }
 
             if (!restEulers.TryGetValue(j.unityPath, out Vector3 rest))
                 rest = Vector3.zero;
 
-            Vector3 cur   = NormalizeEuler(bone.localEulerAngles);
-            Vector3 delta = NormalizeEuler(cur - rest);
-            result[j.jointId] = Mathf.Round(GetAxis(delta, j.axis) * 100f) / 100f;
+            // 쿼터니언 역곱으로 올바른 delta 계산:
+            // Euler 뺄셈(cur - rest)은 틀림 → restQ^-1 * animQ 방식 사용
+            Quaternion restQ  = Quaternion.Euler(rest.x, rest.y, rest.z);
+            Quaternion deltaQ = Quaternion.Inverse(restQ) * bone.localRotation;
+            Vector3 delta     = NormalizeEuler(deltaQ.eulerAngles);
+            result[j.jointId] = new Vector3(
+                Mathf.Round(delta.x * 100f) / 100f,
+                Mathf.Round(delta.y * 100f) / 100f,
+                Mathf.Round(delta.z * 100f) / 100f
+            );
         }
         return result;
     }
@@ -417,7 +425,7 @@ public class AnimPoseExporter : EditorWindow
         return sb.ToString();
     }
 
-    private string PosesToJson(List<(Dictionary<string, float> joints, string anim, int frame)> poses)
+    private string PosesToJson(List<(Dictionary<string, Vector3> joints, string anim, int frame)> poses)
     {
         var sb = new StringBuilder();
         sb.AppendLine("[");
@@ -427,7 +435,12 @@ public class AnimPoseExporter : EditorWindow
             sb.Append($"\"_anim\": \"{poses[i].anim}\", \"_frame\": {poses[i].frame}");
             foreach (var kv in poses[i].joints)
             {
-                sb.Append($", \"{kv.Key}\": {kv.Value:F2}");
+                Vector3 v = kv.Value;
+                var ic = System.Globalization.CultureInfo.InvariantCulture;
+                string xStr = v.x.ToString("F2", ic);
+                string yStr = v.y.ToString("F2", ic);
+                string zStr = v.z.ToString("F2", ic);
+                sb.Append($", \"{kv.Key}\": {{\"x\": {xStr}, \"y\": {yStr}, \"z\": {zStr}}}");
             }
             sb.Append(i < poses.Count - 1 ? "},\n" : "}\n");
         }
@@ -541,15 +554,15 @@ public class AnimPoseExporter : EditorWindow
         return var / list.Count;
     }
 
-    private List<(Dictionary<string, float>, string, int)> DeduplicatePoses(
-        List<(Dictionary<string, float> joints, string anim, int frame)> poses)
+    private List<(Dictionary<string, Vector3>, string, int)> DeduplicatePoses(
+        List<(Dictionary<string, Vector3> joints, string anim, int frame)> poses)
     {
         var seen   = new HashSet<string>();
-        var result = new List<(Dictionary<string, float>, string, int)>();
+        var result = new List<(Dictionary<string, Vector3>, string, int)>();
         foreach (var p in poses)
         {
             var sb = new StringBuilder();
-            foreach (var kv in p.joints) sb.Append($"{kv.Key}:{kv.Value:F1};");
+            foreach (var kv in p.joints) sb.Append($"{kv.Key}:{kv.Value.x:F1},{kv.Value.y:F1},{kv.Value.z:F1};");
             if (seen.Add(sb.ToString())) result.Add((p.joints, p.anim, p.frame));
         }
         return result;

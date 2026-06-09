@@ -173,6 +173,7 @@ public class AnimalLocomotion : MonoBehaviour
             style.normal.textColor = dirColor;
             GUI.Label(new Rect(x, y, 400, 50), dirLabel, style);
         }
+
     }
 
     // ──────────────────────────────────────────────────────────

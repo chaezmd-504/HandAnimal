@@ -109,6 +109,10 @@ class LocomotionMapper:
         self._cursor:          float = 0.0
         self._prev_walk_cursor: Optional[float] = None   # 이전 프레임 cursor 위치
 
+        # DOF velocity 기반 speed (direct 모드 fallback)
+        self._prev_h_left:  Optional[np.ndarray] = None
+        self._prev_h_right: Optional[np.ndarray] = None
+
     # ────────────────────────────────────────────────────────────
     # 초기화 API
     # ────────────────────────────────────────────────────────────
@@ -125,6 +129,8 @@ class LocomotionMapper:
         self._cursor            = 0.0
         self._prev_walk_cursor  = None
         self._ema_speed         = 0.0
+        self._prev_h_left       = None
+        self._prev_h_right      = None
         print(f"[LocomotionMapper] 동물 전환: {animal}  "
               f"base_anim='{self._cfg['base_anim']}'")
 
@@ -133,6 +139,8 @@ class LocomotionMapper:
         self._ref_wd_r         = float(hands_dofs.get("right", {}).get("wrist_dev", 0.0))
         self._ema_speed        = 0.0
         self._prev_walk_cursor = None
+        self._prev_h_left      = None
+        self._prev_h_right     = None
         print(f"[LocomotionMapper] 캘리브레이션 완료  "
               f"ref_wrist_dev_right={self._ref_wd_r:.1f}°")
 
@@ -208,13 +216,24 @@ class LocomotionMapper:
 
         # ── 2. 속도: base_anim cursor 변화량 ─────────────────
         base_anim = cfg["base_anim"]
+        loco_hand = cfg.get("locomotion_hand", None)  # "left"/"right"/None(양손)
         h_left  = _to_vec(hands_dofs.get("left",  {}))
         h_right = _to_vec(hands_dofs.get("right", {}))
+
+        # locomotion_hand 지정 시 해당 손만 사용 (반대 손은 기준값으로 고정)
+        if loco_hand == "left":
+            h_right_loco = _to_vec({})   # 오른손 기여 제거
+            h_left_loco  = h_left
+        elif loco_hand == "right":
+            h_left_loco  = _to_vec({})   # 왼손 기여 제거
+            h_right_loco = h_right
+        else:
+            h_left_loco, h_right_loco = h_left, h_right
 
         raw_delta = 0.0
         if base_anim:
             walk_cursor, min_dist = self._walk_cursor_from_pose(
-                h_left, h_right, engine, base_anim
+                h_left_loco, h_right_loco, engine, base_anim
             )
 
             if walk_cursor is not None:
@@ -231,6 +250,18 @@ class LocomotionMapper:
 
                 self._prev_walk_cursor = walk_cursor
                 self._cursor = walk_cursor
+
+            else:
+                # direct 모드 fallback: DOF 변화 속도로 speed 계산
+                # locomotion_hand 지정 손의 DOF velocity (L2 norm)
+                if self._prev_h_left is not None:
+                    dl = float(np.linalg.norm(h_left_loco  - self._prev_h_left))
+                    dr = float(np.linalg.norm(h_right_loco - self._prev_h_right))
+                    raw_delta = dl + dr
+
+        # DOF 이전값 갱신 (fallback용)
+        self._prev_h_left  = h_left_loco.copy()
+        self._prev_h_right = h_right_loco.copy()
 
         alpha           = cfg["ema_alpha"]
         self._ema_speed = alpha * raw_delta + (1.0 - alpha) * self._ema_speed
@@ -264,7 +295,8 @@ class LocomotionMapper:
             min_distance: 가장 가까운 키프레임과의 L2 거리
         """
         data = engine._cache.get(engine.current_animal)
-        if data is None:
+        if data is None or "anim_groups" not in data:
+            # MappingEngine (direct) 는 anim_groups 없음 → speed 계산 불가
             return None, float("inf")
 
         group = data["anim_groups"].get(anim_name, [])

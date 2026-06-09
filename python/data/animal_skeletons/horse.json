@@ -7,8 +7,8 @@
       "id": "shoulder_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -12.3,
-      "max_angle": 20.2,
+      "min_angle": -20.2,
+      "max_angle": 12.7,
       "axis": "X",
       "rest": 0.0
     },
@@ -16,8 +16,8 @@
       "id": "shoulder_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -14.2,
-      "max_angle": 19.3,
+      "min_angle": -19.5,
+      "max_angle": 14.6,
       "axis": "X",
       "rest": 0.0
     },
@@ -25,18 +25,18 @@
       "id": "thigh_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -137.8,
-      "max_angle": 38.8,
-      "axis": "Z",
+      "min_angle": -39.1,
+      "max_angle": 29.2,
+      "axis": "X",
       "rest": 0.0
     },
     {
       "id": "thigh_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -160.3,
-      "max_angle": 14.5,
-      "axis": "Y",
+      "min_angle": -19.4,
+      "max_angle": 41.9,
+      "axis": "X",
       "rest": 0.0
     },
     {
@@ -44,7 +44,7 @@
       "parent": "body",
       "dof": 1,
       "min_angle": -22.3,
-      "max_angle": 5.0,
+      "max_angle": 5.1,
       "axis": "X",
       "rest": 0.0
     },
@@ -61,18 +61,18 @@
       "id": "shin_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -9.2,
-      "max_angle": 59.5,
-      "axis": "Z",
+      "min_angle": -18.3,
+      "max_angle": 19.4,
+      "axis": "X",
       "rest": 0.0
     },
     {
       "id": "shin_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -123.8,
-      "max_angle": 7.5,
-      "axis": "Z",
+      "min_angle": -23.3,
+      "max_angle": 13.3,
+      "axis": "X",
       "rest": 0.0
     },
     {
@@ -88,7 +88,7 @@
       "id": "front_shoulder_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -13.2,
+      "min_angle": -14.1,
       "max_angle": 37.2,
       "axis": "X",
       "rest": 0.0
@@ -116,7 +116,7 @@
       "parent": "body",
       "dof": 1,
       "min_angle": -17.1,
-      "max_angle": 16.0,
+      "max_angle": 16.1,
       "axis": "X",
       "rest": 0.0
     },
@@ -125,7 +125,7 @@
       "parent": "body",
       "dof": 1,
       "min_angle": -9.9,
-      "max_angle": 20.5,
+      "max_angle": 20.6,
       "axis": "X",
       "rest": 0.0
     },
@@ -133,8 +133,8 @@
       "id": "spine_001",
       "parent": "body",
       "dof": 1,
-      "min_angle": -20.5,
-      "max_angle": 15.3,
+      "min_angle": -19.7,
+      "max_angle": 14.8,
       "axis": "Z",
       "rest": 0.0
     },
@@ -142,18 +142,18 @@
       "id": "front_thigh_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -10.7,
-      "max_angle": 132.7,
-      "axis": "Z",
+      "min_angle": -26.9,
+      "max_angle": 26.7,
+      "axis": "X",
       "rest": 0.0
     },
     {
       "id": "front_thigh_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -134.9,
-      "max_angle": 13.7,
-      "axis": "Z",
+      "min_angle": -25.9,
+      "max_angle": 40.5,
+      "axis": "X",
       "rest": 0.0
     },
     {
@@ -178,9 +178,9 @@
       "id": "spine",
       "parent": "body",
       "dof": 1,
-      "min_angle": -15.3,
-      "max_angle": 21.3,
-      "axis": "Z",
+      "min_angle": -8.5,
+      "max_angle": 29.3,
+      "axis": "X",
       "rest": 0.0
     },
     {
@@ -205,18 +205,18 @@
       "id": "front_foot_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -183.7,
-      "max_angle": 182.7,
-      "axis": "Y",
+      "min_angle": -81.1,
+      "max_angle": 12.8,
+      "axis": "X",
       "rest": 0.0
     },
     {
       "id": "front_foot_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -156.6,
-      "max_angle": 5.4,
-      "axis": "Y",
+      "min_angle": -77.5,
+      "max_angle": 10.9,
+      "axis": "X",
       "rest": 0.0
     },
     {
@@ -232,16 +232,16 @@
       "id": "front_toe_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -107.2,
-      "max_angle": 16.9,
-      "axis": "X",
+      "min_angle": -7.5,
+      "max_angle": 164.8,
+      "axis": "Z",
       "rest": 0.0
     },
     {
       "id": "front_toe_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -90.8,
+      "min_angle": -89.0,
       "max_angle": 15.7,
       "axis": "X",
       "rest": 0.0
@@ -250,18 +250,18 @@
       "id": "ear_l",
       "parent": "body",
       "dof": 1,
-      "min_angle": -181.4,
-      "max_angle": 144.8,
-      "axis": "Y",
+      "min_angle": -12.2,
+      "max_angle": 12.3,
+      "axis": "X",
       "rest": 0.0
     },
     {
       "id": "ear_r",
       "parent": "body",
       "dof": 1,
-      "min_angle": -5.6,
-      "max_angle": 184.0,
-      "axis": "Y",
+      "min_angle": -12.3,
+      "max_angle": 29.9,
+      "axis": "X",
       "rest": 0.0
     }
   ],

@@ -316,6 +316,9 @@ def parse_args():
     p.add_argument("--head-dir", action="store_true",
                    help="방향 제어를 wrist_dev 대신 머리(얼굴) x위치로 변경. "
                         "--locomotion 과 함께 사용.")
+    p.add_argument("--video", type=str, default=None,
+                   help="웹캠 대신 사용할 영상 파일 경로 (.mp4 등). "
+                        "미지정 시 웹캠(0) 사용.")
     return p.parse_args()
 
 
@@ -331,7 +334,16 @@ def main():
     occlusion       = {"left": OcclusionHandler(), "right": OcclusionHandler()}
     occlusion_world = {"left": OcclusionHandler(), "right": OcclusionHandler()}
     _dof_ema: dict[str, dict[str, float]] = {}   # DOF 각도 EMA 스무딩 상태
-    _EMA_ALPHA = 0.7   # 높을수록 반응 빠름, 낮을수록 부드러움 (0.5~0.8 권장)
+    _EMA_ALPHA = 0.7   # 기본값 — 손가락 MCPs 등 의도적 움직임 DOF
+    # 노이즈가 많은 DOF는 개별적으로 강하게 스무딩
+    _EMA_ALPHA_OVERRIDES: dict[str, float] = {
+        "wrist_flex": 0.25,  # 손 들고만 있어도 흔들림 (stdev 14°)
+        "wrist_rot":  0.20,  # 전완 회전, 손 위치 조금만 바뀌어도 튐
+        "thumb_abd":  0.35,  # 엄지 벌림도 jitter 있음
+    }
+    # 관절 출력 EMA — 매핑 엔진 출력 jitter 완화 (DOF 스무딩 이후 2차 필터)
+    _JOINTS_EMA_ALPHA: float = 0.35   # 낮을수록 부드러움, 높을수록 반응 빠름
+    _joints_ema: dict[str, dict] = {}  # {joint_name: {x, y, z} or float}
     server    = WebSocketServer(port=args.port)
 
     if args.mapping == "keyframe":
@@ -390,6 +402,21 @@ def main():
     _prev_h_right:  Optional[np.ndarray] = None
     _vel_ema:       float = 0.0
     _VEL_SCALE:     float = 0.05         # velocity → speed 배율
+
+    # ── 손가락별 다리 매핑 (horse bilateral 전용) ─────────────────
+    # pip 기준 활성 판단: ref=50°, 이 이상 벗어나면 active
+    _FINGER_PIP_REF    = 50.0
+    _FINGER_ACTIVE_THR = 12.0   # °, 노이즈 고려 데드존
+    _WALK_BLEND_RATIO  = 0.30   # 4손가락 시 walk 기여도
+    _FINGER_LEG_JOINTS: dict[str, set] = {
+        "index":  {"front_shoulder_l", "front_thigh_l", "front_shin_l"},
+        "middle": {"front_shoulder_r", "front_thigh_r", "front_shin_r"},
+        "ring":   {"shoulder_l", "thigh_l", "shin_l"},
+        "pinky":  {"shoulder_r", "thigh_r", "shin_r"},
+    }
+    _ALL_LEG_JOINTS: set = {j for s in _FINGER_LEG_JOINTS.values() for j in s}
+    _n_active_fingers: int = 0   # 이번 프레임 활성 손가락 수 (loco 이후 walk blend용)
+
 
     # rule-based 트리거 규칙 로드 (locomotion_config.json에서)
     # {anim: {"dof": str, "hand": str, "delta": float}}
@@ -492,11 +519,14 @@ def main():
         min_tracking_confidence=0.5,
     )
 
-    cap = cv2.VideoCapture(0)
+    cap_src = args.video if args.video else 0
+    cap = cv2.VideoCapture(cap_src)
     if not cap.isOpened():
-        print("[ERROR] 웹캠을 열 수 없습니다.")
+        print(f"[ERROR] 영상 소스를 열 수 없습니다: {cap_src}")
         server.stop()
         sys.exit(1)
+    if args.video:
+        print(f"[INFO] 영상 파일 사용: {args.video}")
 
     print(f"[INFO] 캘리브레이션 시작 — {_CALIB_DURATION:.0f}초 카운트다운")
 
@@ -546,10 +576,12 @@ def main():
                     # 손가락 굴신각은 2D 이미지 좌표에서 계산 (손목 방향 무관하게 안정적)
                     raw_angles     = compute_dof_angles(world_filtered, img_filtered)
 
-                    # EMA 스무딩: 손가락 위치 노이즈 추가 억제
+                    # EMA 스무딩: DOF별 alpha 적용
+                    # wrist_flex/rot 등 노이즈 많은 DOF는 강하게, 손가락은 기본값 유지
                     prev = _dof_ema.get(side, raw_angles)
                     smoothed = {
-                        k: _EMA_ALPHA * raw_angles[k] + (1.0 - _EMA_ALPHA) * prev.get(k, raw_angles[k])
+                        k: _EMA_ALPHA_OVERRIDES.get(k, _EMA_ALPHA) * raw_angles[k]
+                           + (1.0 - _EMA_ALPHA_OVERRIDES.get(k, _EMA_ALPHA)) * prev.get(k, raw_angles[k])
                         for k in raw_angles
                     }
                     _dof_ema[side] = smoothed
@@ -713,6 +745,25 @@ def main():
                             }
                         joints = joints_d
                         _in_trigger_this_frame = (_anim_state == "trigger")
+
+                        # ── 손가락 활성도 감지 → 단일/다중 손가락 모드 ──────
+                        _left_dofs = hands_angles.get("left", {})
+                        _finger_act = {
+                            f: abs(_left_dofs.get(f"{f}_pip", _FINGER_PIP_REF) - _FINGER_PIP_REF)
+                            for f in ("index", "middle", "ring", "pinky")
+                        }
+                        _active_fingers = [f for f, a in _finger_act.items() if a > _FINGER_ACTIVE_THR]
+                        _n_active_fingers = len(_active_fingers)
+
+                        if 0 < _n_active_fingers < 4:
+                            # 1~3손가락: 해당 다리 관절만 남기고 나머지 다리 제거
+                            _active_leg_joints = {
+                                j for f in _active_fingers for j in _FINGER_LEG_JOINTS.get(f, set())
+                            }
+                            joints = {
+                                jid: v for jid, v in joints.items()
+                                if jid not in _ALL_LEG_JOINTS or jid in _active_leg_joints
+                            }
 
                         # ── 트리거 감지 (normal + 쿨다운 없을 때만) ──
                         # snap_delta : 1프레임 DOF 변화량 기준 → 즉시 발동 (확! 동작)
@@ -891,8 +942,48 @@ def main():
                               f"yaw={_loco_result.get('yaw_delta', 0):+.2f}  "
                               f"state={_anim_state}  valid={_loco_result['valid']}")
 
+            # ── 4손가락 활성: walk animation 살짝 블렌딩 ────────────────────────
+            if (args.mapping == "blend" and hand_detected
+                    and _anim_state == "normal" and _n_active_fingers >= 4
+                    and _loco is not None and isinstance(engine, KeyframeMappingEngine)):
+                _base_anim_h = _loco._cfg.get("base_anim", "")
+                if _base_anim_h and engine.anim_frame_count(_base_anim_h) > 0:
+                    _seq = engine.get_sequential_pose(_base_anim_h, float(_loco._cursor))
+                    if _seq:
+                        _w = _WALK_BLEND_RATIO
+                        joints = {
+                            jid: (
+                                {ax: (1 - _w) * joints.get(jid, {}).get(ax, 0.0)
+                                      + _w   * _seq[jid].get(ax, 0.0)
+                                 for ax in ("x", "y", "z")}
+                                if isinstance(joints.get(jid), dict) else _seq[jid]
+                            )
+                            for jid in _seq
+                        } | {jid: v for jid, v in joints.items() if jid not in _seq}
+                        if _loco_result is not None:
+                            _loco_result["speed"] = 0.0   # Unity Walk animator 충돌 방지
+
+            # ── 관절 출력 EMA (2차 스무딩) ───────────────────────
+            smoothed_joints: dict = {}
+            for jname, jval in joints.items():
+                prev_j = _joints_ema.get(jname)
+                if prev_j is None:
+                    smoothed_joints[jname] = jval
+                elif isinstance(jval, dict):
+                    smoothed_joints[jname] = {
+                        ax: _JOINTS_EMA_ALPHA * jval.get(ax, 0.0)
+                            + (1.0 - _JOINTS_EMA_ALPHA) * prev_j.get(ax, jval.get(ax, 0.0))
+                        for ax in jval
+                    }
+                else:
+                    smoothed_joints[jname] = (
+                        _JOINTS_EMA_ALPHA * float(jval)
+                        + (1.0 - _JOINTS_EMA_ALPHA) * float(prev_j)
+                    )
+            _joints_ema.update(smoothed_joints)
+
             server.send_frame(
-                joints        = joints,
+                joints        = smoothed_joints,
                 animal        = engine.current_animal,
                 hand_detected = hand_detected,
                 locomotion    = _loco_result,

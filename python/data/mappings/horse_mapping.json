@@ -1,292 +1,61 @@
 {
   "animal": "horse",
   "mode": "bilateral",
+  "_comment": "왼손=4다리(검지→앞왼, 중지→앞오, 약지→뒷왼, 새끼→뒷오) / 오른손=상체(손목→머리목, 손가락→척추)",
+  "_note": "ref_H.left leg DOFs = 50° (반굽힘 캘리브 기준), ref_A leg = 0° (idle), scale 증가로 KeyframeMappingEngine 작동",
   "mapping": {
-    "shoulder_l": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.2321,
-      "Q_score": 4.9113,
-      "hand": "left"
-    },
-    "thigh_l": {
-      "hand_dof_idx": 7,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.9622,
-      "Q_score": 3.6877,
-      "hand": "left"
-    },
-    "shin_l": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 0.7633,
-      "Q_score": 4.0041,
-      "hand": "left"
-    },
-    "front_shoulder_l": {
-      "hand_dof_idx": 4,
-      "hand_dof_name": "thumb_abd",
-      "scale_factor": 0.72,
-      "Q_score": 4.0802,
-      "hand": "left"
-    },
-    "foot_l": {
-      "hand_dof_idx": 1,
-      "hand_dof_name": "wrist_dev",
-      "scale_factor": 0.662,
-      "Q_score": 4.9694,
-      "hand": "left"
-    },
-    "front_thigh_l": {
-      "hand_dof_idx": 2,
-      "hand_dof_name": "wrist_rot",
-      "scale_factor": 0.7967,
-      "Q_score": 5.4031,
-      "hand": "left"
-    },
-    "toe_l": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.81,
-      "Q_score": 5.567,
-      "hand": "left"
-    },
-    "front_shin_l": {
-      "hand_dof_idx": 1,
-      "hand_dof_name": "wrist_dev",
-      "scale_factor": 0.484,
-      "Q_score": 4.8562,
-      "hand": "left"
-    },
-    "front_foot_l": {
-      "hand_dof_idx": 2,
-      "hand_dof_name": "wrist_rot",
-      "scale_factor": 2.0356,
-      "Q_score": 6.449,
-      "hand": "left"
-    },
-    "front_toe_l": {
-      "hand_dof_idx": 2,
-      "hand_dof_name": "wrist_rot",
-      "scale_factor": 0.6894,
-      "Q_score": 5.5156,
-      "hand": "left"
-    },
-    "ear_l": {
-      "hand_dof_idx": 2,
-      "hand_dof_name": "wrist_rot",
-      "scale_factor": 1.8122,
-      "Q_score": 6.3735,
-      "hand": "left"
-    },
-    "spine_003": {
-      "hand_dof_idx": 16,
-      "hand_dof_name": "pinky_cmc",
-      "scale_factor": 0.91,
-      "Q_score": 3.5728,
-      "hand": "left"
-    },
-    "spine_007": {
-      "hand_dof_idx": 16,
-      "hand_dof_name": "pinky_cmc",
-      "scale_factor": 0.6067,
-      "Q_score": 3.6219,
-      "hand": "left"
-    },
-    "spine_002": {
-      "hand_dof_idx": 5,
-      "hand_dof_name": "thumb_mcp",
-      "scale_factor": 0.4,
-      "Q_score": 4.0459,
-      "hand": "left"
-    },
-    "shoulder_r": {
-      "hand_dof_idx": 7,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 0.3722,
-      "Q_score": 3.6195,
-      "hand": "right"
-    },
-    "thigh_r": {
-      "hand_dof_idx": 7,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.9422,
-      "Q_score": 3.4174,
-      "hand": "right"
-    },
-    "shin_r": {
-      "hand_dof_idx": 8,
-      "hand_dof_name": "index_pip",
-      "scale_factor": 1.1936,
-      "Q_score": 3.1692,
-      "hand": "right"
-    },
-    "front_shoulder_r": {
-      "hand_dof_idx": 3,
-      "hand_dof_name": "thumb_cmc",
-      "scale_factor": 0.8817,
-      "Q_score": 4.2373,
-      "hand": "right"
-    },
-    "foot_r": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 0.3378,
-      "Q_score": 3.7101,
-      "hand": "right"
-    },
-    "front_thigh_r": {
-      "hand_dof_idx": 4,
-      "hand_dof_name": "thumb_abd",
-      "scale_factor": 2.1229,
-      "Q_score": 3.7191,
-      "hand": "right"
-    },
-    "toe_r": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 1.0989,
-      "Q_score": 3.4739,
-      "hand": "right"
-    },
-    "front_shin_r": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.1779,
-      "Q_score": 4.8518,
-      "hand": "right"
-    },
-    "front_foot_r": {
-      "hand_dof_idx": 5,
-      "hand_dof_name": "thumb_mcp",
-      "scale_factor": 2.7,
-      "Q_score": 3.8541,
-      "hand": "right"
-    },
-    "front_toe_r": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.7607,
-      "Q_score": 5.3162,
-      "hand": "right"
-    },
-    "ear_r": {
-      "hand_dof_idx": 14,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 1.7236,
-      "Q_score": 4.158,
-      "hand": "right"
-    },
-    "spine_008": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.6614,
-      "Q_score": 5.1223,
-      "hand": "right"
-    },
-    "spine_001": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 0.3978,
-      "Q_score": 3.5911,
-      "hand": "right"
-    },
-    "spine": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.2614,
-      "Q_score": 4.9488,
-      "hand": "right"
-    },
-    "scull": {
-      "hand_dof_idx": 0,
-      "hand_dof_name": "wrist_flex",
-      "scale_factor": 0.4279,
-      "Q_score": 5.0407,
-      "hand": "right"
-    }
+    "front_shoulder_l": { "hand_dof_idx": 7,  "hand_dof_name": "index_mcp",  "scale_factor": 0.5,  "Q_score": 5.0, "hand": "left" },
+    "front_thigh_l":    { "hand_dof_idx": 8,  "hand_dof_name": "index_pip",  "scale_factor": 2.5,  "Q_score": 5.0, "hand": "left" },
+    "front_shin_l":     { "hand_dof_idx": 9,  "hand_dof_name": "index_dip",  "scale_factor": 1.0,  "Q_score": 5.0, "hand": "left" },
+
+    "front_shoulder_r": { "hand_dof_idx": 10, "hand_dof_name": "middle_mcp", "scale_factor": 0.5,  "Q_score": 5.0, "hand": "left" },
+    "front_thigh_r":    { "hand_dof_idx": 11, "hand_dof_name": "middle_pip", "scale_factor": 3.0,  "Q_score": 5.0, "hand": "left" },
+    "front_shin_r":     { "hand_dof_idx": 12, "hand_dof_name": "middle_dip", "scale_factor": 1.0,  "Q_score": 5.0, "hand": "left" },
+
+    "shoulder_l":       { "hand_dof_idx": 13, "hand_dof_name": "ring_mcp",   "scale_factor": 0.5,  "Q_score": 5.0, "hand": "left" },
+    "thigh_l":          { "hand_dof_idx": 14, "hand_dof_name": "ring_pip",   "scale_factor": 3.5,  "Q_score": 5.0, "hand": "left" },
+    "shin_l":           { "hand_dof_idx": 15, "hand_dof_name": "ring_dip",   "scale_factor": 1.0,  "Q_score": 5.0, "hand": "left" },
+
+    "shoulder_r":       { "hand_dof_idx": 17, "hand_dof_name": "pinky_mcp",  "scale_factor": 0.5,  "Q_score": 5.0, "hand": "left" },
+    "thigh_r":          { "hand_dof_idx": 18, "hand_dof_name": "pinky_pip",  "scale_factor": 4.0,  "Q_score": 5.0, "hand": "left" },
+    "shin_r":           { "hand_dof_idx": 19, "hand_dof_name": "pinky_dip",  "scale_factor": 1.0,  "Q_score": 5.0, "hand": "left" },
+
+    "scull":            { "hand_dof_idx": 0,  "hand_dof_name": "wrist_flex", "scale_factor": 0.8,  "Q_score": 5.0, "hand": "right" },
+    "spine_008":        { "hand_dof_idx": 0,  "hand_dof_name": "wrist_flex", "scale_factor": 0.5,  "Q_score": 5.0, "hand": "right" },
+    "spine_007":        { "hand_dof_idx": 1,  "hand_dof_name": "wrist_dev",  "scale_factor": 0.6,  "Q_score": 5.0, "hand": "right" },
+    "spine_003":        { "hand_dof_idx": 1,  "hand_dof_name": "wrist_dev",  "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" },
+    "spine_002":        { "hand_dof_idx": 7,  "hand_dof_name": "index_mcp",  "scale_factor": 0.4,  "Q_score": 5.0, "hand": "right" },
+    "spine_001":        { "hand_dof_idx": 10, "hand_dof_name": "middle_mcp", "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" },
+    "spine":            { "hand_dof_idx": 13, "hand_dof_name": "ring_mcp",   "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" }
   },
   "reference_pose_H": {
     "left": {
-      "pinky_mcp": 10.0,
-      "pinky_dip": 10.0,
-      "pinky_pip": 10.0,
-      "thumb_mcp": 29.83,
-      "pinky_cmc": 15.38,
-      "index_pip": 56.81,
-      "ring_mcp": 42.39,
-      "wrist_dev": -0.04,
-      "ring_pip": 14.41,
-      "index_mcp": 36.44,
-      "ring_dip": 10.0,
-      "middle_mcp": 10.0,
-      "thumb_cmc": 32.74,
-      "index_dip": 36.61,
-      "middle_pip": 10.0,
-      "middle_dip": 10.0,
-      "thumb_abd": 49.64,
-      "thumb_ip": 15.0,
-      "wrist_flex": 5.57,
-      "wrist_rot": 4.42
+      "wrist_flex": 7.49, "wrist_dev": 1.37, "wrist_rot": 21.4,
+      "thumb_cmc": 18.8, "thumb_abd": 15.0, "thumb_mcp": 12.7, "thumb_ip": 12.49,
+      "index_mcp": 50.0, "index_pip": 50.0, "index_dip": 30.0,
+      "middle_mcp": 50.0, "middle_pip": 50.0, "middle_dip": 30.0,
+      "ring_mcp": 50.0, "ring_pip": 50.0, "ring_dip": 30.0,
+      "pinky_cmc": 14.97, "pinky_mcp": 50.0, "pinky_pip": 50.0, "pinky_dip": 30.0
     },
     "right": {
-      "pinky_mcp": 10.0,
-      "pinky_dip": 10.0,
-      "pinky_pip": 10.0,
-      "thumb_mcp": 29.83,
-      "pinky_cmc": 15.38,
-      "index_pip": 56.81,
-      "ring_mcp": 42.39,
-      "wrist_dev": -0.04,
-      "ring_pip": 14.41,
-      "index_mcp": 36.44,
-      "ring_dip": 10.0,
-      "middle_mcp": 10.0,
-      "thumb_cmc": 32.74,
-      "index_dip": 36.61,
-      "middle_pip": 10.0,
-      "middle_dip": 10.0,
-      "thumb_abd": 49.64,
-      "thumb_ip": 15.0,
-      "wrist_flex": 5.57,
-      "wrist_rot": 4.42
+      "wrist_flex": 7.49, "wrist_dev": 1.37, "wrist_rot": 21.4,
+      "thumb_cmc": 18.8, "thumb_abd": 15.0, "thumb_mcp": 12.7, "thumb_ip": 12.49,
+      "index_mcp": 10.0, "index_pip": 10.0, "index_dip": 10.0,
+      "middle_mcp": 10.0, "middle_pip": 10.0, "middle_dip": 10.0,
+      "ring_mcp": 10.0, "ring_pip": 10.0, "ring_dip": 10.0,
+      "pinky_cmc": 14.97, "pinky_mcp": 10.0, "pinky_pip": 10.0, "pinky_dip": 10.0
     }
   },
   "reference_pose_A": {
-    "shoulder_l": 0.29,
-    "thigh_l": -44.65,
-    "shin_l": -0.32,
-    "front_shoulder_l": 15.08,
-    "foot_l": -1.56,
-    "front_thigh_l": -5.21,
-    "toe_l": 5.92,
-    "front_shin_l": 4.44,
-    "front_foot_l": -0.29,
-    "front_toe_l": -33.6,
-    "ear_l": 0.13,
-    "spine_003": -0.03,
-    "spine_007": 0.0,
-    "spine_002": -4.01,
-    "shoulder_r": -0.41,
-    "thigh_r": -112.33,
-    "shin_r": -2.79,
-    "front_shoulder_r": 10.09,
-    "foot_r": 5.66,
-    "front_thigh_r": -2.58,
-    "toe_r": -15.16,
-    "front_shin_r": -1.09,
-    "front_foot_r": -49.04,
-    "front_toe_r": -70.3,
-    "ear_r": -0.3,
-    "spine_008": -0.77,
-    "spine_001": -2.62,
-    "spine": 2.75,
-    "scull": 4.8
+    "front_shoulder_l": 0.0, "front_thigh_l": 0.0, "front_shin_l": 0.0,
+    "front_foot_l": 0.0,     "front_toe_l": 0.0,
+    "front_shoulder_r": 0.0, "front_thigh_r": 0.0, "front_shin_r": 0.0,
+    "front_foot_r": 0.0,     "front_toe_r": 0.0,
+    "shoulder_l": 0.0,  "thigh_l": 0.0, "shin_l": 0.0, "foot_l": 0.0, "toe_l": 0.0,
+    "shoulder_r": 0.0,  "thigh_r": 0.0, "shin_r": 0.0, "foot_r": 0.0, "toe_r": 0.0,
+    "scull": 4.8, "spine_008": -0.77, "spine_007": 0.0,
+    "spine_003": -0.03, "spine_002": -4.01, "spine_001": -2.62, "spine": 2.75
   },
-  "Q_score_reference": 10.1595,
-  "bilateral_balance": {
-    "n_left": 14,
-    "n_right": 15,
-    "balanced": true
-  }
+  "Q_score_reference": 5.0,
+  "bilateral_balance": { "n_left": 20, "n_right": 7, "balanced": false }
 }

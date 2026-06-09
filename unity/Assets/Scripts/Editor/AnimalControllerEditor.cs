@@ -164,19 +164,15 @@ public class AnimalControllerEditor : Editor
                     bone = root.Find(unityPath.Substring(slash + 1));
             }
 
-            // skeleton.json 우선, 없으면 bone_map axis 사용
-            bool   axX = false, axY = false, axZ = false;
-            float  minA = -45f, maxA = 45f;
+            // poses.json 이 xyz dict 형식이면 세 축 모두 활성화
+            // skeleton.json / bone_map 의 axis 는 dominant axis 참고용으로만 사용
+            bool   axX = true, axY = true, axZ = true;
+            float  minA = -180f, maxA = 180f;
 
             if (skelData != null && skelData.TryGetValue(jointId, out var jd))
             {
-                axX = jd.axis == "X"; axY = jd.axis == "Y"; axZ = jd.axis == "Z";
+                // ROM은 skeleton.json 값 사용, 세 축은 모두 열어둠
                 minA = jd.minAngle; maxA = jd.maxAngle;
-            }
-            else if (!string.IsNullOrEmpty(axisHint))
-            {
-                string ax = axisHint.ToUpper();
-                axX = ax == "X"; axY = ax == "Y"; axZ = ax == "Z";
             }
 
             // 새 항목 추가
@@ -247,18 +243,12 @@ public class AnimalControllerEditor : Editor
                 if (slash >= 0) bone = root.Find(unityPath.Substring(slash + 1));
             }
 
-            bool  axX = false, axY = false, axZ = false;
-            float minA = -45f, maxA = 45f;
+            bool  axX = true, axY = true, axZ = true;
+            float minA = -180f, maxA = 180f;
 
             if (skelData != null && skelData.TryGetValue(jointId, out var jd))
             {
-                axX = jd.axis == "X"; axY = jd.axis == "Y"; axZ = jd.axis == "Z";
                 minA = jd.minAngle; maxA = jd.maxAngle;
-            }
-            else if (!string.IsNullOrEmpty(axisHint))
-            {
-                string ax = axisHint.ToUpper();
-                axX = ax == "X"; axY = ax == "Y"; axZ = ax == "Z";
             }
 
             entriesProp.InsertArrayElementAtIndex(entriesProp.arraySize);

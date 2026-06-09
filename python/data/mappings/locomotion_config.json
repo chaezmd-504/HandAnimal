@@ -29,6 +29,7 @@
   },
   "horse": {
     "base_anim": "Horse_001_walk",
+    "locomotion_hand": "left",
     "speed_scale": 0.06,
     "dir_scale": 0.8,
     "dir_deadzone": 5,
@@ -47,9 +48,9 @@
         "delta": 50.0
       },
       "Horse_001_eat": {
-        "dof": "ring_pip",
+        "dof": "pinky_mcp",
         "hand": "right",
-        "delta": 50.0
+        "delta": 40.0
       }
     }
   },

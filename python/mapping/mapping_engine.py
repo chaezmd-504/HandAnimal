@@ -51,7 +51,7 @@ class MappingEngine:
         current_animal: 현재 선택된 동물 이름
     """
 
-    ANIMALS = ["spider", "butterfly", "fish"]
+    ANIMALS = ["spider", "butterfly", "fish", "horse"]
 
     def __init__(self, mappings_dir: str):
         self.mappings_dir  = mappings_dir
