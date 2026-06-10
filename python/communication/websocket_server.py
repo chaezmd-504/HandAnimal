@@ -44,6 +44,24 @@ class WebSocketServer:
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._thread: Optional[threading.Thread] = None
         self._stop_event: Optional[asyncio.Event] = None
+        self._on_message = None   # Callable[[str], None] | None
+        self._on_connect  = None  # Callable[[], None]   | None
+
+    @property
+    def on_message(self):
+        return self._on_message
+
+    @on_message.setter
+    def on_message(self, callback):
+        self._on_message = callback
+
+    @property
+    def on_connect(self):
+        return self._on_connect
+
+    @on_connect.setter
+    def on_connect(self, callback):
+        self._on_connect = callback
 
     # ──────────────────────────────────────────────────────────
     # 서버 생명주기
@@ -82,9 +100,12 @@ class WebSocketServer:
         self._clients.add(ws)
         addr = ws.remote_address
         print(f"[WebSocketServer] Unity 연결됨: {addr}")
+        if self._on_connect is not None:
+            self._on_connect()
         try:
-            async for _ in ws:
-                pass  # 클라이언트에서 오는 메시지는 무시 (단방향 전송)
+            async for msg in ws:
+                if self._on_message is not None:
+                    self._on_message(msg)
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:

@@ -94,20 +94,19 @@ def compute_face_yaw(detection) -> tuple[float, float]:
     return float(yaw_ratio), float(eye_dist)
 
 
+_EYE_OPEN_THR = 0.007  # 눈 개방도 최소값 (정규화 좌표 기준) — 이하면 깜빡임으로 판정
+
 def compute_gaze_uv(face_landmarks) -> tuple[float, float, bool]:
     """
     FaceLandmarker 결과 (단일 얼굴의 478개 랜드마크)에서 시선 UV 계산.
-
-    Parameters
-    ----------
-    face_landmarks : list of NormalizedLandmark (478개, x/y/z 속성)
+    깜빡임(blink) 감지 시 valid=False 반환 → EMA 오염 방지.
 
     Returns
     -------
     (gaze_x, gaze_y, valid)
         gaze_x : 정규화된 수평 시선 [0,1] — 0=왼쪽, 0.5=중앙, 1=오른쪽
         gaze_y : 정규화된 수직 시선 [0,1] — 0=위쪽, 0.5=중앙, 1=아래쪽
-        valid  : 랜드마크가 충분히 신뢰 가능하면 True
+        valid  : 눈 뜨고 있고 랜드마크 신뢰 가능하면 True
     """
     if len(face_landmarks) < 478:
         return 0.5, 0.5, False
@@ -124,30 +123,26 @@ def compute_gaze_uv(face_landmarks) -> tuple[float, float, bool]:
     eye_r_top   = face_landmarks[_EYE_R_TOP]
     eye_r_bot   = face_landmarks[_EYE_R_BOT]
 
-    # 왼눈 가로 범위 (inner > outer in x when mirrored)
-    eye_l_w = eye_l_inner.x - eye_l_outer.x
-    # 오른눈 가로 범위
-    eye_r_w = eye_r_outer.x - eye_r_inner.x
+    # ── 깜빡임 필터: 눈 세로 개방도가 임계값 이하면 무효 ──────────
+    eye_l_h = eye_l_bot.y - eye_l_top.y
+    eye_r_h = eye_r_bot.y - eye_r_top.y
+    if eye_l_h < _EYE_OPEN_THR or eye_r_h < _EYE_OPEN_THR:
+        return 0.5, 0.5, False
 
+    # ── 수평 gaze ─────────────────────────────────────────────────
+    eye_l_w = eye_l_inner.x - eye_l_outer.x
+    eye_r_w = eye_r_outer.x - eye_r_inner.x
     if abs(eye_l_w) < 1e-4 or abs(eye_r_w) < 1e-4:
         return 0.5, 0.5, False
 
-    # 수평: iris x를 눈 좌우 범위로 정규화 [0,1]
-    gaze_x_l = (iris_l.x - eye_l_outer.x) / eye_l_w   # 0=외측, 1=내측
-    gaze_x_r = (iris_r.x - eye_r_inner.x) / eye_r_w   # 0=내측, 1=외측
-    # 두 눈 평균: 왼쪽 볼 때 gaze_x_l 작고 gaze_x_r 큼 → 평균은 0쪽
-    # 오른쪽 볼 때 gaze_x_l 크고 gaze_x_r 작음 → 평균은 1쪽
+    gaze_x_l = (iris_l.x - eye_l_outer.x) / eye_l_w
+    gaze_x_r = (iris_r.x - eye_r_inner.x) / eye_r_w
     gaze_x = (gaze_x_l + (1.0 - gaze_x_r)) / 2.0
 
-    # 수직: iris y를 눈 위아래 범위로 정규화 [0,1]
-    eye_l_h = eye_l_bot.y - eye_l_top.y
-    eye_r_h = eye_r_bot.y - eye_r_top.y
-    if abs(eye_l_h) < 1e-4 or abs(eye_r_h) < 1e-4:
-        gaze_y = 0.5
-    else:
-        gaze_y_l = (iris_l.y - eye_l_top.y) / eye_l_h
-        gaze_y_r = (iris_r.y - eye_r_top.y) / eye_r_h
-        gaze_y = (gaze_y_l + gaze_y_r) / 2.0
+    # ── 수직 gaze ─────────────────────────────────────────────────
+    gaze_y_l = (iris_l.y - eye_l_top.y) / eye_l_h
+    gaze_y_r = (iris_r.y - eye_r_top.y) / eye_r_h
+    gaze_y = (gaze_y_l + gaze_y_r) / 2.0
 
     gaze_x = float(max(0.0, min(1.0, gaze_x)))
     gaze_y = float(max(0.0, min(1.0, gaze_y)))
