@@ -43,8 +43,8 @@
       "id": "spine_003",
       "parent": "body",
       "dof": 1,
-      "min_angle": -22.3,
-      "max_angle": 5.1,
+      "min_angle": -30.0,
+      "max_angle": 30.0,
       "axis": "X",
       "rest": 0.0
     },
@@ -52,8 +52,8 @@
       "id": "spine_007",
       "parent": "body",
       "dof": 1,
-      "min_angle": -12.6,
-      "max_angle": 5.6,
+      "min_angle": -30.0,
+      "max_angle": 30.0,
       "axis": "X",
       "rest": 0.0
     },
@@ -107,7 +107,7 @@
       "parent": "body",
       "dof": 1,
       "min_angle": -87.6,
-      "max_angle": 5.0,
+      "max_angle": 40.0,
       "axis": "X",
       "rest": 0.0
     },
@@ -223,7 +223,7 @@
       "id": "scull",
       "parent": "body",
       "dof": 1,
-      "min_angle": -7.7,
+      "min_angle": -40.0,
       "max_angle": 52.2,
       "axis": "X",
       "rest": 0.0

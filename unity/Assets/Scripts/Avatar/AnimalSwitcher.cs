@@ -106,6 +106,16 @@ public class AnimalSwitcher : MonoBehaviour
         if (animalNameText != null)
             animalNameText.text = animalName;
 
+        // FollowCamera 타겟 갱신
+        var cam = FindAnyObjectByType<FollowCamera>();
+        if (cam != null)
+            cam.SetTarget(_map[animalName].rootObject?.transform);
+
+        // GazeNavigator 연동 갱신
+        var gazeNav = FindAnyObjectByType<GazeNavigator>();
+        if (gazeNav != null)
+            gazeNav.SetAnimalLocomotion(_map[animalName].locomotion);
+
         Debug.Log($"[AnimalSwitcher] 동물 전환: {animalName}");
     }
 

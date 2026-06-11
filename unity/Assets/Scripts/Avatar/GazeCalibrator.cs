@@ -155,6 +155,7 @@ public class GazeCalibrator : MonoBehaviour
     private void OnGUI()
     {
         if (_state == State.Done) return;
+        if (_state == State.ConnectWait) return;  // gaze 미사용 시 오버레이 숨김
 
         int sw = Screen.width;
         int sh = Screen.height;
@@ -209,7 +210,6 @@ public class GazeCalibrator : MonoBehaviour
             if (_state == State.Countdown && countdownSec > 0f)
             {
                 float progress = 1f - (_countdown / countdownSec);   // 0→1
-                float arcR = 55f;
                 GUI.color = new Color(0.4f, 0.8f, 1f, 0.6f);
                 // 간단 근사: progress 만큼 채워지는 원을 픽셀로 그리기 어려우므로
                 // 아래쪽에 progress 바로 대신 표시

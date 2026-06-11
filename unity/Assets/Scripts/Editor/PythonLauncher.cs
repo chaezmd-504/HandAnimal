@@ -25,6 +25,7 @@ public class PythonLauncherWindow : EditorWindow
     private int   _animalIdx   = 0;
     private int   _mappingIdx  = 0;
     private bool  _locomotion  = true;
+    private bool  _gaze        = false;
     private bool  _distLog     = false;
     private int   _distLogN    = 30;
     private float _temperature = 8f;
@@ -96,6 +97,7 @@ public class PythonLauncherWindow : EditorWindow
         _animalIdx  = EditorGUILayout.Popup("--animal",  _animalIdx,  Animals);
         _mappingIdx = EditorGUILayout.Popup("--mapping", _mappingIdx, Mappings);
         _locomotion = EditorGUILayout.Toggle("--locomotion", _locomotion);
+        _gaze       = EditorGUILayout.Toggle("--gaze (시선 제어)", _gaze);
 
         EditorGUILayout.BeginHorizontal();
         _distLog = EditorGUILayout.Toggle("--dist-log", _distLog);
@@ -188,6 +190,7 @@ public class PythonLauncherWindow : EditorWindow
         sb.Append($"--animal {Animals[_animalIdx]}");
         sb.Append($" --mapping {Mappings[_mappingIdx]}");
         if (_locomotion)   sb.Append(" --locomotion");
+        if (_gaze)         sb.Append(" --gaze");
         if (_distLog)      sb.Append($" --dist-log {_distLogN}");
         if (_temperature != 8f) sb.Append($" --temperature {_temperature:F1}");
         if (!string.IsNullOrWhiteSpace(_extraArgs)) sb.Append($" {_extraArgs.Trim()}");

@@ -13,6 +13,39 @@ using UnityEngine;
 
 public static class AnimalSceneSetup
 {
+    // ── 기존 씬에 Gaze 시스템만 추가 ────────────────────────────
+    [MenuItem("HandAvatar/Add Gaze System to Scene")]
+    public static void AddGazeToScene()
+    {
+        // 씬에서 AnimalLocomotion 자동 탐색
+        var locos = Object.FindObjectsByType<AnimalLocomotion>(FindObjectsSortMode.None);
+        if (locos.Length == 0)
+        {
+            EditorUtility.DisplayDialog("오류",
+                "씬에 AnimalLocomotion 컴포넌트를 찾지 못했습니다.\n" +
+                "먼저 Setup Spider/Horse in Scene 을 실행하세요.", "OK");
+            return;
+        }
+
+        // 여러 마리면 첫 번째에 연결 (보통 AnimalSwitcher 가 관리)
+        var loco = locos[0];
+        SetupGazeSystem(loco);
+
+        EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+
+        EditorUtility.DisplayDialog("완료",
+            "GazeSystem 추가 완료!\n\n" +
+            $"AnimalLocomotion: {loco.gameObject.name}\n\n" +
+            "실행 방법:\n" +
+            "  python -u main.py --animal horse --mapping blend --locomotion --gaze\n" +
+            "  Unity Play → 노란 점 9개 응시 → 시선으로 방향 제어\n\n" +
+            "AnimalLocomotion Inspector → Yaw Source:\n" +
+            "  Auto  = gaze 연결 시 자동 전환\n" +
+            "  Gaze  = 항상 시선\n" +
+            "  HeadDir = 기존 head-dir", "OK");
+    }
+
     // ── Spider ───────────────────────────────────────────────────
     [MenuItem("HandAvatar/Setup Spider in Scene")]
     public static void SetupSpider()
@@ -110,8 +143,11 @@ public static class AnimalSceneSetup
         var loco = go.GetComponent<AnimalLocomotion>() ?? Undo.AddComponent<AnimalLocomotion>(go);
         Debug.Log("[AnimalSceneSetup] AnimalLocomotion 추가 완료");
 
+        // 6-1. GazeSystem 추가 (GazeReceiver + GazeNavigator + GazeCalibrator)
+        SetupGazeSystem(loco);
+
         // 7. AnimalSwitcher 등록
-        var switcher = Object.FindObjectOfType<AnimalSwitcher>();
+        var switcher = Object.FindAnyObjectByType<AnimalSwitcher>();
         if (switcher != null)
         {
             var switcherSO  = new SerializedObject(switcher);
@@ -155,7 +191,56 @@ public static class AnimalSceneSetup
             "다음 단계:\n" +
             $"  1. {goName} 선택 → AnimalController Inspector\n" +
             $"  2. 동물 이름 = '{animalName}' 입력\n" +
-            "  3. 'JointEntry 전체 자동 생성' 버튼 클릭",
+            "  3. 'JointEntry 전체 자동 생성' 버튼 클릭\n\n" +
+            "Gaze 사용 시:\n" +
+            "  4. python scripts/gaze_sender.py 실행\n" +
+            "  5. AnimalLocomotion Inspector → Yaw Source = Gaze 또는 Auto",
             "OK");
+    }
+
+    // ── GazeSystem 구성 ───────────────────────────────────────────────────────
+
+    private static void SetupGazeSystem(AnimalLocomotion loco)
+    {
+        // 이미 있으면 loco 연결만 갱신
+        var gazeSystem = GameObject.Find("GazeSystem")
+                      ?? new GameObject("GazeSystem");
+        Undo.RegisterCreatedObjectUndo(gazeSystem, "Create GazeSystem");
+
+        var receiver   = gazeSystem.GetComponent<GazeReceiver>()
+                      ?? Undo.AddComponent<GazeReceiver>(gazeSystem);
+        var navigator  = gazeSystem.GetComponent<GazeNavigator>()
+                      ?? Undo.AddComponent<GazeNavigator>(gazeSystem);
+        var calibrator = gazeSystem.GetComponent<GazeCalibrator>()
+                      ?? Undo.AddComponent<GazeCalibrator>(gazeSystem);
+
+        // GazeNavigator.animalLocomotion = loco
+        {
+            var so = new SerializedObject(navigator);
+            so.FindProperty("animalLocomotion").objectReferenceValue = loco;
+            so.ApplyModifiedProperties();
+        }
+        // GazeReceiver.gazeNavigator = navigator
+        {
+            var so = new SerializedObject(receiver);
+            so.FindProperty("gazeNavigator").objectReferenceValue = navigator;
+            so.ApplyModifiedProperties();
+        }
+        // GazeCalibrator.gazeReceiver = receiver
+        {
+            var so = new SerializedObject(calibrator);
+            so.FindProperty("gazeReceiver").objectReferenceValue = receiver;
+            so.ApplyModifiedProperties();
+        }
+
+        // MainThreadDispatcher 확인
+        if (Object.FindAnyObjectByType<MainThreadDispatcher>() == null)
+        {
+            var dispatcher = new GameObject("MainThreadDispatcher");
+            dispatcher.AddComponent<MainThreadDispatcher>();
+            Undo.RegisterCreatedObjectUndo(dispatcher, "Create MainThreadDispatcher");
+        }
+
+        Debug.Log("[AnimalSceneSetup] GazeSystem 구성 완료 (GazeReceiver + GazeNavigator + GazeCalibrator)");
     }
 }

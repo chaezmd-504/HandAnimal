@@ -15,8 +15,22 @@ using UnityEngine;
 
 public class AnimalLocomotion : MonoBehaviour
 {
+    // ── 방향 제어 소스 ────────────────────────────────────────────────────────
+    public enum YawSource
+    {
+        HeadDir,   // 기존 Python head-dir (--head-dir 플래그)
+        Gaze,      // 시선 제어 (gaze_sender.py)
+        Auto,      // gaze 연결되면 자동 전환, 미연결 시 head-dir
+    }
+
+    [Header("방향 제어 소스")]
+    [Tooltip("HeadDir = 기존 head-dir  |  Gaze = 시선  |  Auto = gaze 연결 시 자동 전환")]
+    [SerializeField] private YawSource yawSource = YawSource.Auto;
+    [Tooltip("Gaze/Auto 모드 최대 회전 속도 (deg/s)")]
+    [SerializeField] private float gazeMaxTurnSpeed = 90f;
+
     [Header("이동 배율")]
-    [Tooltip("yaw_delta 에 곱해지는 회전 배율 (기본 1.0)")]
+    [Tooltip("yaw_delta 에 곱해지는 회전 배율 (HeadDir 모드)")]
     [SerializeField] private float rotationMultiplier = 1.0f;
 
     [Header("이산 속도 (Discrete Speed)")]
@@ -24,12 +38,8 @@ public class AnimalLocomotion : MonoBehaviour
     [SerializeField] private bool useDiscreteSpeed = true;
     [Tooltip("Python speed 이 이 값 미만이면 정지 (idle)")]
     [SerializeField] private float idleThreshold  = 0.05f;
-    [Tooltip("Python speed 이 이 값 이상이면 Fast 속도 사용")]
-    [SerializeField] private float fastThreshold  = 0.15f;
     [Tooltip("Normal 이동 속도 (Unity units/s)")]
     [SerializeField] private float normalSpeed    = 20f;
-    [Tooltip("Fast 이동 속도 (Unity units/s)")]
-    [SerializeField] private float fastSpeed      = 30f;
 
     [Header("감쇠 설정")]
     [Tooltip("손 미감지 시 속도 감쇠 계수 (0=즉시 멈춤, 1=감쇠 없음)")]
@@ -40,14 +50,43 @@ public class AnimalLocomotion : MonoBehaviour
     [SerializeField] private bool showDebugLog = false;
     [SerializeField] private bool showHUD      = true;
 
-    // 현재 상태 (외부에서 ApplyLocomotion 으로 갱신)
+    // ── 내부 상태 ─────────────────────────────────────────────────────────────
     private float _speed;
-    private float _yawDelta;
+    private float _yawDelta;    // head-dir yaw (deg/frame, Python에서)
     private bool  _valid;
     private float _moveSpeed;   // OnGUI 표시용
 
+    // Gaze 상태
+    private float _gazeNorm     = 0f;   // -1(좌)~+1(우), GazeNavigator에서 설정
+    private bool  _gazeActive   = false;
+    private int   _gazeMissCnt  = 0;
+    private const int GazeMissReset = 10;
+
     /// <summary>실제로 이동 중인지 (AnimalController Walk 판단용)</summary>
     public bool IsMoving => _moveSpeed > 0.001f;
+
+    // ── Gaze 외부 API (GazeNavigator 에서 호출) ───────────────────────────────
+
+    /// <summary>
+    /// GazeNavigator 에서 매 프레임 호출. normalizedTurn: -1(좌)~0(직진)~+1(우).
+    /// </summary>
+    public void SetGazeYaw(float normalizedTurn)
+    {
+        _gazeNorm    = normalizedTurn;
+        _gazeActive  = true;
+        _gazeMissCnt = 0;
+    }
+
+    /// <summary>gaze 미감지 시 GazeNavigator 에서 호출.</summary>
+    public void OnGazeLost()
+    {
+        _gazeMissCnt++;
+        if (_gazeMissCnt >= GazeMissReset)
+        {
+            _gazeActive = false;
+            _gazeNorm   = 0f;
+        }
+    }
 
     // ──────────────────────────────────────────────────────────
     // 외부 API — WebSocketClient 에서 호출
@@ -77,12 +116,20 @@ public class AnimalLocomotion : MonoBehaviour
             _speed *= speedDecay;
         }
 
+        // ── 방향 소스 결정 ────────────────────────────────────────────────────
+        bool useGaze = yawSource == YawSource.Gaze
+                    || (yawSource == YawSource.Auto && _gazeActive);
+
+        float activeYaw = useGaze
+            ? _gazeNorm * gazeMaxTurnSpeed * Time.deltaTime   // deg this frame
+            : _yawDelta;                                       // Python head-dir (deg/frame)
+
         // 회전 (Y 축)
-        if (Mathf.Abs(_yawDelta) > 0.01f)
+        if (Mathf.Abs(activeYaw) > 0.01f)
         {
             transform.Rotate(
                 Vector3.up,
-                _yawDelta * rotationMultiplier,
+                activeYaw * rotationMultiplier,
                 Space.World
             );
         }
@@ -135,18 +182,22 @@ public class AnimalLocomotion : MonoBehaviour
             speedColor = new Color(0.6f, 0.6f, 0.6f); // 회색
         }
 
-        // 방향 상태
+        // 방향 소스 표시
+        bool   hudUseGaze = yawSource == YawSource.Gaze || (yawSource == YawSource.Auto && _gazeActive);
+        float  hudYaw     = hudUseGaze ? _gazeNorm * gazeMaxTurnSpeed * Time.deltaTime : _yawDelta;
+        string srcLabel   = hudUseGaze ? "[GAZE]" : "[HEAD]";
+
         string dirLabel = "";
         Color  dirColor = Color.white;
-        if (_yawDelta > 0.1f)
+        if (hudYaw > 0.1f)
         {
-            dirLabel = $"TURNING RIGHT  ({_yawDelta:+0.00})";
-            dirColor = new Color(0.4f, 0.8f, 1f);   // 하늘색
+            dirLabel = $"{srcLabel} TURNING RIGHT  ({hudYaw:+0.00})";
+            dirColor = new Color(0.4f, 0.8f, 1f);
         }
-        else if (_yawDelta < -0.1f)
+        else if (hudYaw < -0.1f)
         {
-            dirLabel = $"TURNING LEFT   ({_yawDelta:+0.00})";
-            dirColor = new Color(1f, 0.8f, 0.2f);   // 노란색
+            dirLabel = $"{srcLabel} TURNING LEFT   ({hudYaw:+0.00})";
+            dirColor = new Color(1f, 0.8f, 0.2f);
         }
 
         var style = new GUIStyle(GUI.skin.label)

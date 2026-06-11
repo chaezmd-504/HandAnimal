@@ -37,16 +37,6 @@
     "ema_alpha": 0.3,
     "proximity_scale": 0.03,
     "triggers": {
-      "Horse_001_idle": {
-        "dof": "index_mcp",
-        "hand": "right",
-        "delta": 37.6
-      },
-      "Horse_001_run": {
-        "dof": "ring_pip",
-        "hand": "right",
-        "delta": 50.0
-      },
       "Horse_001_eat": {
         "dof": "pinky_mcp",
         "hand": "right",

@@ -55,7 +55,17 @@
       "Bash(grep -E \"\\\\.\\(anim|controller|fbx|FBX\\)$\")",
       "Bash(git -C \"C:/Program Files \\(x86\\)/GitHub/HandAnimal\" show 5a2c4264:python/data/animal_skeletons/spider.json)",
       "Bash(ls \"/c/Program Files \\(x86\\)/GitHub/HandAnimal/python/data/\"*.npy)",
-      "Bash(conda env:*)"
+      "Bash(conda env:*)",
+      "Bash(xargs ls:*)",
+      "Bash(grep -l \"Horse_001\" \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/unity/Assets/ithappy/Animals_FREE/Animations/\"*.meta)",
+      "Bash(grep -v \".pptx$\")",
+      "Bash(\"C:/Users/chaez/miniconda3/envs/capstone_env/python.exe\" scripts/make_weekly_pptx.py)",
+      "Bash(\"C:/Users/chaez/miniconda3/envs/capstone_env/python.exe\" scripts/mock_sender.py --help)",
+      "Bash(dir \"C:\\\\Program Files \\(x86\\)\\\\GitHub\\\\HandAnimal\\\\python\\\\data\\\\poses\")",
+      "Bash(timeout 8 \"C:/Users/chaez/miniconda3/envs/capstone_env/python.exe\" scripts/mock_sender.py --animal spider --mode walk)",
+      "Bash(timeout 5 \"C:/Users/chaez/miniconda3/envs/capstone_env/python.exe\" scripts/mock_sender.py --animal spider --mode walk --speed 0.12)",
+      "WebFetch(domain:github.com)",
+      "Bash(grep -B 5 \"m_Script: {fileID: 11500000, guid:\" \"C:\\\\Program Files \\(x86\\)\\\\GitHub\\\\HandAnimal\\\\unity\\\\Assets\\\\SimpleNaturePack_Demo.unity\")"
     ]
   }
 }

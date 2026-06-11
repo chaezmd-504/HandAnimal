@@ -20,8 +20,12 @@ using UnityEngine;
 
 public class GazeNavigator : MonoBehaviour
 {
-    [Header("이동 대상")]
-    [Tooltip("gaze로 조종할 오브젝트 (Sphere 등)")]
+    [Header("동물 연동 (선택)")]
+    [Tooltip("연결 시 Sphere 이동 대신 동물 방향 제어. 비워두면 Target Object 이동.")]
+    [SerializeField] private AnimalLocomotion animalLocomotion;
+
+    [Header("이동 대상 (독립 테스트용)")]
+    [Tooltip("animalLocomotion 미연결 시 이 오브젝트를 직접 조종 (Sphere 등)")]
     [SerializeField] private Transform targetObject;
 
     [Tooltip("전진 속도 (m/s)")]
@@ -54,6 +58,12 @@ public class GazeNavigator : MonoBehaviour
     // 외부 API — GazeReceiver 에서 매 메시지마다 호출
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// <summary>AnimalSwitcher가 동물 전환 시 호출해 연동 대상을 교체한다.</summary>
+    public void SetAnimalLocomotion(AnimalLocomotion loco)
+    {
+        animalLocomotion = loco;
+    }
+
     public void OnGazeUpdate(float gazeX, float gazeY)
     {
         _missCnt = 0;
@@ -66,7 +76,10 @@ public class GazeNavigator : MonoBehaviour
     {
         _missCnt++;
         if (_missCnt >= missStopFrames)
+        {
             _hasGaze = false;
+            animalLocomotion?.OnGazeLost();
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -75,7 +88,8 @@ public class GazeNavigator : MonoBehaviour
 
     private void Update()
     {
-        if (targetObject == null || !_hasGaze) return;
+        if (!_hasGaze) return;
+        if (animalLocomotion == null && targetObject == null) return;
 
         // ── 1. 좌우 회전: gaze_x → yaw delta ────────────────────────────────
         //   xOffset: -0.5(좌 끝) ~ 0(중앙) ~ +0.5(우 끝)
@@ -92,14 +106,22 @@ public class GazeNavigator : MonoBehaviour
         }
 
         float yawDelta = normalizedTurn * turnSpeed * Time.deltaTime;
-        targetObject.Rotate(Vector3.up, yawDelta, Space.World);
 
-        // ── 2. 전진 (targetObject 로컬 forward 방향) ─────────────────────────
-        targetObject.position += targetObject.forward * moveSpeed * Time.deltaTime;
+        if (animalLocomotion != null)
+        {
+            // ── 동물 연동 모드: yaw를 AnimalLocomotion 에 전달 ────────────────
+            animalLocomotion.SetGazeYaw(normalizedTurn);
+        }
+        else if (targetObject != null)
+        {
+            // ── 독립 테스트 모드: Sphere 직접 조종 ───────────────────────────
+            targetObject.Rotate(Vector3.up, yawDelta, Space.World);
+            targetObject.position += targetObject.forward * moveSpeed * Time.deltaTime;
+        }
 
         if (showLog)
             Debug.Log($"[GazeNavigator] gaze=({_smoothX:F2},{_smoothY:F2})"
-                    + $"  turn={yawDelta:F1}°  pos={targetObject.position}");
+                    + $"  turn={yawDelta:F1}°  norm={normalizedTurn:F2}");
     }
 
     // ─────────────────────────────────────────────────────────────────────────

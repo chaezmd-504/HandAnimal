@@ -21,6 +21,12 @@ public class FollowCamera : MonoBehaviour
     [Tooltip("회전 추적 속도")]
     [SerializeField] private float rotationSmoothing = 6f;
 
+    /// <summary>AnimalSwitcher가 동물 전환 시 호출해 추적 대상을 교체한다.</summary>
+    public void SetTarget(Transform newTarget)
+    {
+        target = newTarget;
+    }
+
     private void LateUpdate()
     {
         if (target == null) return;
