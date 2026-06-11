@@ -42,6 +42,7 @@ from mapping.mapping_engine import MappingEngine
 from mapping.keyframe_engine import KeyframeMappingEngine
 from mapping.locomotion_mapper import LocomotionMapper
 from communication.websocket_server import WebSocketServer
+from queue import Queue as _Queue
 
 BaseOptions           = mp.tasks.BaseOptions
 HandLandmarker        = mp.tasks.vision.HandLandmarker
@@ -53,6 +54,8 @@ MAPPINGS_DIR = os.path.join(DATA_DIR, "mappings")
 POSES_DIR    = os.path.join(DATA_DIR, "animal_skeletons")
 
 HAND_COLOR = {"left": (0, 255, 0), "right": (255, 100, 0)}
+
+_ANIMALS_CYCLE = ["spider", "horse"]   # 박수로 순환 전환할 동물 목록
 
 _bone_axes_cache: dict[str, dict[str, tuple[str, int]]] = {}
 
@@ -319,6 +322,11 @@ def parse_args():
     p.add_argument("--video", type=str, default=None,
                    help="웹캠 대신 사용할 영상 파일 경로 (.mp4 등). "
                         "미지정 시 웹캠(0) 사용.")
+    p.add_argument("--gaze", action="store_true",
+                   help="시선 추적 활성화. eyetrax 기반 캘리브레이션 후 "
+                        "gaze_x → 방향 제어. Unity GazeReceiver 포트 8766 사용.")
+    p.add_argument("--gaze-port", type=int, default=8766,
+                   help="Gaze WebSocket 포트 (기본값: 8766)")
     return p.parse_args()
 
 
@@ -328,6 +336,10 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    _current_animal_idx = (
+        _ANIMALS_CYCLE.index(args.animal) if args.animal in _ANIMALS_CYCLE else 0
+    )
 
     download_model()
 
@@ -400,6 +412,7 @@ def main():
     # Walk ROM 추출 (blend 모드)
     _walk_skeleton: dict = {}
     _prev_h_right:  Optional[np.ndarray] = None
+    _prev_h_left:   Optional[np.ndarray] = None
     _vel_ema:       float = 0.0
     _VEL_SCALE:     float = 0.05         # velocity → speed 배율
 
@@ -417,6 +430,18 @@ def main():
     _ALL_LEG_JOINTS: set = {j for s in _FINGER_LEG_JOINTS.values() for j in s}
     _n_active_fingers: int = 0   # 이번 프레임 활성 손가락 수 (loco 이후 walk blend용)
 
+    # ── 박수 감지 상태 ──────────────────────────────────────────
+    # 판정 기준: 최근 WINDOW 프레임 내에 손이 FAR_THR 이상 떨어져 있었고
+    #           현재 NEAR_THR 이하로 가까워졌을 때 → 의도적 박수로 판정
+    _CLAP_NEAR_THR     = 0.20   # 박수 직후 손바닥 간 거리 (화면 너비 비율)
+    _CLAP_FAR_THR      = 0.38   # 박수 전 손이 멀었던 기준 거리
+    _CLAP_WINDOW       = 25     # "멀었다" 이력을 확인할 프레임 수 (~0.8초)
+    _CLAP_COOLDOWN     = 90     # 발동 후 쿨다운 프레임 수 (~3초 @30fps)
+    _clap_cooldown_cnt = 0
+    _clap_dist_hist: list[float] = []   # 최근 WINDOW 프레임 거리 이력
+    _clap_flash_cnt  = 0               # 화면 플래시 카운터
+    _clap_new_animal = ""
+
 
     # rule-based 트리거 규칙 로드 (locomotion_config.json에서)
     # {anim: {"dof": str, "hand": str, "delta": float}}
@@ -425,7 +450,11 @@ def main():
     _trigger_ref:   dict = {}
 
     if args.mapping == "blend":
-        _walk_rom = engine.get_walk_rom(args.base_anim)
+        # locomotion_config.json의 base_anim 우선, 없으면 --base-anim 인자 사용
+        from mapping.locomotion_mapper import load_config as _load_loco_cfg_early
+        _base_anim_name = (_load_loco_cfg_early(MAPPINGS_DIR).get(args.animal, {}).get("base_anim")
+                           or args.base_anim)
+        _walk_rom = engine.get_walk_rom(_base_anim_name)
         if _walk_rom:
             _walk_skeleton = {
                 "joints": [
@@ -434,9 +463,9 @@ def main():
                 ]
             }
             print(f"[INFO] Walk ROM 로드: {len(_walk_rom)}개 관절 "
-                  f"(anim='{args.base_anim}')")
+                  f"(anim='{_base_anim_name}')")
         else:
-            print(f"[WARN] Walk ROM 추출 실패 — base_anim='{args.base_anim}'이 "
+            print(f"[WARN] Walk ROM 추출 실패 — base_anim='{_base_anim_name}'이 "
                   f"poses.json에 없는지 확인. 전체 skeleton ROM 사용.")
 
         # 트리거 규칙 로드
@@ -485,6 +514,47 @@ def main():
         print(f"[INFO] body mapping 로드: {_body_map_path}  ({len(_body_mapping)}관절)")
 
     server.start()
+
+    # ── Gaze 초기화 ───────────────────────────────────────────
+    _gaze_server    = None
+    _gaze_estimator = None
+    _gaze_cmd_q:    _Queue = _Queue()
+    _gaze_state     = "waiting"     # "waiting" | "collecting" | "ready"
+    _gaze_target    = (960.0, 540.0)
+    _gaze_collect_n = 0
+    _GAZE_COLLECT_FRAMES = 60
+    _gaze_step      = 0
+    _gaze_features: list = []
+    _gaze_targets:  list = []
+    _gaze_x, _gaze_y = 0.5, 0.5
+    _gaze_sw, _gaze_sh = 1920, 1080   # 화면 해상도
+
+    if args.gaze:
+        try:
+            from eyetrax import GazeEstimator as _GazeEstimator
+            import screeninfo as _screeninfo
+            try:
+                _m = _screeninfo.get_monitors()[0]
+                _gaze_sw, _gaze_sh = _m.width, _m.height
+            except Exception:
+                pass
+            _gaze_estimator = _GazeEstimator()
+            _gaze_server    = WebSocketServer(port=args.gaze_port)
+
+            def _on_gaze_connect():
+                _gaze_server._broadcast(json.dumps({"type": "ready"}))
+                print(f"[GAZE] Unity 연결 → ready 전송 (port {args.gaze_port})")
+
+            def _on_gaze_msg(msg):
+                _gaze_cmd_q.put(msg)
+
+            _gaze_server.on_connect  = _on_gaze_connect
+            _gaze_server.on_message  = _on_gaze_msg
+            _gaze_server.start()
+            print(f"[GAZE] eyetrax 초기화 완료. Unity 캘리브레이션 대기 중 (ws://localhost:{args.gaze_port})")
+        except ImportError:
+            print("[WARN] eyetrax 미설치 — --gaze 비활성. pip install eyetrax")
+            args.gaze = False
 
     # ── 머리 방향 제어 초기화 ─────────────────────────────────
     _face_detector    = None   # MediaPipe FaceDetector 인스턴스
@@ -556,6 +626,7 @@ def main():
 
             # ── 손 감지 (캘리브레이션 중에도 실행) ────────────
             hands_angles: dict[str, dict[str, float]] = {}
+            _palm_pos:    dict[str, np.ndarray]        = {}
             if result.hand_landmarks and result.hand_world_landmarks:
                 for landmarks, world_landmarks, handedness_list in zip(
                     result.hand_landmarks,
@@ -586,6 +657,8 @@ def main():
                     }
                     _dof_ema[side] = smoothed
                     hands_angles[side] = smoothed
+                    # 손바닥 중심: 중지 MCP (landmark 9), 정규화 0~1
+                    _palm_pos[side] = np.array([landmarks[9].x, landmarks[9].y])
 
             # ── 캘리브레이션 단계 ──────────────────────────────
             if not calib_done:
@@ -602,6 +675,18 @@ def main():
                             calib_reject_msg  = _calib_feedback(calib_warnings)
                             print(f"[WARN] 캘리브레이션 거부. 재시도...")
                         else:
+                            # 캘리브레이션 성공 → reference_pose_H를 JSON 파일에 저장
+                            _map_path = os.path.join(MAPPINGS_DIR, f"{args.animal}_mapping.json")
+                            try:
+                                with open(_map_path, "r", encoding="utf-8") as _f:
+                                    _map_data = json.load(_f)
+                                _map_data["reference_pose_H"] = engine._cache[args.animal]["reference_pose_H"]
+                                with open(_map_path, "w", encoding="utf-8") as _f:
+                                    json.dump(_map_data, _f, indent=2, ensure_ascii=False)
+                                print(f"[CALIB] reference_pose_H 저장 완료: {_map_path}")
+                            except Exception as _e:
+                                print(f"[WARN] reference_pose_H 저장 실패: {_e}")
+
                             # blend 모드: direct 엔진도 동일한 캘리브레이션 적용
                             if args.mapping == "blend":
                                 _engine_direct.calibrate(hands_angles)
@@ -654,6 +739,7 @@ def main():
 
                             _vel_ema      = 0.0
                             _prev_h_right = None
+                            _prev_h_left  = None
                             # 머리 방향: 캘리브 시점 yaw 비율을 기준으로 저장
                             # 감지 실패 시 _head_ref_set=False 유지 → 메인 루프 첫 감지 시 자동 설정
                             if _face_detector is not None:
@@ -698,6 +784,82 @@ def main():
             # ── 정상 동작 단계 ────────────────────────────────
             hand_detected = bool(hands_angles)
             _in_trigger_this_frame = False   # 이번 프레임 트리거 재생 여부 (loco speed 계산용)
+
+            # ── 박수 감지 → 동물 전환 ────────────────────────────────────────────
+            # 판정: 최근 WINDOW 프레임 내에 FAR_THR 이상 떨어진 적 있고 + 지금 NEAR_THR 이하
+            if _clap_flash_cnt > 0:
+                _clap_flash_cnt -= 1
+            if _clap_cooldown_cnt > 0:
+                _clap_cooldown_cnt -= 1
+            elif "left" in _palm_pos and "right" in _palm_pos:
+                _clap_dist = float(np.linalg.norm(_palm_pos["left"] - _palm_pos["right"]))
+                # 이력 업데이트
+                _clap_dist_hist.append(_clap_dist)
+                if len(_clap_dist_hist) > _CLAP_WINDOW:
+                    _clap_dist_hist.pop(0)
+
+                _was_far   = len(_clap_dist_hist) == _CLAP_WINDOW and max(_clap_dist_hist) >= _CLAP_FAR_THR
+                _now_close = _clap_dist < _CLAP_NEAR_THR
+
+                if _was_far and _now_close:
+                    _current_animal_idx = (_current_animal_idx + 1) % len(_ANIMALS_CYCLE)
+                    _new_animal = _ANIMALS_CYCLE[_current_animal_idx]
+                    print(f"\n[CLAP] 박수 감지! {engine.current_animal} → {_new_animal}")
+
+                    # Unity 전환
+                    server._broadcast(json.dumps({"type": "switch_animal", "animal": _new_animal}))
+
+                    # Python 엔진 전환
+                    engine.set_animal(_new_animal)
+                    if args.mapping == "blend":
+                        _engine_direct.set_animal(_new_animal)
+                        if hands_angles:
+                            engine.calibrate(hands_angles)
+                            _engine_direct.calibrate(hands_angles)
+                            _trigger_ref = {s: dict(d) for s, d in hands_angles.items()}
+                        # Walk ROM 재로드
+                        _base_anim_new = _loco_cfg.get(_new_animal, {}).get("base_anim", args.base_anim)
+                        _wr_new = engine.get_walk_rom(_base_anim_new)
+                        _walk_skeleton = ({"joints": [
+                            {"id": jid, "min_angle": mn, "max_angle": mx}
+                            for jid, (mn, mx) in _wr_new.items()
+                        ]} if _wr_new else {})
+                        # 트리거 규칙 재로드
+                        _trigger_rules = {k: v for k, v in
+                            _loco_cfg.get(_new_animal, {}).get("triggers", {}).items()
+                            if not k.startswith("_") and isinstance(v, dict)}
+                        _trigger_hold_cnt.clear()
+
+                    # skeleton ROM 재로드
+                    _skel_p = os.path.join(POSES_DIR, f"{_new_animal}.json")
+                    if os.path.exists(_skel_p):
+                        with open(_skel_p, encoding="utf-8") as _f:
+                            _skeleton = json.load(_f)
+
+                    # 로코모션 재초기화
+                    if _loco is not None:
+                        _loco = LocomotionMapper(_new_animal, MAPPINGS_DIR)
+                        if hands_angles:
+                            _loco.calibrate(hands_angles)
+
+                    # 상태 리셋
+                    _vel_ema         = 0.0
+                    _prev_h_right    = None
+                    _prev_h_left     = None
+                    _joints_ema.clear()
+                    _anim_state      = "normal"
+                    _trigger_anim    = None
+                    _cooldown_frames = 0
+                    _clap_dist_hist.clear()
+                    _clap_cooldown_cnt = _CLAP_COOLDOWN
+                    _clap_flash_cnt    = 45
+                    _clap_new_animal   = _new_animal
+                    frame_count = 0
+                    t_start     = time.time()
+                    continue   # 이번 프레임 스킵
+            else:
+                _clap_dist_hist.clear()   # 한 손이 사라지면 이력 리셋
+
             if hand_detected:
                 try:
                     if args.mapping == "blend":
@@ -707,10 +869,17 @@ def main():
                         h_right = _dof_dict_to_vec(hands_angles.get("right", {}))
 
                         # ── 속도(velocity) 계산 ───────────────────────
+                        # locomotion_hand 에 따라 기준 손 결정
+                        _loco_hand_cfg = (_loco._cfg.get("locomotion_hand") if _loco else None)
+                        if _loco_hand_cfg == "left":
+                            _h_vel, _prev_h_vel = h_left, _prev_h_left
+                        else:
+                            _h_vel, _prev_h_vel = h_right, _prev_h_right
+
                         # deadzone: 노이즈(~10-15) 이하는 0으로 처리
                         _VEL_DEADZONE = 12.0
-                        if _prev_h_right is not None:
-                            _vel_raw = float(np.linalg.norm(h_right - _prev_h_right))
+                        if _prev_h_vel is not None:
+                            _vel_raw = float(np.linalg.norm(_h_vel - _prev_h_vel))
                             if _vel_raw < _VEL_DEADZONE:
                                 # 실제 움직임 없음 → 즉시 감쇠
                                 _vel_ema *= 0.2
@@ -719,6 +888,7 @@ def main():
                                 # 빠른 반응: 새 값 70% 반영
                                 _vel_ema = 0.7 * _vel + 0.3 * _vel_ema
                         _prev_h_right = h_right.copy()
+                        _prev_h_left  = h_left.copy()
 
                         # ── 쿨다운 감소 ──────────────────────────────
                         if _cooldown_frames > 0:
@@ -733,7 +903,20 @@ def main():
                             print("[BLEND] → normal (trigger ended)")
 
                         # ── Walk ROM direct mapping (항상 실행 — trigger 중엔 blend용) ──
-                        _sk = _walk_skeleton if _walk_skeleton else _skeleton
+                        # 다리 관절: walk_skeleton ROM 사용 (walk 범위 내 제어)
+                        # spine/head 등 비다리 관절: 전체 skeleton ROM 사용 (직접 1:1 제어)
+                        if _walk_skeleton and _skeleton:
+                            _leg_jids = _ALL_LEG_JOINTS  # 왼/오른 앞뒤 다리 관절
+                            _full_rom  = {j["id"]: j for j in _skeleton.get("joints", [])}
+                            _walk_rom_map = {j["id"]: j for j in _walk_skeleton.get("joints", [])}
+                            _merged = [
+                                _walk_rom_map[jid] if jid in _leg_jids and jid in _walk_rom_map
+                                else _full_rom[jid]
+                                for jid in _full_rom
+                            ]
+                            _sk = {"joints": _merged}
+                        else:
+                            _sk = _walk_skeleton if _walk_skeleton else _skeleton
                         joints_d = _engine_direct.transform_clamped(hands_angles, _sk)
                         joints_d = _float_joints_to_xyz(joints_d, _engine_direct.current_animal)
                         _DEAD = 3.0
@@ -820,6 +1003,7 @@ def main():
                                 _trigger_end_time = time.time() + _duration
                                 _vel_ema         = 0.0
                                 _prev_h_right    = None
+                                _prev_h_left     = None
                                 print(f"[BLEND] → trigger: {_fired_anim}  "
                                       f"kf={_n_kf}  duration={_duration:.2f}s")
 
@@ -884,6 +1068,23 @@ def main():
                     print(f"  → r_leg={_jxyz('r_leg')}  "
                           f"l_leg={_jxyz('l_leg')}  "
                           f"r_bone_006={_jxyz('r_bone_006')}")
+                    if args.animal == "horse":
+                        spine_head = {k: _jxyz(k) for k in joints if 'spine' in k or 'scull' in k}
+                        if spine_head:
+                            print(f"  [HORSE spine/head] {spine_head}")
+                        else:
+                            print(f"  [HORSE spine/head] 전송 없음 — joints 키: {list(joints.keys())[:10]}")
+                        # wrist_flex delta 직접 확인
+                        if "right" in hands_angles and args.mapping == "blend":
+                            r = hands_angles["right"]
+                            wf_cur = r.get("wrist_flex", 0.0)
+                            wd_cur = r.get("wrist_dev", 0.0)
+                            _ed = _engine_direct._cache.get(_engine_direct.current_animal, {})
+                            _ref_H_r = _ed.get("reference_pose_H", {}).get("right", {})
+                            wf_ref = _ref_H_r.get("wrist_flex", 0.0)
+                            wd_ref = _ref_H_r.get("wrist_dev", 0.0)
+                            print(f"  [WRIST] flex: cur={wf_cur:.1f}  ref={wf_ref:.1f}  delta={wf_cur-wf_ref:+.1f}"
+                                  f"  |  dev: cur={wd_cur:.1f}  ref={wd_ref:.1f}  delta={wd_cur-wd_ref:+.1f}")
             else:
                 joints = {}
                 # 손 미감지 시 velocity EMA 감쇠 (안 하면 이전 값이 유지되어 계속 이동)
@@ -933,9 +1134,13 @@ def main():
                         _loco_result["speed"] = round(
                             min(_vel_ema * _VEL_SCALE, 2.0), 4
                         )
-                    # 머리 방향 제어 활성 시 yaw_delta 덮어쓰기
+                    # 방향 제어 우선순위: head-dir > gaze(Unity 측) > wrist_dev
                     if _face_detector is not None:
+                        # head-dir 모드: yaw_delta 덮어쓰기
                         _loco_result["yaw_delta"] = round(_head_yaw_delta, 3)
+                    elif args.gaze:
+                        # gaze 모드: Python은 yaw_delta=0 전송, 방향은 Unity GazeNavigator가 담당
+                        _loco_result["yaw_delta"] = 0.0
 
                     if frame_count % 30 == 0:
                         print(f"[LOCO] vel_ema={_vel_ema:.2f}  speed={_loco_result['speed']:.4f}  "
@@ -981,6 +1186,63 @@ def main():
                         + (1.0 - _JOINTS_EMA_ALPHA) * float(prev_j)
                     )
             _joints_ema.update(smoothed_joints)
+
+            # ── Gaze 처리 (--gaze 활성 시) ──────────────────────
+            if args.gaze and _gaze_estimator is not None:
+                # 커맨드 처리
+                while not _gaze_cmd_q.empty():
+                    try:
+                        _gcmd = json.loads(_gaze_cmd_q.get_nowait())
+                        if _gcmd.get("cmd") == "collect":
+                            _gaze_target    = (_gcmd["uv_x"] * _gaze_sw, _gcmd["uv_y"] * _gaze_sh)
+                            _gaze_collect_n = 0
+                            _gaze_step      = int(_gcmd.get("step", 1))
+                            _gaze_state     = "collecting"
+                            print(f"[GAZE] Step {_gaze_step} 수집 시작")
+                        elif _gcmd.get("cmd") == "train":
+                            if len(_gaze_features) >= 9:
+                                _gaze_estimator.train(
+                                    np.array(_gaze_features), np.array(_gaze_targets))
+                                _gaze_state = "ready"
+                                _gaze_server._broadcast(json.dumps({"type": "calib_complete"}))
+                                print(f"[GAZE] 모델 학습 완료 ({len(_gaze_features)}샘플)")
+                    except Exception as _ge:
+                        print(f"[WARN] gaze cmd 오류: {_ge}")
+
+                # 특징 추출
+                try:
+                    _gfeatures, _is_blink = _gaze_estimator.extract_features(frame)
+                except Exception:
+                    _gfeatures, _is_blink = None, False
+
+                if _gaze_state == "collecting":
+                    if _gfeatures is not None and not _is_blink:
+                        _gaze_features.append(_gfeatures)
+                        _gaze_targets.append(list(_gaze_target))
+                        _gaze_collect_n += 1
+                        if _gaze_collect_n >= _GAZE_COLLECT_FRAMES:
+                            _gaze_state = "waiting"
+                            _gaze_server._broadcast(json.dumps({
+                                "type": "point_done", "step": _gaze_step}))
+                            print(f"[GAZE] Step {_gaze_step} 완료")
+
+                elif _gaze_state == "ready":
+                    try:
+                        if _gfeatures is not None and not _is_blink:
+                            _px, _py = _gaze_estimator.predict(
+                                _gfeatures.reshape(1, -1))[0]
+                            _gaze_x = max(0.0, min(1.0, _px / _gaze_sw))
+                            _gaze_y = max(0.0, min(1.0, _py / _gaze_sh))
+                            _gvalid = True
+                        else:
+                            _gvalid = False
+                    except Exception:
+                        _gvalid = False
+                    _gaze_server._broadcast(json.dumps({
+                        "gaze_x": round(_gaze_x, 4),
+                        "gaze_y": round(_gaze_y, 4),
+                        "valid":  _gvalid,
+                    }))
 
             server.send_frame(
                 joints        = smoothed_joints,
@@ -1041,6 +1303,16 @@ def main():
                                     (10, 152 + idx * 24),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.52, (100, 200, 150), 1)
 
+                # 박수 전환 플래시
+                if _clap_flash_cnt > 0:
+                    _falpha = int(255 * _clap_flash_cnt / 45)
+                    _ftxt   = f"CLAP!  ->  {_clap_new_animal.upper()}"
+                    _ftw    = cv2.getTextSize(_ftxt, cv2.FONT_HERSHEY_SIMPLEX, 1.4, 3)[0][0]
+                    cv2.putText(frame, _ftxt,
+                                (w // 2 - _ftw // 2, h // 2),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.4,
+                                (_falpha, _falpha, _falpha), 3)
+
                 cv2.imshow("HandAvatar", frame)
 
             key = cv2.waitKey(1) & 0xFF
@@ -1051,6 +1323,8 @@ def main():
     cap.release()
     if _face_detector is not None:
         _face_detector.close()
+    if _gaze_server is not None:
+        _gaze_server.stop()
     if not args.no_window:
         cv2.destroyAllWindows()
     server.stop()

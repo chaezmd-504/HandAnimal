@@ -22,8 +22,8 @@
 
     "scull":            { "hand_dof_idx": 0,  "hand_dof_name": "wrist_flex", "scale_factor": 0.8,  "Q_score": 5.0, "hand": "right" },
     "spine_008":        { "hand_dof_idx": 0,  "hand_dof_name": "wrist_flex", "scale_factor": 0.5,  "Q_score": 5.0, "hand": "right" },
-    "spine_007":        { "hand_dof_idx": 1,  "hand_dof_name": "wrist_dev",  "scale_factor": 0.6,  "Q_score": 5.0, "hand": "right" },
-    "spine_003":        { "hand_dof_idx": 1,  "hand_dof_name": "wrist_dev",  "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" },
+    "spine_007":        { "hand_dof_idx": 8,  "hand_dof_name": "index_pip",  "scale_factor": 0.6,  "Q_score": 5.0, "hand": "right" },
+    "spine_003":        { "hand_dof_idx": 11, "hand_dof_name": "middle_pip", "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" },
     "spine_002":        { "hand_dof_idx": 7,  "hand_dof_name": "index_mcp",  "scale_factor": 0.4,  "Q_score": 5.0, "hand": "right" },
     "spine_001":        { "hand_dof_idx": 10, "hand_dof_name": "middle_mcp", "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" },
     "spine":            { "hand_dof_idx": 13, "hand_dof_name": "ring_mcp",   "scale_factor": 0.3,  "Q_score": 5.0, "hand": "right" }
