@@ -363,97 +363,57 @@ public class AnimalController : MonoBehaviour
     {
         if (!showHUD) return;
 
-        // 현재 모드 결정
-        string mode;
-        Color  modeColor;
+        // ── 모드 / 색상 결정 ──────────────────────────────────
+        string modeLabel;
+        Color  pill;
         if (_triggerTimer > 0f)
         {
-            mode      = $"TRIGGER  [{_currentTriggerAnim}]  {_triggerTimer:F1}s";
-            modeColor = new Color(1f, 0.6f, 0.1f);
+            modeLabel = $"◆ {_currentTriggerAnim.ToUpper()}  {_triggerTimer:F1}s";
+            pill = new Color(1f, 0.55f, 0.05f);
         }
         else if (_inWalkMode)
         {
-            mode      = $"WALK  [{walkAnimName}]";
-            modeColor = new Color(0.2f, 1f, 0.4f);
+            modeLabel = "▶ WALK";
+            pill = new Color(0.15f, 0.85f, 0.35f);
         }
         else if (_isIdle)
         {
-            mode      = "IDLE";
-            modeColor = new Color(0.6f, 0.6f, 0.6f);
+            modeLabel = "● IDLE";
+            pill = new Color(0.5f, 0.5f, 0.55f);
         }
         else
         {
-            mode      = "DIRECT";
-            modeColor = new Color(0.4f, 0.8f, 1f);
+            modeLabel = "◉ DIRECT";
+            pill = new Color(0.3f, 0.75f, 1f);
         }
 
-        // Animator 현재 클립명
-        string animClip = "-";
-        if (idleAnimator != null && idleAnimator.enabled)
-        {
-            var info = idleAnimator.GetCurrentAnimatorStateInfo(0);
-            animClip = idleAnimator.GetCurrentAnimatorClipInfo(0).Length > 0
-                ? idleAnimator.GetCurrentAnimatorClipInfo(0)[0].clip.name
-                : info.shortNameHash.ToString();
-        }
+        int sw = Screen.width;
+        int bw = 220, bh = 36;
+        int bx = sw - bw - 16, by = 16;
 
-        var style = new GUIStyle(GUI.skin.label)
+        // 반투명 배경 pill
+        GUI.color = new Color(0f, 0f, 0f, 0.55f);
+        GUI.DrawTexture(new Rect(bx - 8, by - 6, bw + 16, bh + 12), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+
+        var s = new GUIStyle(GUI.skin.label)
         {
-            fontSize  = 22,
+            fontSize  = 20,
             fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
         };
+        s.normal.textColor = pill;
+        GUI.Label(new Rect(bx, by, bw, bh), modeLabel, s);
 
-        int x = 20, y = 110;
-
-        // 모드
-        style.normal.textColor = Color.black;
-        GUI.Label(new Rect(x+2, y+2, 500, 35), $"MODE: {mode}", style);
-        style.normal.textColor = modeColor;
-        GUI.Label(new Rect(x,   y,   500, 35), $"MODE: {mode}", style);
-
-        // Animator 클립
-        y += 32;
-        style.fontSize = 18;
-        style.fontStyle = FontStyle.Normal;
-        style.normal.textColor = Color.black;
-        GUI.Label(new Rect(x+2, y+2, 500, 28), $"ANIM: {animClip}", style);
-        style.normal.textColor = new Color(1f, 1f, 0.6f);
-        GUI.Label(new Rect(x,   y,   500, 28), $"ANIM: {animClip}", style);
-
-        // 관절 수 + walkActive
-        y += 28;
-        string jointInfo = $"JOINTS: {_jointMap.Count}  TARGET: {_targetAngles.Count}  walkActive={_walkActive}";
-        style.normal.textColor = Color.black;
-        GUI.Label(new Rect(x+2, y+2, 600, 28), jointInfo, style);
-        style.normal.textColor = new Color(0.8f, 0.8f, 0.8f);
-        GUI.Label(new Rect(x,   y,   600, 28), jointInfo, style);
-
-        // scull / spine_008 실시간 delta 표시
-        y += 28;
-        string[] debugJoints = { "scull", "spine_008", "spine_007" };
-        foreach (var djName in debugJoints)
+        // walkActive 점 표시 (오른쪽 하단 작게)
+        if (!_isIdle)
         {
-            string djStr;
-            if (_targetAngles.TryGetValue(djName, out var djVec))
-            {
-                if (_jointMap.TryGetValue(djName, out var djEntry) && djEntry.jointTransform != null)
-                {
-                    Quaternion delta = Quaternion.Inverse(djEntry.restRotation) * djEntry.jointTransform.localRotation;
-                    Vector3 actualEuler = delta.eulerAngles;
-                    float ax = actualEuler.x > 180f ? actualEuler.x - 360f : actualEuler.x;
-                    djStr = $"{djName}: target=({djVec.x:F1},{djVec.y:F1},{djVec.z:F1})  actual_delta_x={ax:F1}°";
-                }
-                else
-                    djStr = $"{djName}: target=({djVec.x:F1},{djVec.y:F1},{djVec.z:F1})  [no transform]";
-            }
-            else
-                djStr = $"{djName}: no target";
-
-            style.normal.textColor = Color.black;
-            GUI.Label(new Rect(x+2, y+2, 700, 26), djStr, style);
-            style.normal.textColor = new Color(1f, 0.7f, 0.4f);
-            GUI.Label(new Rect(x,   y,   700, 26), djStr, style);
-            y += 26;
+            s.fontSize  = 14;
+            s.fontStyle = FontStyle.Normal;
+            s.alignment = TextAnchor.MiddleCenter;
+            string sub = _walkActive ? "moving" : "still";
+            s.normal.textColor = new Color(1f, 1f, 1f, 0.5f);
+            GUI.Label(new Rect(bx, by + bh + 2, bw, 20), sub, s);
         }
     }
 }
