@@ -327,6 +327,13 @@ def parse_args():
                         "gaze_x → 방향 제어. Unity GazeReceiver 포트 8766 사용.")
     p.add_argument("--gaze-port", type=int, default=8766,
                    help="Gaze WebSocket 포트 (기본값: 8766)")
+    p.add_argument("--fast", action="store_true",
+                   help="저사양 모드: 해상도 480×270, 2프레임 스킵, 미리보기 창 비활성화. "
+                        "Unity와 같은 PC에서 실행 시 렉 감소.")
+    p.add_argument("--cam-width",  type=int, default=None, help="웹캠 가로 해상도 (기본: 카메라 기본값)")
+    p.add_argument("--cam-height", type=int, default=None, help="웹캠 세로 해상도 (기본: 카메라 기본값)")
+    p.add_argument("--skip", type=int, default=0,
+                   help="N프레임마다 1프레임만 처리 (0=스킵 없음, 1=1프레임 스킵 후 1처리 등)")
     return p.parse_args()
 
 
@@ -598,6 +605,19 @@ def main():
     if args.video:
         print(f"[INFO] 영상 파일 사용: {args.video}")
 
+    # ── 저사양 모드 / 해상도 설정 ──────────────────────────────
+    _fast_mode  = args.fast
+    _skip_every = args.skip if not _fast_mode else 1   # fast: 1프레임 스킵
+    _cam_w = args.cam_width  if args.cam_width  else (480 if _fast_mode else None)
+    _cam_h = args.cam_height if args.cam_height else (270 if _fast_mode else None)
+    if _cam_w: cap.set(cv2.CAP_PROP_FRAME_WIDTH,  _cam_w)
+    if _cam_h: cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _cam_h)
+    if _fast_mode:
+        args.no_window = True   # fast 모드는 창 비활성화
+        print(f"[INFO] 저사양 모드: 해상도 {_cam_w}×{_cam_h}, {_skip_every}프레임 스킵, 창 비활성화")
+    elif _cam_w or _cam_h:
+        print(f"[INFO] 해상도 설정: {_cam_w}×{_cam_h}")
+
     print(f"[INFO] 캘리브레이션 시작 — {_CALIB_DURATION:.0f}초 카운트다운")
 
     # ── 캘리브레이션 상태 ──────────────────────────────────────
@@ -609,12 +629,20 @@ def main():
     frame_count = 0
     t_start     = time.time()
 
+    _skip_counter = 0
     with HandLandmarker.create_from_options(options) as landmarker:
         while True:
             ret, frame = cap.read()
             if not ret:
                 print("[ERROR] 프레임 읽기 실패.")
                 break
+
+            # 프레임 스킵 (저사양 모드 또는 --skip N)
+            if _skip_every > 0:
+                _skip_counter += 1
+                if _skip_counter <= _skip_every:
+                    continue
+                _skip_counter = 0
 
             h, w     = frame.shape[:2]
             ts_ms    = int(time.time() * 1000)
