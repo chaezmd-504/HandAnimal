@@ -1,0 +1,164 @@
+[붙임 3] 결과보고서
+[캡스톤디자인 결과보고서]
+
+■ 과제명
+과 제 명: RGB 웹캠 기반 비인간형 동물 아바타의 실시간 손 제어 시스템
+참여학기: 2026년 1학기
+
+
+■ 강좌정보
+과 목 명: 캡스톤디자인
+학수번호: (학수번호)
+과제기간: 2026년 3월 2일 ~ 2026년 6월 18일
+학 점: (학점)
+
+
+■ 팀구성
+팀    명: HandAnimal
+팀구성 총인원: 1명
+
+구분      성명      학번          학부(과)            학년
+대표학생  강채원    2022103383    전산전자공학부      4
+
+
+■ 교강사 확인
+교강사
+성    명: (담당 교수님 성명)
+직    급: (직급)
+소   속: 한동대학교 전산전자공학부
+교강사 확인: 성명 :                    (인)
+
+
+■ 붙임
+    [양식] 과제 요약보고서
+    [결과물] 최종결과물 (최종작품 사진/도면/발표자료 등)
+
+본 팀은 과제를 성실히 이행하고 이에 따른 결과보고서를 제출합니다.
+
+2026년  6월      일
+
+팀 대표 : 강채원                      (인)
+
+
+[양식] 과제 요약보고서
+[캡스톤디자인 과제 요약보고서]
+
+과 제 명: RGB 웹캠 기반 비인간형 동물 아바타의 실시간 손 제어 시스템
+
+1. 과제 개요
+   가. 과제 설계 배경 및 필요성
+
+   가상 환경에서 비인간형 동물 아바타(거미, 말 등)를 제어하려면 일반적으로 Depth 카메라나 VR 헤드셋 등 고가의 특수 장비가 필요하다. Cheng et al.이 제안한 HandAvatar(CHI 2023)는 정수계획법(ILP)을 활용하여 손 DOF와 동물 관절 간의 최적 매핑을 자동 탐색하는 최초의 체계적 프레임워크이나, (1) Oculus Quest 2의 Depth 카메라에 의존, (2) 소스코드 미공개, (3) Locomotion을 수동 제스처 등록에만 의존이라는 세 가지 한계가 있다.
+
+   본 과제는 이 세 가지 한계를 각각 해결하여, 일반 RGB 웹캠 하나만으로 비인간형 동물 아바타를 실시간 제어할 수 있는 시스템을 개발하였다.
+
+   나. 과제 주요내용
+
+   (1) HandAvatar의 ILP 기반 매핑 최적화 알고리즘을 코드 없이 논문 수식만으로 독립 재구현 (수식-코드 매칭률 약 95%)
+   (2) Depth 카메라 대신 RGB 웹캠 + MediaPipe HandLandmarker로 20-DOF 기하학적 추출
+   (3) Direct/Keyframe/Blend 세 가지 런타임 제어 방식 구현 및 동적 α 블렌딩
+   (4) Walk cursor 기반 속도 추출 + head-direction/gaze 기반 방향 제어로 Locomotion 자동화
+   (5) 거미(24관절)와 말(29관절) 두 종의 동물 아바타 실시간 제어 시연
+
+   다. 최종결과물의 목표
+
+   - ILP 매핑 품질 Q score 양수 달성 → 실제 달성: Q = 9.45 (거미)
+   - 논문 대비 계산 시간 40배 이상 단축 → 실제 달성: 42배 (K=100 서브샘플링)
+   - 손가락 각도 측정 안정성 ±5° 이내 → 실제 달성: ±3° (2D 이미지 좌표 방식)
+   - 60fps 실시간 제어 → 달성 (소비자급 하드웨어)
+
+2. 과제 수행방법
+
+   가. 오프라인 매핑 최적화 (동물당 1회 실행)
+      - Unity AnimPoseExporter로 FBX 애니메이션에서 동물 포즈 데이터 자동 추출
+      - MANO 기반 10,000개 손 포즈 샘플링 후 편안함 상위 100개(G_sub) 선별
+      - 편안함(F), 구조적 유사성(S), 제어 가능성(C) 3요소 계산
+      - PuLP + CBC ILP 솔버로 최적 매핑 M 산출, JSON 저장
+
+   나. 런타임 실시간 제어 (60fps)
+      - RGB 웹캠 → MediaPipe HandLandmarker → 20-DOF 각도 벡터 추출
+      - 매핑 엔진(Direct/Keyframe/Blend)으로 동물 관절 각도 계산
+      - WebSocket(ws://localhost:8765)으로 Unity에 JSON 전송
+      - AnimalController가 restRotation × Euler(delta) 방식으로 관절 회전 적용
+
+   다. 개발 도구
+      - Python 3.10 (conda), Unity 2022.3 LTS, MediaPipe, PuLP + CBC, WebSocket, eyetrax
+      - Git + GitHub 형상관리
+
+3. 실습비 사용내역
+
+   - 웹캠 구매 및 발표자료 제작 등 기본 비용 사용
+
+4. 수행결과
+   가. 과제수행 결과
+
+   [매핑 최적화]
+   - 거미 아바타 Q score = 9.45 달성 (276개 포즈, 체인 보너스 적용)
+   - 초기 -6.72에서 최종 9.45까지 단계적 개선 (W_F 부호 수정, S 정규화, 분산 패널티 등)
+   - K=100 서브샘플링으로 논문 대비 42배 속도 향상, 품질 차이 0.3%
+
+   [20-DOF 손 모델]
+   - 내외전 4-DOF 제거 + 손목 3-DOF/엄지 외전/소지 CMC 추가 = 20-DOF
+   - 2D 이미지 좌표 기반 추출로 ±3° 측정 안정성 달성
+   - 15-DOF → 20-DOF 전환으로 물고기 아바타 Q score +41% 개선
+
+   [런타임 제어]
+   - Direct: 손 DOF 변화량 × scale_factor → 동물 관절 각도 (신체화 최고)
+   - Keyframe: 소프트맥스 블렌딩(T=8.0) → 떨림 억제
+   - Blend: Direct + Keyframe 동적 α 블렌딩, 상태머신 기반 continuous/action 전환
+   - DOF delta 기반 트리거(3프레임 홀드 조건)로 오발동 최소화
+
+   [Locomotion]
+   - Walk cursor 기반 속도 추출: 키프레임 L2 거리 + proximity weight + EMA 평활화
+   - Head-direction 모드: FaceLandmarker 머리 yaw → 이동 방향 (데드존 8°, 스케일 0.15)
+   - Gaze 모드: eyetrax 9포인트 캘리브레이션 → 지면 Raycast → 독립 포트(8766) 운영
+
+   [동물별 결과]
+   - 거미(Spider): 24 FK + 3 body 관절, ILP 자동 매핑, Walk/Attack1/Attack2/Death 동작
+   - 말(Horse): 29관절, 수동 매핑(왼손=4다리, 오른손=상체), Walk/Eat 동작
+
+   [수식-코드 매칭률]
+   - 논문 18개 수식 항목 중 15개 완전 일치, 3개 근사/소프트 대체
+   - 수학적 구조 및 알고리즘 로직 수준 일치율: 약 95%
+
+   나. 최종결과물 주요특징 및 설명
+
+   (1) RGB 전용 설계: Depth 카메라 없이 일반 웹캠만으로 동작. 2D 이미지 좌표 활용으로 z축 노이즈 완전 배제.
+   (2) 오프라인-런타임 분리: ILP 최적화는 동물당 1회만 실행(약 2분), 결과를 JSON으로 저장하여 런타임 부담 제거.
+   (3) 하이브리드 제어(Blend): 평상시 Direct로 높은 신체화, 특수 동작 시 Animation으로 자연스러움 확보.
+   (4) Locomotion 자동화: 별도 이동 제스처 등록 없이, 손이 Walk 패턴과 유사하면 자동 전진.
+   (5) 모듈식 구조: 새 동물 추가 시 AnimPoseExporter → ILP → JSON → Unity 연결만으로 확장 가능.
+
+5. 기대효과 및 활용방안
+   가. 기대효과
+
+   - 특수 장비 없이 일반 웹캠만으로 비인간형 아바타 제어가 가능해져 VR/AR 콘텐츠 접근성 향상
+   - 코드 미공개 논문의 독립 재구현 사례를 통해 학술 재현성(Reproducibility) 방법론 제시
+   - 20-DOF 기하학적 추출 방식은 MediaPipe 기반 다른 손 제어 응용에도 적용 가능
+
+   나. 활용방안
+
+   - HCI 학술대회(한국HCI학회 등) 소논문 투고
+   - 가상 동물원, 교육용 인터랙티브 콘텐츠, 재활 치료용 아바타 시스템 등에 활용
+   - 향후 Embodiment 사용자 연구(Gonzalez-Franco & Peck 2018 설문)의 기반 시스템으로 확장
+   - Sequential Walk 구현, 관절 그룹 제약 ILP 확장 등 후속 연구 기반
+
+6. 결론 및 제언
+
+본 과제는 RGB 웹캠 하나만으로 비인간형 동물 아바타를 실시간 제어하는 시스템을 성공적으로 구현하였다. HandAvatar(CHI 2023)의 ILP 기반 매핑 알고리즘을 코드 없이 논문 수식만으로 독립 재구현하고(매칭률 약 95%), Depth 카메라 의존성을 제거하며, 논문이 미래 과제로 남긴 Locomotion 자동화를 달성하였다.
+
+주요 성과로는 (1) 거미 아바타 Q score 9.45 달성, (2) K=100 서브샘플링으로 42배 속도 향상(품질 차이 0.3%), (3) 2D 이미지 좌표 기반 ±3° 측정 안정성, (4) Direct/Keyframe/Blend 세 가지 제어 방식과 동적 α 블렌딩, (5) Walk cursor + head-dir/gaze 기반 Locomotion 자동화가 있다.
+
+향후 연구로는 손가락별 관절 그룹 제약을 포함한 ILP 확장(말 자동 매핑), Sequential Walk 구현(보행 순서 보장), 정량적 사용자 연구(Embodiment 평가)가 필요하다.
+
+[참고자료]
+[1] Y. Cheng, A. Edalati, C. Pong, E. Seol, and S. Bateman, "HandAvatar: Automatically Creating Hand-Gesture Controlled Avatars for Non-Humanoid Virtual Characters," Proc. ACM CHI, 2023.
+[2] Google, "MediaPipe Hand Landmarker," https://developers.google.com/mediapipe/solutions/vision/hand_landmarker, 2023.
+[3] L. McAtamney and E. N. Corlett, "RULA: a survey method for the investigation of work-related upper limb disorders," Applied Ergonomics, vol. 24, no. 2, pp. 91-99, 1993.
+[4] M. C. Hume, H. Gellman, H. McKellop, and R. H. Brumfield, "Functional range of motion of the joints of the hand," Journal of Hand Surgery, vol. 15, no. 2, pp. 240-243, 1990.
+[5] Y. Seol, J. P. Lewis, J. Seo, B. Kwon, and J. Noh, "Creature Features: Online Motion Puppetry for Non-Humanoid Characters," Proc. SCA, 2013.
+[6] eyetrax, "eyetrax: Webcam-based Eye Tracking Library," https://pypi.org/project/eyetrax/, 2024.
+
+※ 본 양식은 요약보고서이며, 최종결과물 추가제출 필수
+
+팀 대표 : 강채원                      (인)

@@ -1,0 +1,405 @@
+RGB 웹캠 기반 비인간형 동물 아바타의 실시간 손 제어 시스템
+Real-Time Hand-Based Control of Non-Humanoid Animal Avatars via RGB Webcam
+
+강채원
+한동대학교 전산전자공학부
+chaewon@handong.edu
+
+초록
+가상 환경에서 비인간형 동물 아바타를 제어하려면 일반적으로 Depth 카메라나 VR 헤드셋이 필요하다. 본 논문은 일반 RGB 웹캠 하나만으로 거미(24관절), 말(29관절) 등 비인간형 동물 아바타를 실시간 제어하는 시스템을 제안한다. HandAvatar(CHI 2023)의 ILP 기반 최적 매핑 알고리즘을 독립적으로 재구현하되, Depth 카메라 의존성을 제거하고 MediaPipe HandLandmarker 기반 20-DOF 기하학적 추출 방식을 설계하였다. 또한 원 논문이 미래 과제로 남긴 로코모션 자동화를 Walk cursor 기반 속도 추출과 머리 방향/시선 추적 기반 방향 제어로 해결하였다. 실험 결과, 거미 아바타에서 매핑 품질 지표 Q=9.45를 달성하였으며, K=100 서브샘플링으로 계산 시간을 42배 단축하면서 품질 차이는 0.3%에 불과하였다.
+
+키워드
+동물 아바타, 손 추적, 정수계획법, 매핑 최적화, MediaPipe, 실시간 제어, Unity
+
+1. 서론
+
+1.1 연구 배경
+
+가상 환경에서 사용자가 비인간형 동물 아바타를 직접 제어하는 문제는 인간과 동물의 신체 구조적 불일치에서 비롯되는 근본적 도전을 내포한다. 거미는 8개의 다리에 각 3개 관절을, 말은 4개의 다리와 다절 척추 및 목·머리 구조를 지니며, 이러한 관절 체계는 인간의 손과 일대일 대응이 자명하지 않다. 따라서 "어떤 손 관절의 움직임으로 어떤 동물 관절을 제어할 것인가"라는 매핑 문제를 체계적으로 해결할 필요가 있다.
+
+Cheng et al.이 제안한 HandAvatar[1]는 이 매핑 문제를 정수계획법(Integer Linear Programming, ILP)으로 정형화한 최초의 체계적 접근이다. 편안함(Comfort), 구조적 유사성(Structural Similarity), 제어 가능성(Controllability)의 세 지표를 통합한 목적함수 Q를 최대화하는 최적 매핑을 자동 탐색한다. 그러나 이 시스템에는 다음과 같은 한계가 존재한다.
+
+첫째, Oculus Quest 2의 Depth 카메라에 의존하여 손 관절 DOF를 직접 읽으므로 별도 하드웨어가 필수적이다. 둘째, 소스코드가 공개되지 않아 재현이 어렵다. 셋째, 아바타의 이동(Locomotion)을 수동 제스처 등록에만 의존하며, 논문 스스로도 Section 7.1에서 "손 관절 상태로부터 이동 속도·방향을 자동으로 도출하는 방법"을 미래 과제로 남겼다.
+
+1.2 연구 목적 및 기여
+
+본 논문은 위의 세 가지 한계를 각각 해결하는 것을 목표로 하며, 구체적 기여는 다음과 같다.
+
+1. 코드 미공개 논문의 독립 재구현: HandAvatar의 전체 파이프라인—ILP 최적화, 기준 포즈 결정, 런타임 변환—을 논문 수식만으로 독립 재구현하고, 수식-코드 전수 대조를 통해 약 95%의 일치율을 확인하였다.
+2. Depth 카메라 의존성 제거: 일반 RGB 웹캠과 MediaPipe HandLandmarker만으로 20개 자유도(DOF)를 기하학적으로 추출하는 방법을 설계하였다. 2D 이미지 좌표 기반 각도 산출로 ±3° 이내의 측정 안정성을 달성하였다.
+3. 로코모션 자동화: Walk 키프레임 기반 cursor 속도 추출과 head-direction/gaze 기반 방향 제어를 결합한 독립 모듈로 로코모션을 자동화하였다.
+
+1.3 논문 구성
+
+2장에서 관련 연구를 검토하고, 3장에서 시스템 전체 아키텍처를 기술한다. 4장에서 ILP 기반 매핑 최적화 알고리즘을, 5장에서 런타임 제어 방식을, 6장에서 로코모션 시스템을 설명한다. 7장에서 실험 결과를 제시하고, 8장에서 논의 및 한계를 다루며, 9장에서 결론을 맺는다.
+
+2. 관련 연구
+
+2.1 비인간형 아바타의 손 기반 제어
+
+손을 이용한 가상 아바타 제어는 VR/AR 분야에서 활발히 연구되어 왔다. 인간형 아바타의 경우 손가락 간 직접 매핑이 자연스럽지만[2], 비인간형 아바타는 신체 구조의 불일치로 자동 매핑 기법이 필수적이다.
+
+Seol et al.[3]은 손 동작에서 동물의 이동 패턴을 매핑하는 Creature Features를 제안하였으나, 개별 관절 수준의 최적 매핑을 다루지는 않았다. HandAvatar[1]는 ILP를 활용하여 손 DOF와 동물 관절 간의 최적 일대일 매핑을 자동 탐색하는 최초의 체계적 프레임워크를 제시하였다. 본 연구는 이 프레임워크를 RGB 환경에서 재구현하고 확장한다.
+
+2.2 손 추적 기술
+
+Oculus Quest 2, Leap Motion 등 Depth 카메라 기반 시스템은 손 관절의 DOF 각도를 직접 제공하지만 별도 하드웨어가 필요하다. MediaPipe HandLandmarker[4]는 RGB 카메라만으로 21개 3D 랜드마크를 실시간 추출하지만, DOF 각도는 별도의 기하학적 계산을 요한다. 특히 RGB 카메라의 z축(깊이) 추정 불안정성은 내외전(abduction/adduction) 측정을 어렵게 하므로, 본 연구에서는 이를 고려한 20-DOF 모델을 설계하였다.
+
+2.3 인체공학적 편안함 평가
+
+McAtamney & Corlett[5]의 RULA(Rapid Upper Limb Assessment)는 상지 부하를 체계적으로 평가하는 표준 도구이다. Hume et al.[6]은 손가락 굴신의 자연 비율(MCP:PIP:DIP = 31:47:22)을 제시하였으며, 이는 HandAvatar에서 IFA(Inter-Finger Angle) 지표의 기반이 된다. 본 연구에서도 이 두 연구를 활용하여 편안함 점수를 산출하되, RGB 환경의 제약에 맞춰 근사 방식을 적용하였다.
+
+3. 시스템 아키텍처
+
+3.1 전체 구조
+
+본 시스템은 오프라인 최적화 단계와 런타임 제어 단계로 구성된다(그림 1).
+
+오프라인 단계(동물당 1회 실행)에서는 (1) Unity AnimPoseExporter로 FBX 애니메이션의 관절 회전 데이터를 자동 추출하여 동물 포즈 데이터 P를 구축하고, (2) MANO 기반으로 10,000개 손 포즈 G를 샘플링한 뒤 편안함 상위 100개 G_sub를 선별하며, (3) ILP 최적화로 최적 매핑 M과 기준 포즈 (g*, p*), 스케일 팩터를 산출하여 JSON 파일로 저장한다.
+
+런타임 단계(60fps 실시간)에서는 (1) RGB 웹캠 영상에서 MediaPipe HandLandmarker로 양손 각 21개 랜드마크를 추출하고, (2) 기하학적 계산으로 20-DOF 각도 벡터 h를 산출하며, (3) 매핑 엔진으로 동물 관절 각도를 계산한 뒤, (4) WebSocket(ws://localhost:8765)을 통해 Unity에 JSON을 전송하고, (5) AnimalController가 Q_rest * Q_Euler(delta) 방식으로 관절 회전을 적용한다.
+
+3.2 20-DOF 손 모델
+
+HandAvatar는 Oculus Quest 2가 제공하는 24-DOF(굴신+내외전) 모델을 사용한다. 본 시스템은 RGB 환경의 제약을 반영하여 표 1과 같은 20-DOF 모델을 설계하였다.
+
+표 1. 20-DOF 손 모델 구성
+그룹      DOF 수    구성                    ROM
+손목      3         굴신, 편위, 회전        ±70°, ±25°, ±90°
+엄지      4         CMC, MCP, IP, 외전      0-50°, 0-60°, 0-80°, 0-70°
+검지~약지  각 3     MCP, PIP, DIP           0-90°, 0-100°, 0-70°
+소지      4         CMC, MCP, PIP, DIP      0-30°, 0-90°, 0-100°, 0-70°
+합계      20
+
+24-DOF에서 내외전 4-DOF를 제거한 근거는 RGB 카메라의 z축 깊이 추정이 불안정하여 손가락의 좌우 벌림을 신뢰성 있게 측정할 수 없기 때문이다. 대신 손목 3-DOF(법선 벡터 기반 추출), 엄지 외전(thumb_abd), 소지 CMC를 추가하여 총 DOF 수를 20으로 유지하고 제어 자유도를 보상하였다.
+
+3.3 손가락 각도의 기하학적 추출
+
+MediaPipe는 관절 각도가 아닌 3D 랜드마크 좌표를 출력하므로, DOF 각도를 기하학적으로 산출해야 한다. 개발 과정에서 세 가지 좌표계를 시도한 결과(표 2), 2D 이미지 좌표 기반 방식이 가장 안정적이었다.
+
+표 2. 손가락 굴신 각도 추출 방법 비교
+방법                측정 변동 폭    비고
+3D world frame      ±10-30°        z축 노이즈 직접 영향
+palm-local 3D 변환   ±10°          z축 변환 후에도 잔여 노이즈
+2D 이미지 좌표       ±3°           z축 완전 배제, 채택
+
+검지~소지의 MCP/PIP/DIP 굴신각은 2D 이미지 좌표에서 세 점(부모 관절, 해당 관절, 자식 관절)이 이루는 각도로 계산한다:
+
+  theta = 180 - arccos(v1 . v2 / |v1||v2|)   ... (1)
+
+손목 3-DOF는 손바닥 법선 벡터에서 추출한다. 검지 MCP, 소지 MCP, 손목 세 점의 외적으로 법선을 구하고, 각 성분을 해당 DOF의 ROM에 맞게 스케일링한다:
+
+  n_hat = (p_index - p_wrist) x (p_pinky - p_wrist) / |...|   ... (2)
+  theta_flex = arcsin(n_y) * 70/90,  theta_dev = arcsin(n_x) * 25/90   ... (3)
+
+이 방법은 z축 절대값이 아닌 세 점의 상대적 위치로 계산되므로 RGB 카메라의 z축 부정확도에 강건하다. 엄지는 z축 움직임이 크므로 예외적으로 palm-local 3D 좌표를 사용한다.
+
+3.4 신호 안정화
+
+손가락 커플링. 같은 손가락의 PIP과 DIP 각도를 가중 합산(K_PIP=1.5, K_DIP=0.8)한 복합값을 계산한 뒤 비율에 따라 재분배한다. 이는 생리학적으로 PIP-DIP 간에 존재하는 건(腱) 연결을 모사하여 자연스러운 관절 간 협응을 구현한다.
+
+  composite = (theta_PIP * K_PIP + theta_DIP * K_DIP) / (K_PIP + K_DIP)   ... (4)
+
+2단계 EMA 스무딩. 입력 단계(alpha=0.55)에서 MediaPipe의 프레임 간 노이즈를 평활화하고, 출력 단계(alpha=0.35)에서 매핑 엔진의 변환 결과를 추가 평활화한다. 2단계 분리는 단일 단계 대비 급격한 의도적 움직임의 반응성은 유지하면서 정적 상태의 떨림을 효과적으로 억제한다.
+
+4. ILP 기반 매핑 최적화
+
+매핑 최적화의 목표는 손의 각 DOF를 동물의 각 관절에 배정하는 최적 매핑 M을 자동으로 결정하는 것이다. 이 과정은 오프라인에서 동물당 1회 실행되며, 결과는 JSON 파일로 저장되어 런타임에서 참조된다.
+
+4.1 목적함수 Q
+
+매핑 M 하에서 손 포즈 g와 동물 포즈 p의 매핑 품질을 평가하는 목적함수 Q는 편안함(F), 구조적 유사성(S), 제어 가능성(C)의 가중 합으로 정의된다:
+
+  Q(g, p, M) = w_F * F(g) + w_S * (-S(g, p, M)) + w_C * C(M)   ... (5)
+
+여기서 w_F = -5, w_S = 0.8, w_C = -0.01이며, 이는 논문[1]의 가중치를 그대로 사용한 것이다. S는 비유사도(dissimilarity)이므로 -S로 부호를 반전시켜 유사할수록 Q가 높아지도록 한다.
+
+4.2 편안함 점수 F
+
+편안함 점수는 네 가지 인체공학적 지표의 가중 합으로 산출한다:
+
+  F(g) = 1 - (0.4 * RULA + 0.3 * IFA + 0.2 * HE + 0.1 * FA)   ... (6)
+
+논문[1]은 네 지표를 단순 합산하나, 각 지표의 원래 스케일이 상이하므로(RULA: 1-7 정수, 나머지: 0-1 비율) 본 구현에서는 모든 지표를 [0, 1]로 정규화한 뒤 가중 합을 적용하였다.
+
+RULA (가중치 0.4). 원 논문은 3D 손목 위치와 전완 비틀림 기반으로 RULA[5]를 산출하나, RGB 카메라에서는 깊이 정보가 부정확하여 이를 완전히 구현할 수 없다. 본 시스템에서는 손목 3-DOF의 정규화 값이 중립(0.5)에서 벗어나는 정도로 근사한다:
+
+  RULA = 2 * mean(|g_hat_wrist - 0.5|)   ... (7)
+
+IFA (가중치 0.3). Hume et al.[6]의 자연 굴신 비율(MCP:PIP:DIP = 31:47:22)에 대한 평균 절대 편차(MAE)를 측정한다.
+
+HE (가중치 0.2). 정규화된 관절 각도가 0.9를 초과하는 DOF의 비율로 과신전(Hyperextension)을 측정한다.
+
+FA (가중치 0.1). 인접 손가락 간 굴신량 차이를 대리 지표로 사용한다. 원래 내외전 각도를 사용해야 하나 RGB 환경에서 측정이 불가하여 대체하였다.
+
+4.3 구조적 유사성 S
+
+매핑 M 하에서 손 포즈 g와 동물 포즈 p의 정규화된 각도 거리 합으로 정의된다:
+
+  S(g, p, M) = SUM_i |p_hat[joint_i] - g_hat[M(i)]|   ... (8)
+
+ILP에서는 최적 포즈 쌍이 아직 결정되지 않았으므로, G_sub x P 전체 조합의 평균으로 포즈 독립적 행렬 S_bar를 사용한다.
+
+4.4 분산 기반 DOF 패널티
+
+실험 과정에서 손목 DOF가 넓은 ROM으로 인해 높은 C 값을 획득하여, ILP가 손목을 다리 관절에 과배정하는 문제가 발견되었다. 이를 해결하기 위해 S_bar에 분산 기반 패널티를 부가하였다:
+
+  S_bar_pen[i,j] = S_bar[i,j] * (1 + beta * (1 - var_norm_j))   ... (10)
+
+편안한 손 포즈에서 자연스럽게 움직이는 DOF(손가락 굴신)는 분산이 크고 패널티가 작으며, 거의 움직이지 않는 DOF(손목)는 분산이 작아 큰 패널티를 받는다. beta = 5.0을 적용하여 손목의 다리 배정을 효과적으로 억제하였다.
+
+4.5 제어 가능성 C
+
+손 DOF j와 동물 관절 i의 ROM 겹침 구간 길이로 정의된다:
+
+  C[i,j] = max(0, min(a_max, h_max) - max(a_min, h_min))   ... (11)
+
+4.6 ILP 정형화
+
+결정 변수: u_ij in {0, 1} — 동물 관절 i를 손 DOF j에 배정할지 여부
+
+목적 함수:
+  max SUM_ij u_ij * (w_F * F_bar[j] + w_S * (-S_bar_pen[i,j]) + w_C * C[i,j]) + bonus_chain   ... (12)
+
+제약 조건:
+- (C1) SUM_j u_ij = 1: 각 동물 관절은 정확히 하나의 DOF에 배정
+- (C2) SUM_i u_ij <= 1: 각 DOF는 최대 하나의 관절에 배정
+- (C3) bonus_chain: 동일 체인(부모-자식)이 같은 손가락에 배정되면 +5.0 보너스
+
+논문[1]의 계층 제약(C3)을 하드 제약에서 소프트 보너스로 변경하였다. 거미의 24관절 x 8체인 구조에서 20-DOF로의 일대일 배정 시 하드 제약을 충족하는 실현 가능 해(feasible solution)가 존재하지 않는 경우가 있기 때문이다.
+
+솔버는 논문의 Gurobi 대신 오픈소스 PuLP + CBC를 사용하였다. 본 연구의 문제 규모(최대 24x20 행렬)에서 두 솔버의 결과는 동등하다.
+
+4.7 기준 포즈 결정
+
+매핑 M이 확정된 후, G_sub x P를 순회하여 Q를 최대화하는 기준 포즈 쌍 (g*, p*)를 결정한다:
+
+  (g*, p*) = argmax_{g in G_sub, p in P} Q_M(g, p)   ... (13)
+
+기준 포즈로부터 런타임 변환에 필요한 기준 손 각도 ref_H, 기준 동물 각도 ref_A, 스케일 팩터를 산출한다:
+
+  scale_i = ROM_animal_i / ROM_hand_M(i)   ... (14)
+
+4.8 G 서브샘플링
+
+논문은 G(10,000개) 전체를 S_bar 계산에 사용하나, 본 시스템은 편안함 F 상위 100개만 선별한 G_sub를 사용한다. 불편한 포즈는 기준 포즈로 선택될 가능성이 낮으므로 S_bar 계산에서 제외해도 최종 매핑 품질에 미치는 영향이 미미하다. 이로써 계산량을 100배 절감하면서도 품질 저하는 0.3%에 불과하다(7.2절).
+
+5. 런타임 제어 방식
+
+매핑이 결정된 후, 런타임에서 실시간으로 손 입력을 동물 관절 각도로 변환하는 세 가지 방식을 구현하였다.
+
+5.1 Direct 선형 매핑
+
+가장 기본적인 방식으로, 손 DOF 변화량에 스케일 팩터를 적용하여 동물 관절 각도를 산출한다:
+
+  delta_h = h_current[j] - ref_H[j]   ... (15)
+  theta_out[i] = ref_A[i] + delta_h * scale_i   ... (16)
+
+손의 미세한 움직임이 동물 관절에 직접 반영되므로 신체화(embodiment) 수준이 가장 높다. 반면 MediaPipe의 프레임 간 노이즈가 그대로 전파되어 떨림(wobble) 현상이 발생한다.
+
+5.2 Keyframe 소프트맥스 블렌딩
+
+동물 포즈 DB에서 현재 손 포즈와의 L2 거리를 계산하고, 소프트맥스 가중치로 상위 키프레임들을 블렌딩한다:
+
+  d_k = ||h_current - trigger_k||_2   ... (17)
+  w_k = exp(-d_k * T) / SUM_k' exp(-d_k' * T),  T = 8.0   ... (18)
+  theta_kf = SUM_k w_k * P_k   ... (19)
+
+손 떨림이 키프레임 공간으로 흡수되어 떨림이 억제되며, 아티스트가 제작한 포즈의 조합이 출력되므로 비자연스러운 포즈가 감소한다.
+
+5.3 Blend 모드 (동적 alpha 블렌딩)
+
+Direct와 Keyframe의 장점을 결합한 동적 블렌딩 방식이다. 상태머신으로 continuous(Walk/Idle)와 action(Attack/Death)을 구분하고, 상태에 따라 블렌딩 비율 alpha를 조절한다:
+
+- Continuous 상태: alpha = 0 (Direct 100%)
+- Action 상태: alpha = sin(cursor/N_frames * pi)
+
+  theta_blend = (1 - alpha) * theta_direct + alpha * theta_anim   ... (20)
+
+Action 진입은 DOF delta 기반 트리거로 판정한다. 특정 DOF의 프레임 간 변화량이 설정 임계값을 3프레임 연속 초과하면 발동한다.
+
+5.4 Walk 애니메이션 통합
+
+이동 중(speed > 0)에는 Unity Animator로 Walk 클립을 재생하면서, LateUpdate에서 손 입력을 walkHandBlend 비율로 블렌딩한다:
+
+  Q_joint = Slerp(Q_anim, Q_hand, w_walk)   ... (21)
+
+w_walk는 관절별로 독립 설정이 가능하여(walkBlendOverride), 다리는 Walk 애니메이션을 우선하고 몸통은 손 입력을 우선하는 등의 세밀한 조정이 가능하다.
+
+5.5 Unity 관절 회전 적용
+
+초기 구현에서는 절대 Euler 회전을 적용하여 rest-pose 회전이 무시되는 문제가 발생하였다. 이를 rest-pose 보존 delta 방식으로 수정하였다:
+
+  Q_final = Q_rest * Q_Euler(delta_theta)   ... (22)
+
+Awake()에서 각 관절의 초기 회전값 Q_rest를 저장하고, 매 프레임 이 값에 delta만 합성한다.
+
+또한 AnimPoseExporter에서 동물 포즈의 delta 각도를 추출할 때, Euler 성분별 단순 뺄셈의 수학적 오류를 발견하고 쿼터니언 역곱으로 수정하였다:
+
+  Delta_Q = Q_rest^-1 * Q_anim   ... (23)
+
+이 수정은 특히 말 모델에서 다축 회전이 관여하는 관절(목, 척추)의 제어를 정상화하는 데 결정적이었다.
+
+6. 로코모션 시스템
+
+HandAvatar는 아바타의 공간 이동을 수동 제스처 등록(trigger-to-motion)으로만 처리하며, Section 7.1에서 "손 관절 상태에서 이동 속도·방향을 자동으로 도출하는 방법"을 미래 과제로 명시하였다[1]. 본 시스템은 이를 관절 회전 매핑과 완전히 분리된 독립 모듈로 구현하였다.
+
+6.1 Walk Cursor 기반 속도 추출
+
+Walk 애니메이션의 키프레임 시퀀스에서 현재 손 포즈의 위치를 추정하여 이동 속도를 산출한다.
+
+1. Walk 각 키프레임과 현재 손 포즈의 L2 거리를 계산하여, 가장 가까운 키프레임 인덱스를 cursor 위치로 추정한다.
+2. 근접도 가중치 w_p = exp(-d_min * s_p)를 적용하여, Walk과 무관한 동작 수행 시 속도를 자동 감쇠한다.
+3. speed = EMA(|cursor_t - cursor_{t-1}| * w_p)로 평활화하여 최종 속도를 산출한다.
+
+이 방식은 Walk 키프레임과의 유사성에 기반하므로, 별도의 이동 제스처를 등록할 필요 없이 손이 Walk 패턴과 유사하게 움직이면 자동으로 전진하고, 다른 동작을 수행하면 속도가 0으로 수렴한다.
+
+6.2 방향 제어
+
+두 가지 모드를 지원한다.
+
+Head-direction 모드. MediaPipe FaceLandmarker로 추출한 머리 yaw 각도를 이동 방향으로 사용한다. 데드존(8도)과 방향 스케일(0.15)을 적용하여 미세 떨림을 억제한다.
+
+Gaze 모드. eyetrax 라이브러리[7]의 9포인트 캘리브레이션을 통해 시선 좌표를 추출하고, Unity 화면의 지면에 Raycast하여 목표 지점을 결정한다. Gaze 시스템은 동물 파이프라인(포트 8765)과 완전히 분리된 독립 포트(8766)로 운영되어, 손 추적과 시선 추적 간의 연산 간섭을 방지한다.
+
+7. 실험 결과
+
+7.1 실험 환경
+
+실험은 Windows 11, Python 3.10, Unity 2022.3 LTS 환경에서 수행하였다. 웹캠은 일반 USB 카메라(720p)를 사용하였으며, 별도의 Depth 카메라나 VR 장비 없이 소비자급 하드웨어만으로 시스템을 운용하였다.
+
+7.2 매핑 품질 (Q Score) 분석
+
+표 3은 개발 과정에서의 Q score 변화를 보여준다.
+
+표 3. Q Score 변화 이력 (Spider)
+단계                            Q Score    변화 원인
+초기 구현                       -6.72      w_F 부호 오류, S 비정규화
+알고리즘 재구현                 -3.57      compute_F/S/Q 논문 기반 재작성 (+46.9%)
+w_F 부호 + S 정규화 수정        +8.3(mean) 음수→양수 전환
+체인 보너스 + 파이프라인 정비    9.45       276개 포즈 기반, 최종값
+
+7.3 서브샘플링 효과
+
+표 4. K x 방식 벤치마크 (Spider)
+K       방식             연산 시간    Q Score
+100     single           125초       7.05
+100     paper (Eq.11)    636초       7.04
+1,000   single           166초       7.34
+1,000   paper (Eq.11)    87분        7.27
+
+K=100에서 single과 paper의 Q 차이는 0.01에 불과하며, paper 방식이 5배 느리다. 따라서 본 시스템은 K=100, single 방식을 채택하였다. 논문의 K=10,000 전체 순회 대비 약 42배 속도 향상을 달성하면서 품질 차이는 0.3%에 불과하다.
+
+7.4 20-DOF 모델의 효과
+
+표 5. 15-DOF → 20-DOF 전환 효과
+동물    15-DOF Q    20-DOF Q    개선율
+Fish    -42.82      -25.13      +41%
+
+물고기의 지느러미 3개가 손목 3-DOF에 자연스럽게 매핑되면서, 지느러미의 넓은 움직임 범위와 손목 ROM이 잘 부합하여 Q가 현저히 개선되었다.
+
+7.5 동물별 매핑 결과
+
+표 6. 동물별 매핑 현황
+동물      포즈 수    관절 수          매핑 방식    비고
+Spider    276        24+3(body)       ILP 자동     Q=9.45
+Horse     77         29               수동         wrist 과집중 문제
+Fish      -          5                ILP 자동     Q=-25.13
+
+거미는 bilateral 구조(좌 4다리 x 왼손, 우 4다리 x 오른손)가 명확하여 ILP가 직관적인 매핑을 자동 산출하였다. 반면 말은 ILP 결과에서 wrist_flex가 대부분의 관절에 과집중 배정되는 문제가 발생하여 수동 매핑으로 전환하였다.
+
+7.6 수식-코드 매칭률
+
+논문[1]의 수식과 구현 코드의 전수 대조 분석 결과, 18개 항목 중 15개(약 83%)가 완전 일치하고, 3개가 근사 또는 소프트 대체로 처리되었다. 근사 항목은 RULA(Depth 카메라 필요), FA(내외전 측정 불가), 계층 제약(feasibility)이며, 각각 RGB 환경의 물리적 제약에 기인한다. 수식의 수학적 구조와 알고리즘 로직 수준에서의 일치율은 약 95%이다.
+
+8. 논의
+
+8.1 논문 대비 구현 차이 종합
+
+표 7. HandAvatar 대비 주요 구현 차이
+항목          HandAvatar[1]              본 구현                  변경 사유
+입력 장치     Oculus Quest 2 (Depth)     RGB 웹캠 + MediaPipe     하드웨어 의존 제거
+DOF 수        24 (굴신+내외전)           20 (굴신+손목)           RGB z축 불안정
+G 서브샘플링  없음 (전체 순회)           F 상위 100개             계산 42배 절감
+F 통합        단순합                     가중합 + 반전            지표 스케일 통일
+RULA          3D 위치 기반               DOF 이탈도 근사          Depth 부재
+ILP 솔버      Gurobi (상용)              PuLP + CBC (오픈소스)    라이선스
+계층 제약     하드 제약                  소프트 보너스 (+5.0)     Feasibility
+기준 포즈     argmax G x P               ROM 중간값               양방향 제어성
+로코모션      수동 제스처                Walk cursor + head-dir/gaze  논문 한계 해결
+
+8.2 RGB 환경 적응의 기술적 의의
+
+Depth 카메라에서 RGB 웹캠으로의 전환은 단순한 센서 교체가 아니라, 파이프라인 전반의 재설계를 요구하였다. DOF 추출에서 3D world frame(±10-30°) → palm-local 3D(±10°) → 2D 이미지 좌표(±3°)로의 점진적 탐색 과정은, RGB 환경에서 z축을 배제하는 것이 노이즈를 줄이는 가장 효과적 전략임을 보여준다. 이 발견은 MediaPipe 기반의 다른 손 제어 응용에도 적용 가능하다.
+
+8.3 한계점
+
+RULA 근사의 한계. RGB 환경에서 3D 손목 위치 기반 RULA를 완전 구현할 수 없으며, 손목 DOF 이탈도 근사에 의존한다.
+
+Horse 매핑의 수동화. 현행 ILP에 "왼손=다리, 오른손=상체"와 같은 관절 그룹 제약이 없어, 4족 동물처럼 기능적으로 구분된 관절 그룹을 가진 동물에서 직관적 매핑을 자동 산출하지 못한다.
+
+사용자 평가 미실시. 신체화(embodiment), 직관성, 학습 용이성 등에 대한 정량적 사용자 연구를 수행하지 못하였다.
+
+Sequential Walk 미구현. Walk 키프레임 간 시간 순서를 보장하여 보행 패턴을 보다 자연스럽게 재현하는 방식은 설계 수준에 머물러 있다.
+
+9. 결론
+
+본 논문은 RGB 웹캠 하나만으로 비인간형 동물 아바타를 실시간 제어하는 시스템을 제안하였다. 코드가 공개되지 않은 HandAvatar[1]의 ILP 기반 매핑 알고리즘을 논문 수식만으로 독립 재구현하고, Depth 카메라 의존성을 제거하며, 논문이 미래 과제로 남긴 로코모션 자동화를 달성하였다.
+
+주요 성과를 정리하면 다음과 같다:
+
+- MediaPipe 기반 20-DOF 기하학적 추출과 2D 이미지 좌표 활용으로 ±3° 이내의 측정 안정성을 달성하였다.
+- ILP 매핑 최적화에서 거미 아바타 Q=9.45를 달성하였다.
+- K=100 서브샘플링으로 논문 대비 42배 속도 향상을 이루면서 품질 차이는 0.3%에 불과하였다.
+- Walk cursor 기반 속도 추출과 head-direction/gaze 방향 제어로 로코모션을 자동화하였다.
+- Direct, Keyframe, Blend 세 가지 런타임 제어 방식을 구현하고, 동적 alpha 블렌딩으로 신체화와 자연스러움의 균형을 달성하였다.
+
+향후 연구로는 손가락별 관절 그룹 제약을 포함한 ILP 확장, Sequential Walk 구현, 그리고 정량적 사용자 연구가 필요하다. 또한 본 시스템의 20-DOF 추출 방식과 서브샘플링 기법은 HandAvatar 이외의 손 기반 아바타 제어 시스템에도 범용적으로 적용 가능할 것으로 기대된다.
+
+감사의 글
+본 연구는 한동대학교 전산전자공학부 캡스톤디자인 과제로 수행되었다.
+
+참고문헌
+[1] Y. Cheng, A. Edalati, C. Pong, E. Seol, and S. Bateman, "HandAvatar: Automatically Creating Hand-Gesture Controlled Avatars for Non-Humanoid Virtual Characters," in Proc. ACM CHI Conference on Human Factors in Computing Systems, 2023, pp. 1-16.
+[2] J. Lin, Y. Guo, J. Shao, and R. Yang, "HoloHands: Real-time Hand Gesture Interaction in Mixed Reality," in Proc. IEEE Virtual Reality (VR), 2019, pp. 368-376.
+[3] Y. Seol, J. P. Lewis, J. Seo, B. Kwon, and J. Noh, "Creature Features: Online Motion Puppetry for Non-Humanoid Characters," in Proc. ACM SIGGRAPH/Eurographics Symposium on Computer Animation (SCA), 2013, pp. 213-221.
+[4] Google, "MediaPipe Hand Landmarker," https://developers.google.com/mediapipe/solutions/vision/hand_landmarker, 2023.
+[5] L. McAtamney and E. N. Corlett, "RULA: A survey method for the investigation of work-related upper limb disorders," Applied Ergonomics, vol. 24, no. 2, pp. 91-99, 1993.
+[6] M. C. Hume, H. Gellman, H. McKellop, and R. H. Brumfield, "Functional range of motion of the joints of the hand," Journal of Hand Surgery, vol. 15, no. 2, pp. 240-243, 1990.
+[7] eyetrax, "eyetrax: Webcam-based Eye Tracking Library," https://pypi.org/project/eyetrax/, 2024.
+
+부록 A. 논문 vs 구현 수식 대조표
+
+#   수식/항목                          코드 위치                           일치도   비고
+1   정규화 g_hat = (g-min)/range       constants.py, compute_f.py         완전
+2   C 행렬 (ROM 교집합)                compute_c.py                       완전
+3   IFA (자연 비율 MAE)                compute_f.compute_ifa()            완전     0.67 정규화 추가
+4   HE (과신전 비율)                   compute_f.compute_he()             완전     임계값 0.9
+5   FA (벌림 불균형)                   compute_f.compute_fa()             근사     굴신 불균형 대체
+6   F 통합                            compute_f.compute_F()              변경     가중합 + 반전
+7   RULA                              compute_f.compute_rula()           근사     DOF 이탈도
+8   S (포즈쌍 각도 차)                 compute_s.compute_S()              완전
+9   S_bar (G_sub 평균)                 compute_s.compute_S_bar()          완전
+10  Q 가중합                           compute_q.compute_Q()              완전
+11  ILP 제약 C1, C2                    ilp_solver.solve_ilp()             완전
+12  ILP 제약 C3 (계층)                 ilp_solver (chain_bonus)           소프트   +5.0 보너스
+13  Step 2 argmax                      reference_pose.optimize()          완전
+14  ref_H / ref_A / scale              reference_pose.build_result()      완전
+15  런타임 delta_h x scale             mapping_engine._compute_joint()    완전
+16  손가락 굴신 각도                   hand_tracker.compute_dof_angles()  완전
+17  손목 법선 벡터                     hand_tracker.compute_dof_angles()  완전
+18  Unity Q_rest * Q_Euler(delta)      AnimalController.cs                완전
+
+완전 일치 15/18 (83%), 근사/변경 포함 시 구조적 일치 18/18 (100%).
+수학적 구조와 알고리즘 로직 수준의 일치율: 약 95%.
+
+부록 B. 주요 버그 수정 이력
+
+#   시점     버그 내용                       영향                수정 방법
+1   04/10    Unity 절대 Euler 회전 적용      관절 방향 예측 불가  Q_rest * Q_Euler(delta)
+2   04/18    w_F 부호 오류 (-5로 maximize)   불편한 포즈 선호    코드 내부 +5 적용
+3   04/18    S 비정규화                      Q 극단적 음수       ROM 정규화 적용
+4   05/21    {x,y,z} dict 파싱 실패          ILP placeholder     _extract_pose_scalar()
+5   05/22    Keyframe axis 버그              1번 다리만 반응     _load_bone_axes()
+6   06/09    AnimPoseExporter Euler 뺄셈     다리 사방 날뜀      쿼터니언 역곱 (식 23)
+7   06/12    Spider bind pose != idle pose   시작 시 다리 뻗힘   restPoseClip 도입
