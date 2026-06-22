@@ -49,15 +49,45 @@ BETA_MAP = {
     "spider":     5.0,
     "butterfly":  0.0,
     "fish":       0.0,
+    # horse: wrist 과배정 방지를 위해 beta=5.0 적용
+    "horse":      5.0,
 }
 
 # 동물별 메인 매핑에서 제외할 관절 (body_mapping 또는 IK 타겟)
 # body_mapping.json 에 있는 관절은 자동으로 추가됨
 EXCLUDE_EXTRA = {
     # IK 타겟 본, 보조 뼈 등 손가락으로 제어하지 않을 것들
-    "spider": {"l_leg_ik_005", "l_leg_ik_008", "l_leg_ik_011", "l_legik_015",
-               "r_leg_ik_005", "r_leg_ik_008", "r_leg_ik_011",
-               "ass", "bone_002", "l_bone_014", "r_bone_014"},
+    "spider": {
+        # IK 타겟 (FK 제어 안 함)
+        "l_leg_ik_005", "l_leg_ik_008", "l_leg_ik_011", "l_legik_015",
+        "r_leg_ik_005", "r_leg_ik_008", "r_leg_ik_011",
+        # 몸통/꼬리 (body_mapping 별도 관리)
+        "ass", "bone_002", "l_bone_014", "r_bone_014",
+        # ── 다리 체인 secondary 뼈 (각 다리 굴신각으로 처리) ──
+        # primary 는 l/r_leg, l/r_leg_001, l/r_leg_002, l/r_leg_003 유지
+        # secondary 는 keyframe 애니메이션 데이터로 자동 구동됨
+        "l_bone_009", "l_bone_006", "l_bone_003", "l_bone_012",  # 다리1~4 mid
+        "l_bone_010", "l_bone_007", "l_bone_004", "l_bone_013",  # 다리1~4 tip
+        "r_bone_009", "r_bone_006", "r_bone_003", "r_bone_012",  # 다리1~4 mid
+        "r_bone_010", "r_bone_007", "r_bone_004", "r_bone_013",  # 다리1~4 tip
+        # 공격/기타 본 (body_mapping 또는 트리거에서 처리)
+        "bone", "atack1", "bodyik_001",
+    },
+    # horse: 다리 체인을 thigh 1관절로 대표, 나머지는 keyframe으로 구동
+    # shoulder/shin/foot/toe/ear 제외 → thigh(4) + body(7) = 11관절
+    "horse": {
+        # 다리 체인 secondary (shoulder, shin, foot, toe)
+        "front_shoulder_l", "front_shoulder_r",
+        "shoulder_l",       "shoulder_r",
+        "front_shin_l",     "front_shin_r",
+        "shin_l",           "shin_r",
+        "front_foot_l",     "front_foot_r",
+        "foot_l",           "foot_r",
+        "front_toe_l",      "front_toe_r",
+        "toe_l",            "toe_r",
+        # 귀 (미세 움직임, 제어 불필요)
+        "ear_l",            "ear_r",
+    },
 }
 
 SKELETONS_DIR = os.path.join(PYTHON_DIR, "data", "animal_skeletons")

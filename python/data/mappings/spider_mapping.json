@@ -3,251 +3,202 @@
   "mode": "bilateral",
   "mapping": {
     "l_leg": {
-      "hand_dof_idx": 7,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.2956,
-      "Q_score": 3.5611,
-      "hand": "left"
+      "hand_dof_idx": 9,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 1.2878,
+      "Q_score": 3.6932,
+      "hand": "left",
+      "chain_followers": [
+        {
+          "id": "l_bone_012",
+          "ratio": 0.7
+        },
+        {
+          "id": "l_bone_013",
+          "ratio": 0.4
+        }
+      ]
     },
     "l_leg_001": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "middle_mcp",
-      "scale_factor": 0.7428,
-      "Q_score": 3.5663,
-      "hand": "left"
+      "hand_dof_idx": 12,
+      "hand_dof_name": "middle_dip",
+      "scale_factor": 0.8989,
+      "Q_score": 3.7652,
+      "hand": "left",
+      "chain_followers": [
+        {
+          "id": "l_bone_009",
+          "ratio": 0.7
+        },
+        {
+          "id": "l_bone_010",
+          "ratio": 0.4
+        }
+      ]
     },
     "l_leg_002": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 0.8017,
-      "Q_score": 3.5951,
-      "hand": "left"
+      "hand_dof_idx": 15,
+      "hand_dof_name": "ring_dip",
+      "scale_factor": 1.2556,
+      "Q_score": 4.0227,
+      "hand": "left",
+      "chain_followers": [
+        {
+          "id": "l_bone_006",
+          "ratio": 0.7
+        },
+        {
+          "id": "l_bone_007",
+          "ratio": 0.4
+        }
+      ]
     },
     "l_leg_003": {
       "hand_dof_idx": 16,
       "hand_dof_name": "pinky_cmc",
-      "scale_factor": 2.4617,
+      "scale_factor": 2.2233,
       "Q_score": 3.8343,
-      "hand": "left"
-    },
-    "l_bone_009": {
-      "hand_dof_idx": 11,
-      "hand_dof_name": "middle_pip",
-      "scale_factor": 0.5232,
-      "Q_score": 3.043,
-      "hand": "left"
-    },
-    "l_bone_006": {
-      "hand_dof_idx": 14,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 0.9578,
-      "Q_score": 2.8565,
-      "hand": "left"
-    },
-    "l_bone_003": {
-      "hand_dof_idx": 17,
-      "hand_dof_name": "pinky_mcp",
-      "scale_factor": 0.7901,
-      "Q_score": 3.3139,
-      "hand": "left"
-    },
-    "l_bone_012": {
-      "hand_dof_idx": 8,
-      "hand_dof_name": "index_pip",
-      "scale_factor": 0.6755,
-      "Q_score": 3.028,
-      "hand": "left"
-    },
-    "l_bone_010": {
-      "hand_dof_idx": 12,
-      "hand_dof_name": "middle_dip",
-      "scale_factor": 0.6178,
-      "Q_score": 3.3284,
-      "hand": "left"
-    },
-    "l_bone_007": {
-      "hand_dof_idx": 15,
-      "hand_dof_name": "ring_dip",
-      "scale_factor": 1.1306,
-      "Q_score": 3.2471,
-      "hand": "left"
-    },
-    "l_bone_004": {
-      "hand_dof_idx": 19,
-      "hand_dof_name": "pinky_dip",
-      "scale_factor": 0.8301,
-      "Q_score": 3.5892,
-      "hand": "left"
-    },
-    "l_bone_013": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 0.7956,
-      "Q_score": 3.6235,
-      "hand": "left"
+      "hand": "left",
+      "chain_followers": [
+        {
+          "id": "l_bone_003",
+          "ratio": 0.7
+        },
+        {
+          "id": "l_bone_004",
+          "ratio": 0.4
+        }
+      ]
     },
     "r_leg": {
-      "hand_dof_idx": 7,
-      "hand_dof_name": "index_mcp",
-      "scale_factor": 1.2956,
-      "Q_score": 3.8462,
-      "hand": "right"
+      "hand_dof_idx": 9,
+      "hand_dof_name": "index_dip",
+      "scale_factor": 1.3033,
+      "Q_score": 3.9878,
+      "hand": "right",
+      "chain_followers": [
+        {
+          "id": "r_bone_012",
+          "ratio": 0.7
+        },
+        {
+          "id": "r_bone_013",
+          "ratio": 0.4
+        }
+      ]
     },
     "r_leg_001": {
-      "hand_dof_idx": 10,
-      "hand_dof_name": "middle_mcp",
-      "scale_factor": 0.7428,
-      "Q_score": 3.2307,
-      "hand": "right"
+      "hand_dof_idx": 12,
+      "hand_dof_name": "middle_dip",
+      "scale_factor": 0.5867,
+      "Q_score": 3.4172,
+      "hand": "right",
+      "chain_followers": [
+        {
+          "id": "r_bone_009",
+          "ratio": 0.7
+        },
+        {
+          "id": "r_bone_010",
+          "ratio": 0.4
+        }
+      ]
     },
     "r_leg_002": {
-      "hand_dof_idx": 13,
-      "hand_dof_name": "ring_mcp",
-      "scale_factor": 0.8017,
-      "Q_score": 2.7267,
-      "hand": "right"
+      "hand_dof_idx": 15,
+      "hand_dof_name": "ring_dip",
+      "scale_factor": 0.3478,
+      "Q_score": 3.1247,
+      "hand": "right",
+      "chain_followers": [
+        {
+          "id": "r_bone_006",
+          "ratio": 0.7
+        },
+        {
+          "id": "r_bone_007",
+          "ratio": 0.4
+        }
+      ]
     },
     "r_leg_003": {
       "hand_dof_idx": 16,
       "hand_dof_name": "pinky_cmc",
-      "scale_factor": 2.4617,
+      "scale_factor": 2.7,
       "Q_score": 3.8401,
-      "hand": "right"
-    },
-    "r_bone_009": {
-      "hand_dof_idx": 11,
-      "hand_dof_name": "middle_pip",
-      "scale_factor": 0.5232,
-      "Q_score": 3.2033,
-      "hand": "right"
-    },
-    "r_bone_006": {
-      "hand_dof_idx": 14,
-      "hand_dof_name": "ring_pip",
-      "scale_factor": 0.9578,
-      "Q_score": 3.7144,
-      "hand": "right"
-    },
-    "r_bone_003": {
-      "hand_dof_idx": 17,
-      "hand_dof_name": "pinky_mcp",
-      "scale_factor": 0.7901,
-      "Q_score": 3.635,
-      "hand": "right"
-    },
-    "r_bone_012": {
-      "hand_dof_idx": 8,
-      "hand_dof_name": "index_pip",
-      "scale_factor": 0.6755,
-      "Q_score": 3.3448,
-      "hand": "right"
-    },
-    "r_bone_010": {
-      "hand_dof_idx": 12,
-      "hand_dof_name": "middle_dip",
-      "scale_factor": 0.6178,
-      "Q_score": 3.4545,
-      "hand": "right"
-    },
-    "r_bone_007": {
-      "hand_dof_idx": 15,
-      "hand_dof_name": "ring_dip",
-      "scale_factor": 1.1306,
-      "Q_score": 3.5273,
-      "hand": "right"
-    },
-    "r_bone_004": {
-      "hand_dof_idx": 19,
-      "hand_dof_name": "pinky_dip",
-      "scale_factor": 0.8301,
-      "Q_score": 3.813,
-      "hand": "right"
-    },
-    "r_bone_013": {
-      "hand_dof_idx": 9,
-      "hand_dof_name": "index_dip",
-      "scale_factor": 0.7956,
-      "Q_score": 3.7265,
-      "hand": "right"
+      "hand": "right",
+      "chain_followers": [
+        {
+          "id": "r_bone_003",
+          "ratio": 0.7
+        },
+        {
+          "id": "r_bone_004",
+          "ratio": 0.4
+        }
+      ]
     }
   },
   "reference_pose_H": {
     "left": {
+      "index_mcp": 10.0,
       "pinky_pip": 10.0,
-      "middle_dip": 35.44,
+      "pinky_mcp": 10.0,
       "thumb_abd": 15.0,
-      "pinky_dip": 39.29,
-      "ring_dip": 44.91,
-      "pinky_mcp": 53.37,
-      "index_dip": 58.56,
+      "pinky_dip": 10.0,
       "wrist_dev": 0.0,
-      "thumb_cmc": 20.0,
-      "thumb_ip": 15.0,
-      "wrist_flex": 0.0,
-      "ring_mcp": 57.8,
-      "ring_pip": 46.05,
-      "middle_pip": 62.93,
-      "middle_mcp": 55.44,
-      "wrist_rot": 0.0,
-      "pinky_cmc": 14.95,
-      "index_mcp": 49.41,
       "thumb_mcp": 20.0,
-      "index_pip": 30.07
+      "middle_mcp": 10.0,
+      "ring_pip": 10.0,
+      "middle_pip": 10.0,
+      "wrist_flex": 0.0,
+      "ring_mcp": 10.0,
+      "index_pip": 10.0,
+      "thumb_cmc": 20.0,
+      "ring_dip": 54.78,
+      "wrist_rot": 0.0,
+      "middle_dip": 50.6,
+      "index_dip": 49.89,
+      "pinky_cmc": 17.64,
+      "thumb_ip": 15.0
     },
     "right": {
+      "index_mcp": 10.0,
       "pinky_pip": 10.0,
-      "middle_dip": 35.44,
+      "pinky_mcp": 10.0,
       "thumb_abd": 15.0,
-      "pinky_dip": 39.29,
-      "ring_dip": 44.91,
-      "pinky_mcp": 53.37,
-      "index_dip": 58.56,
+      "pinky_dip": 10.0,
       "wrist_dev": 0.0,
-      "thumb_cmc": 20.0,
-      "thumb_ip": 15.0,
-      "wrist_flex": 0.0,
-      "ring_mcp": 57.8,
-      "ring_pip": 46.05,
-      "middle_pip": 62.93,
-      "middle_mcp": 55.44,
-      "wrist_rot": 0.0,
-      "pinky_cmc": 14.95,
-      "index_mcp": 49.41,
       "thumb_mcp": 20.0,
-      "index_pip": 30.07
+      "middle_mcp": 10.0,
+      "ring_pip": 10.0,
+      "middle_pip": 10.0,
+      "wrist_flex": 0.0,
+      "ring_mcp": 10.0,
+      "index_pip": 10.0,
+      "thumb_cmc": 20.0,
+      "ring_dip": 54.78,
+      "wrist_rot": 0.0,
+      "middle_dip": 50.6,
+      "index_dip": 49.89,
+      "pinky_cmc": 17.64,
+      "thumb_ip": 15.0
     }
   },
-  "_ref_A_comment": "restPoseClip=Idle.anim 기준으로 0 리셋. Idle frame 0 = 자연스러운 자세이므로 delta=0이 idle pose.",
   "reference_pose_A": {
-    "l_leg": 0.0,
-    "l_leg_001": 0.0,
-    "l_leg_002": 0.0,
-    "l_leg_003": 0.0,
-    "l_bone_009": 0.0,
-    "l_bone_006": 0.0,
-    "l_bone_003": 0.0,
-    "l_bone_012": 0.0,
-    "l_bone_010": 0.0,
-    "l_bone_007": 0.0,
-    "l_bone_004": 0.0,
-    "l_bone_013": 0.0,
-    "r_leg": 0.0,
-    "r_leg_001": 0.0,
+    "l_leg": 6.27,
+    "l_leg_001": -6.08,
+    "l_leg_002": 15.25,
+    "l_leg_003": 13.23,
+    "r_leg": 13.34,
+    "r_leg_001": 8.92,
     "r_leg_002": 0.0,
-    "r_leg_003": 0.0,
-    "r_bone_009": 0.0,
-    "r_bone_006": 0.0,
-    "r_bone_003": 0.0,
-    "r_bone_012": 0.0,
-    "r_bone_010": 0.0,
-    "r_bone_007": 0.0,
-    "r_bone_004": 0.0,
-    "r_bone_013": 0.0
+    "r_leg_003": -3.45
   },
-  "Q_score_reference": 7.8963,
+  "Q_score_reference": 6.2044,
   "bilateral_balance": {
-    "n_left": 12,
-    "n_right": 12,
+    "n_left": 4,
+    "n_right": 4,
     "balanced": true
   }
 }

@@ -67,7 +67,18 @@
       "WebFetch(domain:github.com)",
       "Bash(grep -B 5 \"m_Script: {fileID: 11500000, guid:\" \"C:\\\\Program Files \\(x86\\)\\\\GitHub\\\\HandAnimal\\\\unity\\\\Assets\\\\SimpleNaturePack_Demo.unity\")",
       "Bash(node felo-slides/scripts/run_ppt_task.mjs --query 'Create an English presentation PPT for HandAnimal project with 9 slides::*)",
-      "Bash(node felo-slides/scripts/run_ppt_task.mjs --query 'HandAnimal: Real-Time Animal Control via Hand and Gaze Tracking. 9-slide English presentation. Slides: 1-Title, 2-Problem/Motivation, 3-System Overview pipeline Camera to Python MediaPipe to WebSocket to Unity, 4-Hand Tracking Joint Mapping ROM EMA smoothing, 5-Locomotion Control left hand velocity, 6-Gaze Navigation GazeCalibrator GazeNavigator, 7-Demo Results, 8-Challenges Solutions, 9-Conclusion Future Work. Modern dark theme.' --interval 10 --max-wait 300 --timeout 30 --json --verbose)"
+      "Bash(node felo-slides/scripts/run_ppt_task.mjs --query 'HandAnimal: Real-Time Animal Control via Hand and Gaze Tracking. 9-slide English presentation. Slides: 1-Title, 2-Problem/Motivation, 3-System Overview pipeline Camera to Python MediaPipe to WebSocket to Unity, 4-Hand Tracking Joint Mapping ROM EMA smoothing, 5-Locomotion Control left hand velocity, 6-Gaze Navigation GazeCalibrator GazeNavigator, 7-Demo Results, 8-Challenges Solutions, 9-Conclusion Future Work. Modern dark theme.' --interval 10 --max-wait 300 --timeout 30 --json --verbose)",
+      "Bash(where python:*)",
+      "Bash(C:/Users/chaez/AppData/Local/Programs/Python/Python313/python.exe:*)",
+      "Bash(ls \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/\"*.docx)",
+      "Bash(ls \"/c/Program Files \\(x86\\)/GitHub/HandAnimal/\"*.docx)",
+      "Bash(ls \"C:/Program Files \\(x86\\)/GitHub/HandAnimal/python/data/hand_poses/\"*.npy)",
+      "Bash(C:/Users/chaez/anaconda3/envs/capstone_env/python.exe -c ':*)",
+      "Read(//mnt/c/Users/chaez/anaconda3/**)",
+      "Read(//mnt/c/Users/**)",
+      "Bash(~/miniconda3/envs/capstone_env/python.exe:*)",
+      "Bash('~/miniconda3/envs/capstone_env/python.exe' -c:*)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

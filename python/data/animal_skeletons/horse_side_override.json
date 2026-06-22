@@ -1,0 +1,13 @@
+{
+  "_comment": "horse bilateral 배정 오버라이드 — 2026-06-21",
+  "_design": "왼손=4다리(thigh 대표관절), 오른손=상체(scull + spine)",
+  "front_thigh_r": "left",
+  "thigh_r":       "left",
+  "scull":         "right",
+  "spine_008":     "right",
+  "spine_007":     "right",
+  "spine_003":     "right",
+  "spine_002":     "right",
+  "spine_001":     "right",
+  "spine":         "right"
+}

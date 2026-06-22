@@ -59,11 +59,13 @@ public class AnimalController : MonoBehaviour
     [Tooltip("Walk 중 손 입력 반영 비율 (0=애니메이션만, 1=손만)")]
     [Range(0f, 1f)]
     [SerializeField] private float walkHandBlend = 0f;
+    public float WalkHandBlend    { get => walkHandBlend;    set => walkHandBlend    = Mathf.Clamp01(value); }
 
     [Header("트리거 중 손 블렌딩")]
     [Tooltip("트리거 애니메이션 재생 중 손 입력 반영 비율")]
     [Range(0f, 1f)]
     [SerializeField] private float triggerHandBlend = 0.3f;
+    public float TriggerHandBlend { get => triggerHandBlend; set => triggerHandBlend = Mathf.Clamp01(value); }
 
     // Walk 활성 여부 (WebSocketClient에서 locomotion.speed 기반으로 설정)
     private bool _walkActive = false;
@@ -103,7 +105,16 @@ public class AnimalController : MonoBehaviour
         if (autoInferAxes)
             Debug.LogWarning("[AnimalController] autoInferAxes=true — skeleton.json 축/ROM을 채워주세요.");
 
-        Debug.Log($"[AnimalController] 관절 {_jointMap.Count}개  walkAnimName='{walkAnimName}'");
+        // idleAnimator 미지정 시 자동 탐색
+        if (idleAnimator == null)
+        {
+            idleAnimator = GetComponentInChildren<Animator>();
+            if (idleAnimator != null)
+                Debug.Log($"[AnimalController] idleAnimator 자동 탐색: {idleAnimator.gameObject.name}");
+        }
+
+        Debug.Log($"[AnimalController] 관절 {_jointMap.Count}개  walkAnimName='{walkAnimName}'  " +
+                  $"idleAnimator={(idleAnimator != null ? idleAnimator.gameObject.name : "NULL")}");
     }
 
     private IEnumerator Start()
@@ -211,12 +222,23 @@ public class AnimalController : MonoBehaviour
     {
         if (idleAnimator == null)
         {
-            Debug.LogWarning("[AnimalController] PlayTriggerAnim: idleAnimator가 없습니다.");
+            idleAnimator = GetComponentInChildren<Animator>();
+            if (idleAnimator == null)
+            {
+                Debug.Log($"[AnimalController] PlayTriggerAnim({animName}): Animator 없음 on {gameObject.name}");
+                return;
+            }
+            Debug.Log($"[AnimalController] idleAnimator 자동 탐색: {idleAnimator.gameObject.name} on {gameObject.name}");
+        }
+
+        if (idleAnimator.runtimeAnimatorController == null)
+        {
+            Debug.Log($"[AnimalController] PlayTriggerAnim({animName}): Controller 없음 on {gameObject.name}");
             return;
         }
 
         float clipDuration = durationHint;
-        var clips = idleAnimator.runtimeAnimatorController?.animationClips;
+        var clips = idleAnimator.runtimeAnimatorController.animationClips;
         if (clips != null)
         {
             foreach (var clip in clips)
@@ -226,13 +248,15 @@ public class AnimalController : MonoBehaviour
         }
 
         idleAnimator.enabled = true;
-        idleAnimator.speed   = 1f;   // freeze 상태에서도 트리거는 정상 재생
+        idleAnimator.speed   = 1f;
         idleAnimator.Play(animName, 0, 0f);
+        idleAnimator.Update(0f);  // 즉시 평가 (1프레임 지연 방지)
         _triggerTimer       = clipDuration;
         _currentTriggerAnim = animName;
         _isIdle             = true;
         _inWalkMode         = false;
-        Debug.Log($"[AnimalController] 트리거 재생: {animName}  ({clipDuration:F2}s)");
+        Debug.Log($"[AnimalController] 트리거 재생: {animName}  ({clipDuration:F2}s)  " +
+                  $"animator={idleAnimator.gameObject.name}");
     }
 
     public void ApplyJoints(Dictionary<string, JointRotation> joints)

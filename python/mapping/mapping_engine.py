@@ -158,11 +158,21 @@ class MappingEngine:
             ref_H     = data["reference_pose_H"][hand_side]
 
             if not dof_dict:
-                result[joint_id] = round(float(ref_A.get(joint_id, 0.0)), 2)
+                primary_angle = round(float(ref_A.get(joint_id, 0.0)), 2)
             else:
-                result[joint_id] = self._compute_joint(
+                primary_angle = self._compute_joint(
                     info, dof_dict, ref_H, ref_A, joint_id
                 )
+            result[joint_id] = primary_angle
+
+            # chain_followers: primary 델타를 비율로 secondary 관절에 전파
+            # (keyframe 모드에서는 animation 데이터로 처리, direct 모드 전용)
+            delta = primary_angle - float(ref_A.get(joint_id, 0.0))
+            for follower in info.get("chain_followers", []):
+                f_id    = follower["id"]
+                f_ratio = float(follower["ratio"])
+                f_ref   = float(ref_A.get(f_id, 0.0))
+                result[f_id] = round(f_ref + delta * f_ratio, 2)
 
         return result
 
